@@ -19,8 +19,7 @@ class SendMessageCommand extends Command
      */
     public function handle(): void
     {
-        $sid = "AC34a1bd3a16f96cafe7d27c94d6795d7f";
-        $token = "87ece11fc557598b57c3ebe3cc2e37d4";
+   
         $twilio = new Client($sid, $token);
 
         $message = $twilio->messages
