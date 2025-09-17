@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Dashboard\AutoTranslationController;
+use App\Http\Controllers\Dashboard\InquiryController;
 use App\Http\Controllers\Dashboard\MainController;
 use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\SettingController;
@@ -28,6 +29,10 @@ Route::group([
     // User Management
     Route::resource('users', UserController::class)->except('show');
     Route::resource('roles', RoleController::class)->except('show');
+    
+    // Inquiry Management
+    Route::resource('inquiries', InquiryController::class);
+    Route::post('inquiries/{inquiry}/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
     
     // SEO & Redirects
     Route::resource('redirect-rules', RedirectRuleController::class)->except('show');

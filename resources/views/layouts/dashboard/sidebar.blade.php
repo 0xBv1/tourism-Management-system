@@ -56,6 +56,16 @@
                 ]"
             />
 
+            <x-dashboard.sidebar.link-with-child
+                title="Inquiries"
+                icon="message-circle"
+                :permissions="['inquiries.list','inquiries.create','inquiries.edit','inquiries.delete','inquiries.show','inquiries.confirm']"
+                :children="[
+                    ['title' => 'All Inquiries', 'link' => route('dashboard.inquiries.index'), 'permissions' => ['inquiries.list','inquiries.edit','inquiries.delete','inquiries.show'] ],
+                    ['title' => 'Create Inquiry', 'link' => route('dashboard.inquiries.create'), 'permissions' => ['inquiries.create'] ],
+                ]"
+            />
+
             <x-dashboard.sidebar.single-link :permissions="['settings.show']" title="Settings" link="{{ route('dashboard.settings.show') }}" icon="settings" />
 
             {{--Sidebar Auto Generation--}}
