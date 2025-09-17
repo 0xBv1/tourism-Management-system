@@ -39,7 +39,7 @@ Route::group([
     Route::resource('bookings', BookingController::class)->only(['index', 'show', 'update']);
     Route::post('bookings/{booking}/checklist', [BookingController::class, 'updateChecklist'])->name('bookings.checklist');
     Route::get('bookings/{booking}/download', [BookingController::class, 'download'])->name('bookings.download');
-    Route::post('bookings/{booking}/send', [BookingController::class, 'send'])->name('bookings.send');
+    Route::get('bookings/{booking}/send', [BookingController::class, 'send'])->name('bookings.send');
     
     // SEO & Redirects
     Route::resource('redirect-rules', RedirectRuleController::class)->except('show');

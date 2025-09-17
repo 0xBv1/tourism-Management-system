@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\BookingFile;
 use App\Models\Inquiry;
+use App\Models\Payment;
 use App\Enums\BookingStatus;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -83,9 +84,34 @@ class BookingFileSeeder extends Seeder
         ];
 
         foreach ($sampleBookings as $bookingData) {
-            BookingFile::create($bookingData);
+            $booking = BookingFile::create($bookingData);
+            
+            // Create sample payments for some bookings
+            if ($booking->status === BookingStatus::CONFIRMED) {
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'invoice_id' => 'INV-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
+                    'gateway' => 'stripe',
+                    'amount' => 750.00,
+                    'status' => 'completed',
+                    'paid_at' => now()->subDays(1),
+                    'transaction_request' => ['payment_method' => 'card'],
+                    'transaction_verification' => ['transaction_id' => 'txn_' . uniqid()],
+                ]);
+            } elseif ($booking->status === BookingStatus::COMPLETED) {
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'invoice_id' => 'INV-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
+                    'gateway' => 'paypal',
+                    'amount' => $booking->total_amount,
+                    'status' => 'completed',
+                    'paid_at' => now()->subDays(3),
+                    'transaction_request' => ['payment_method' => 'paypal'],
+                    'transaction_verification' => ['transaction_id' => 'paypal_' . uniqid()],
+                ]);
+            }
         }
 
-        $this->command->info('Sample booking files created successfully!');
+        $this->command->info('Sample booking files and payments created successfully!');
     }
 }

@@ -11,17 +11,22 @@ class Payment extends Model
         'invoice_id',
         'booking_id',
         'gateway',
+        'amount',
+        'status',
+        'paid_at',
         'transaction_request',
         'transaction_verification',
     ];
 
     protected $casts = [
+        'amount' => 'decimal:2',
+        'paid_at' => 'datetime',
         'transaction_request' => 'array',
         'transaction_verification' => 'array',
     ];
 
     public function booking(): BelongsTo
     {
-        return $this->belongsTo(Booking::class);
+        return $this->belongsTo(BookingFile::class, 'booking_id');
     }
 }
