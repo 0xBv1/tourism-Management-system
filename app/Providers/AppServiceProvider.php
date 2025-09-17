@@ -8,6 +8,8 @@ use App\Payments\PaymentFactory;
 use App\Payments\PaymentGateway;
 use App\Channels\WhatsappChannel;
 use App\Services\Recaptcha\RecaptchaService;
+use App\Models\BookingFile;
+use App\Observers\BookingFileObserver;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Notifications\ChannelManager;
@@ -49,6 +51,10 @@ class AppServiceProvider extends ServiceProvider
         File::macro('isEmptyDir', function ($path) {
             return count(glob("$path/*")) === 0;
         });
+        
+        // Register observers
+        BookingFile::observe(BookingFileObserver::class);
+        
 //        Str::macro('htmlEntityDecode', fn($value) => Str::of(html_entity_decode($value)));
 //        Stringable::macro('htmlEntityDecode', fn() => new Stringable(html_entity_decode($this->value)));
     }

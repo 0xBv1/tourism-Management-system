@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Dashboard\AutoTranslationController;
+use App\Http\Controllers\Dashboard\BookingController;
 use App\Http\Controllers\Dashboard\InquiryController;
 use App\Http\Controllers\Dashboard\MainController;
 use App\Http\Controllers\Dashboard\RoleController;
@@ -33,6 +34,12 @@ Route::group([
     // Inquiry Management
     Route::resource('inquiries', InquiryController::class);
     Route::post('inquiries/{inquiry}/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
+    
+    // Booking Management
+    Route::resource('bookings', BookingController::class)->only(['index', 'show', 'update']);
+    Route::post('bookings/{booking}/checklist', [BookingController::class, 'updateChecklist'])->name('bookings.checklist');
+    Route::get('bookings/{booking}/download', [BookingController::class, 'download'])->name('bookings.download');
+    Route::post('bookings/{booking}/send', [BookingController::class, 'send'])->name('bookings.send');
     
     // SEO & Redirects
     Route::resource('redirect-rules', RedirectRuleController::class)->except('show');

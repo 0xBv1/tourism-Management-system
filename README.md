@@ -263,3 +263,249 @@ The system uses Laravel's built-in features:
 - Check queue workers are running for background processing
 - Monitor storage space for generated booking files
 - Regular cleanup of old booking files if needed
+
+## Booking Management System
+
+The Booking Management System is a comprehensive module for managing booking files generated from confirmed inquiries. It provides complete booking lifecycle management with audit trails, checklist functionality, and payment tracking.
+
+### Features
+
+#### Core Functionality
+- **Booking File Management**: View, update, and manage booking files
+- **Status Tracking**: Track booking status through various stages
+- **Payment Integration**: Monitor payments and remaining amounts
+- **Checklist System**: Interactive task management with progress tracking
+- **Audit Logging**: Complete audit trail for all booking changes
+- **File Operations**: Download and send booking files
+
+#### Advanced Features
+- **Real-time Updates**: AJAX-powered checklist updates
+- **Progress Tracking**: Visual progress bars for checklist completion
+- **Payment Calculations**: Automatic calculation of paid and remaining amounts
+- **Timeline Management**: Track file generation, sending, and download timestamps
+- **Role-based Access**: Different permission levels for different user roles
+
+### Database Structure
+
+#### Enhanced Booking Files Table
+```sql
+- id (Primary Key)
+- inquiry_id (Foreign Key to inquiries table)
+- file_name (Generated file name)
+- file_path (Storage path)
+- status (String: pending, confirmed, in_progress, completed, cancelled, refunded)
+- checklist (JSON: Task completion tracking)
+- notes (Text: Additional notes)
+- total_amount (Decimal: Total booking amount)
+- currency (String: Currency code)
+- generated_at, sent_at, downloaded_at (Timestamps)
+- created_at, updated_at (Timestamps)
+```
+
+#### Booking Status Enum
+```php
+enum BookingStatus: string
+{
+    case PENDING = 'pending';
+    case CONFIRMED = 'confirmed';
+    case IN_PROGRESS = 'in_progress';
+    case COMPLETED = 'completed';
+    case CANCELLED = 'cancelled';
+    case REFUNDED = 'refunded';
+}
+```
+
+### API Endpoints
+
+#### Dashboard Routes
+```
+GET    /dashboard/bookings                    - List all bookings
+GET    /dashboard/bookings/{id}               - Show booking details
+PUT    /dashboard/bookings/{id}               - Update booking
+POST   /dashboard/bookings/{id}/checklist     - Update checklist item
+GET    /dashboard/bookings/{id}/download      - Download booking file
+POST   /dashboard/bookings/{id}/send          - Send booking file
+```
+
+### Permissions
+
+The system includes comprehensive permissions for different user roles:
+
+#### Administrator Permissions
+- `bookings.list` - View bookings list
+- `bookings.create` - Create new bookings
+- `bookings.edit` - Edit existing bookings
+- `bookings.delete` - Delete bookings
+- `bookings.restore` - Restore soft-deleted bookings
+- `bookings.show` - View individual booking details
+- `bookings.update` - Update booking information
+- `bookings.download` - Download booking files
+- `bookings.send` - Send booking files
+- `bookings.checklist` - Manage checklist items
+
+#### Manager Permissions
+- `bookings.list` - View bookings list
+- `bookings.show` - View individual booking details
+- `bookings.update` - Update booking information
+- `bookings.download` - Download booking files
+- `bookings.send` - Send booking files
+- `bookings.checklist` - Manage checklist items
+
+#### Staff Permissions
+- `bookings.list` - View bookings list
+- `bookings.show` - View individual booking details
+- `bookings.download` - Download booking files
+
+### Workflow Process
+
+1. **Booking Creation**
+   - Booking files are automatically generated when inquiries are confirmed
+   - Initial status is set to "pending"
+   - Basic checklist items are created
+
+2. **Booking Management**
+   - Admin can view and update booking details
+   - Status can be changed through various stages
+   - Payment information can be added and tracked
+
+3. **Checklist Management**
+   - Interactive checklist with real-time updates
+   - Progress tracking with visual indicators
+   - AJAX-powered updates without page refresh
+
+4. **File Operations**
+   - Download booking files with timestamp tracking
+   - Send files via email (integration ready)
+   - Track file access and usage
+
+5. **Audit Trail**
+   - All changes are logged with detailed information
+   - Status changes, checklist updates, and payment modifications are tracked
+   - Complete history available for compliance and debugging
+
+### Event System
+
+#### BookingFileObserver
+- Automatically logs all model events (created, updated, deleted)
+- Tracks specific field changes (status, checklist, payments)
+- Integrates with Spatie Activity Log package
+- Provides detailed audit information
+
+### Notifications
+
+#### Activity Logging
+- All booking changes are logged in the activity log
+- Detailed information about what changed and when
+- User-friendly log messages for different operations
+- Integration with Laravel Telescope for debugging
+
+### File Structure
+
+```
+app/
+├── Models/
+│   └── BookingFile.php (Enhanced)
+├── Enums/
+│   └── BookingStatus.php
+├── Http/
+│   └── Controllers/Dashboard/
+│       └── BookingController.php
+├── DataTables/
+│   └── BookingDataTable.php
+├── Observers/
+│   └── BookingFileObserver.php
+└── Seeders/Permissions/
+    └── BookingPermissionSeeder.php
+
+resources/views/dashboard/bookings/
+├── index.blade.php
+├── show.blade.php
+└── action.blade.php
+
+database/
+├── migrations/
+│   ├── add_booking_fields_to_booking_files_table.php
+│   └── update_booking_files_status_enum.php
+└── seeders/
+    ├── BookingFileSeeder.php
+    └── Permissions/BookingPermissionSeeder.php
+```
+
+### Usage Examples
+
+#### Creating a Booking File
+```php
+$booking = BookingFile::create([
+    'inquiry_id' => $inquiry->id,
+    'file_name' => 'booking_confirmation_001.pdf',
+    'file_path' => '/storage/bookings/booking_confirmation_001.pdf',
+    'status' => BookingStatus::PENDING,
+    'total_amount' => 1500.00,
+    'currency' => 'USD',
+    'checklist' => [
+        'accommodation_booked' => false,
+        'tours_scheduled' => false,
+        'transportation_arranged' => false,
+        'insurance_processed' => false,
+        'final_documents_sent' => false,
+    ],
+    'generated_at' => now()
+]);
+```
+
+#### Updating Checklist
+```php
+$booking->updateChecklistItem('accommodation_booked', true);
+// Progress is automatically calculated and updated
+```
+
+#### Querying Bookings
+```php
+// Get bookings by status
+$pendingBookings = BookingFile::pending()->get();
+$completedBookings = BookingFile::completed()->get();
+
+// Get bookings with payments
+$bookingsWithPayments = BookingFile::with('payments')->get();
+
+// Get bookings with inquiry details
+$bookingsWithInquiries = BookingFile::with('inquiry.client')->get();
+```
+
+#### Payment Tracking
+```php
+// Check if booking is fully paid
+if ($booking->isFullyPaid()) {
+    // Handle fully paid booking
+}
+
+// Get remaining amount
+$remaining = $booking->remaining_amount;
+
+// Get total paid amount
+$paid = $booking->total_paid;
+```
+
+### Configuration
+
+The system uses Laravel's built-in features:
+- **Activity Logging**: Spatie Laravel Activity Log package
+- **Permissions**: Spatie Laravel Permission package
+- **DataTables**: Yajra DataTables for listing
+- **Storage**: Files stored in `storage/app/public/bookings/`
+- **AJAX**: Real-time updates for checklist management
+
+### Security
+
+- All routes are protected by authentication middleware
+- Permission-based access control for all operations
+- CSRF protection on all forms and AJAX requests
+- Input validation for all user inputs
+- Audit logging for compliance and security
+
+### Maintenance
+
+- Run `php artisan db:seed --class=Database\Seeders\Permissions\BookingPermissionSeeder` to create permissions
+- Monitor activity logs for system usage
+- Regular cleanup of old booking files if needed
+- Check storage space for booking file uploads

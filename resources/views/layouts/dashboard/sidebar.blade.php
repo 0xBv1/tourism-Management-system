@@ -66,6 +66,13 @@
                 ]"
             />
 
+            <x-dashboard.sidebar.single-link 
+                :permissions="['bookings.list','bookings.show']" 
+                title="Bookings" 
+                link="{{ route('dashboard.bookings.index') }}" 
+                icon="file-text" 
+            />
+
             <x-dashboard.sidebar.single-link :permissions="['settings.show']" title="Settings" link="{{ route('dashboard.settings.show') }}" icon="settings" />
 
             {{--Sidebar Auto Generation--}}
