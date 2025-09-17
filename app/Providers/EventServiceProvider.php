@@ -2,16 +2,6 @@
 
 namespace App\Providers;
 
-use App\Events\NewBookingEvent;
-use App\Events\NewCarRentalEvent;
-use App\Events\NewCustomTripRequestEvent;
-use App\Listeners\NewBookingListener;
-use App\Listeners\NewCarRentalListener;
-use App\Listeners\NewCustomTripRequestListener;
-use App\Models\Blog;
-use App\Models\ContactRequest;
-use App\Observers\BlogObserver;
-use App\Observers\ContactRequestObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -28,15 +18,6 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        NewBookingEvent::class => [
-            NewBookingListener::class,
-        ],
-        NewCustomTripRequestEvent::class => [
-            NewCustomTripRequestListener::class,
-        ],
-        NewCarRentalEvent::class => [
-            NewCarRentalListener::class,
-        ],
     ];
 
     /**
@@ -46,8 +27,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        ContactRequest::observe(ContactRequestObserver::class);
-        Blog::observe(BlogObserver::class);
+        //
     }
 
     /**

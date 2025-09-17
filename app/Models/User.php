@@ -5,7 +5,6 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -71,29 +70,5 @@ class User extends Authenticatable
         return Attribute::make(
             get: fn() => $this->phone ? $this->phone : 'N/A',
         );
-    }
-
-    /**
-     * Get the supplier profile for this user.
-     */
-    public function supplier(): HasOne
-    {
-        return $this->hasOne(Supplier::class);
-    }
-
-    /**
-     * Check if the user is a supplier.
-     */
-    public function isSupplier(): bool
-    {
-        return $this->hasRole('Supplier') || $this->hasRole('Supplier Admin');
-    }
-
-    /**
-     * Check if the user is a supplier admin.
-     */
-    public function isSupplierAdmin(): bool
-    {
-        return $this->hasRole('Supplier Admin');
     }
 }

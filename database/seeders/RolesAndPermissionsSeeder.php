@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Database\Seeders\Permissions\CustomTripPermissionSeeder;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -14,14 +13,13 @@ class RolesAndPermissionsSeeder extends Seeder
         $rolesWithPermissions = [
             'Administrator' => ['users', 'roles'],
             'Editor' => [],
-            'Operator' => ['custom-trips.list', 'custom-trips.show', 'custom-trips.assign'],
+            'Operator' => [],
         ];
 
         foreach ($rolesWithPermissions as $role => $permissions) {
             $dbRole = Role::updateOrCreate([
                 'name' => $role
             ]);
-
 
             if ($role == 'Administrator') {
                 array_map(fn($perm) => Permission::updateOrCreate(['name' => "$perm.list"]), $permissions);
@@ -41,7 +39,6 @@ class RolesAndPermissionsSeeder extends Seeder
             }
 
             if ($role == 'Operator') {
-                $this->call(CustomTripPermissionSeeder::class);
                 $dbRole->givePermissionTo($permissions);
             }
         }
