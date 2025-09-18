@@ -35,3 +35,7 @@ function deleteInquiry(id) {
 }
 </script>
 
+
+
+
+

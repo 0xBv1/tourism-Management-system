@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8000",
+  "backendAuthType": "basic token",
+  "backendUsername": "admin@perfect.com",
+  "backendPassword": "MM...Perfect",
+  "executionArgs": {
+    "projectName": "T-m",
+    "projectPath": "E:\\perfectsolu\\tourism-Management\\T-m",
+    "testIds": [],
+    "additionalInstruction": "Run comprehensive testing to identify all potential errors, bugs, security vulnerabilities, and performance issues in this Laravel tourism management application. Focus on API endpoints, database operations, authentication, payment processing, and business logic validation.",
+    "envs": {
+      "API_KEY": "sk-user-20_QGOVUztDBGlGdLDgppkjEtOWLRI4zo44rDAopDugimuWuYmK2iUa8rxDK3s2CLgSOWeVZ_uymMcXV7cwLY06-v5ZmCs7Ied8fAm8S67yju0aNZrck1q9OYZ76yvBTIpY"
+    }
+  }
+}

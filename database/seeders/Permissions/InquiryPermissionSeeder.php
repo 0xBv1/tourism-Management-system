@@ -39,3 +39,7 @@ class InquiryPermissionSeeder extends Seeder
     }
 }
 
+
+
+
+

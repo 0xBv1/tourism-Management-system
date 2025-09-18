@@ -10,6 +10,13 @@ use App\Http\Controllers\Dashboard\SitemapController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboard\RedirectRuleController;
+use App\Http\Controllers\Dashboard\HotelController;
+use App\Http\Controllers\Dashboard\VehicleController;
+use App\Http\Controllers\Dashboard\GuideController;
+use App\Http\Controllers\Dashboard\RepresentativeController;
+use App\Http\Controllers\Dashboard\ResourceAssignmentController;
+use App\Http\Controllers\Dashboard\ResourceReportController;
+use App\Http\Controllers\Dashboard\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 //controllers
@@ -46,6 +53,57 @@ Route::group([
     Route::get('redirect-rules/export', [RedirectRuleController::class, 'export'])->name('redirect-rules.export');
     Route::post('redirect-rules/import', [RedirectRuleController::class, 'import'])->name('redirect-rules.import');
     
+    // Resource Management
+    Route::resource('hotels', HotelController::class);
+    Route::get('hotels/calendar', [HotelController::class, 'calendar'])->name('hotels.calendar');
+    
+    Route::resource('vehicles', VehicleController::class);
+    Route::get('vehicles/calendar', [VehicleController::class, 'calendar'])->name('vehicles.calendar');
+    
+    Route::resource('guides', GuideController::class);
+    Route::get('guides/calendar', [GuideController::class, 'calendar'])->name('guides.calendar');
+    
+    Route::resource('representatives', RepresentativeController::class);
+    Route::get('representatives/calendar', [RepresentativeController::class, 'calendar'])->name('representatives.calendar');
+    
+    // Resource Assignment
+    Route::group(['prefix' => 'resource-assignments', 'as' => 'resource-assignments.'], function () {
+        Route::get('{bookingFile}/create', [ResourceAssignmentController::class, 'create'])->name('create');
+        Route::post('{bookingFile}', [ResourceAssignmentController::class, 'store'])->name('store');
+        Route::delete('{resourceBooking}', [ResourceAssignmentController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Resource API Routes
+    Route::group(['prefix' => 'resources', 'as' => 'resources.'], function () {
+        Route::post('available', [ResourceAssignmentController::class, 'getAvailableResources'])->name('available');
+        Route::post('check-availability', [ResourceAssignmentController::class, 'checkAvailability'])->name('check-availability');
+        Route::get('utilization', [ResourceAssignmentController::class, 'getUtilizationReport'])->name('utilization');
+    });
+    
+    // Resource Reports
+    Route::group(['prefix' => 'reports', 'as' => 'reports.'], function () {
+        Route::get('resource-utilization', [ResourceReportController::class, 'index'])->name('resource-utilization');
+        Route::get('resource-utilization/export', [ResourceReportController::class, 'export'])->name('resource-utilization.export');
+        Route::get('resource-details/{resourceType}/{resourceId}', [ResourceReportController::class, 'showResourceDetails'])->name('resource-details');
+    });
+
+    // Comprehensive Reports
+    Route::group(['prefix' => 'reports', 'as' => 'reports.'], function () {
+        Route::get('/', [App\Http\Controllers\Dashboard\ReportsController::class, 'index'])->name('index');
+        Route::get('inquiries', [App\Http\Controllers\Dashboard\ReportsController::class, 'inquiries'])->name('inquiries');
+        Route::get('bookings', [App\Http\Controllers\Dashboard\ReportsController::class, 'bookings'])->name('bookings');
+        Route::get('finance', [App\Http\Controllers\Dashboard\ReportsController::class, 'finance'])->name('finance');
+        Route::get('operational', [App\Http\Controllers\Dashboard\ReportsController::class, 'operational'])->name('operational');
+        Route::get('performance', [App\Http\Controllers\Dashboard\ReportsController::class, 'performance'])->name('performance');
+        Route::get('export/{type}', [App\Http\Controllers\Dashboard\ReportsController::class, 'export'])->name('export');
+    });
+
+    // Payment Management
+    Route::resource('payments', PaymentController::class);
+    Route::post('payments/{payment}/mark-as-paid', [PaymentController::class, 'markAsPaid'])->name('payments.mark-as-paid');
+    Route::get('payments/statements', [PaymentController::class, 'statements'])->name('payments.statements');
+    Route::get('payments/aging-buckets', [PaymentController::class, 'agingBuckets'])->name('payments.aging-buckets');
+
     // Settings
     Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
         Route::get('show', [SettingController::class, 'show'])->name('show');

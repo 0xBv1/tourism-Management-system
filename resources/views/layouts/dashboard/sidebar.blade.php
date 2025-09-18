@@ -73,6 +73,56 @@
                 icon="file-text" 
             />
 
+            <x-dashboard.sidebar.link-with-child
+                title="Finance"
+                icon="dollar-sign"
+                :permissions="['payments.list','payments.create','payments.edit','payments.delete','payments.show','payments.statements','payments.aging-buckets']"
+                :children="[
+                    ['title' => 'Payments', 'link' => route('dashboard.payments.index'), 'permissions' => ['payments.list','payments.edit','payments.delete','payments.show'] ],
+                    ['title' => 'Create Payment', 'link' => route('dashboard.payments.create'), 'permissions' => ['payments.create'] ],
+                    ['title' => 'Payment Statements', 'link' => route('dashboard.payments.statements'), 'permissions' => ['payments.statements'] ],
+                    ['title' => 'Aging Buckets', 'link' => route('dashboard.payments.aging-buckets'), 'permissions' => ['payments.aging-buckets'] ],
+                ]"
+            />
+
+            <x-dashboard.sidebar.link-with-child
+                title="Resource Management"
+                icon="package"
+                :permissions="['hotels.list','vehicles.list','guides.list','representatives.list']"
+                :children="[
+                    ['title' => 'Hotels', 'link' => route('dashboard.hotels.index'), 'permissions' => ['hotels.list'] ],
+                    ['title' => 'Vehicles', 'link' => route('dashboard.vehicles.index'), 'permissions' => ['vehicles.list'] ],
+                    ['title' => 'Guides', 'link' => route('dashboard.guides.index'), 'permissions' => ['guides.list'] ],
+                    ['title' => 'Representatives', 'link' => route('dashboard.representatives.index'), 'permissions' => ['representatives.list'] ],
+                    ['title' => 'Hotel Calendar', 'link' => route('dashboard.hotels.calendar'), 'permissions' => ['hotels.calendar'] ],
+                    ['title' => 'Vehicle Calendar', 'link' => route('dashboard.vehicles.calendar'), 'permissions' => ['vehicles.calendar'] ],
+                    ['title' => 'Guide Calendar', 'link' => route('dashboard.guides.calendar'), 'permissions' => ['guides.calendar'] ],
+                    ['title' => 'Representative Calendar', 'link' => route('dashboard.representatives.calendar'), 'permissions' => ['representatives.calendar'] ],
+                ]"
+            />
+
+            <x-dashboard.sidebar.single-link 
+                :permissions="['bookings.list','bookings.show']" 
+                title="Resource Assignment" 
+                link="{{ route('dashboard.bookings.index') }}#assign-resources" 
+                icon="link-2" 
+            />
+
+            <x-dashboard.sidebar.link-with-child
+                title="Reports"
+                icon="bar-chart-2"
+                :permissions="['reports.index','reports.inquiries','reports.bookings','reports.finance','reports.operational','reports.performance']"
+                :children="[
+                    ['title' => 'Dashboard', 'link' => route('dashboard.reports.index'), 'permissions' => ['reports.index'] ],
+                    ['title' => 'Inquiries Report', 'link' => route('dashboard.reports.inquiries'), 'permissions' => ['reports.inquiries'] ],
+                    ['title' => 'Bookings Report', 'link' => route('dashboard.reports.bookings'), 'permissions' => ['reports.bookings'] ],
+                    ['title' => 'Finance Report', 'link' => route('dashboard.reports.finance'), 'permissions' => ['reports.finance'] ],
+                    ['title' => 'Operational Report', 'link' => route('dashboard.reports.operational'), 'permissions' => ['reports.operational'] ],
+                    ['title' => 'Performance Report', 'link' => route('dashboard.reports.performance'), 'permissions' => ['reports.performance'] ],
+                    ['title' => 'Resource Utilization', 'link' => route('dashboard.reports.resource-utilization'), 'permissions' => ['resource-reports.index'] ],
+                ]"
+            />
+
             <x-dashboard.sidebar.single-link :permissions="['settings.show']" title="Settings" link="{{ route('dashboard.settings.show') }}" icon="settings" />
 
             {{--Sidebar Auto Generation--}}

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "test client login api",
+    "description": "Verify that the client login API accepts valid email and password, returns 200 status on successful login, and returns 400 status on invalid credentials."
+  },
+  {
+    "id": "TC002",
+    "title": "test client registration api",
+    "description": "Verify that the client registration API accepts valid user details including name, email, password, phone, nationality, and birthdate, returns 201 status on successful registration, and returns 400 status on validation errors."
+  },
+  {
+    "id": "TC003",
+    "title": "test get all countries api",
+    "description": "Verify that the API to get all countries returns a 200 status and a list of countries, and that the response is cached appropriately."
+  },
+  {
+    "id": "TC004",
+    "title": "test get country by id api",
+    "description": "Verify that the API to get a country by its ID returns 200 status and correct country details for valid IDs, and returns 404 status for non-existent country IDs."
+  },
+  {
+    "id": "TC005",
+    "title": "test get cities with optional search api",
+    "description": "Verify that the API to get cities supports optional query parameters for id and search, returns 200 status, and returns filtered city lists based on search criteria."
+  },
+  {
+    "id": "TC006",
+    "title": "test capture paypal payment api",
+    "description": "Verify that the PayPal payment capture API successfully captures payments and returns a 200 status with confirmation of payment capture."
+  },
+  {
+    "id": "TC007",
+    "title": "test get fawaterk payment methods api",
+    "description": "Verify that the API to get Fawaterk payment methods returns a 200 status and a list of available payment methods."
+  },
+  {
+    "id": "TC008",
+    "title": "test list all bookings api",
+    "description": "Verify that the API to list all bookings returns a 200 status and a list of bookings with correct details."
+  },
+  {
+    "id": "TC009",
+    "title": "test list hotels api",
+    "description": "Verify that the API to list hotels returns a 200 status and a list of hotels, and that the create hotel API accepts valid hotel data and creates a hotel successfully."
+  },
+  {
+    "id": "TC010",
+    "title": "test list users api",
+    "description": "Verify that the API to list users returns a 200 status and a list of users, and that the create user API accepts valid user data and creates a user successfully."
+  }
+]

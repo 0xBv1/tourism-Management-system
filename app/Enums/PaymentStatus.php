@@ -20,4 +20,18 @@ enum PaymentStatus: string
             array_map(fn($case) => ucfirst(str_replace('_', ' ', $case->value)), self::cases())
         );
     }
+
+    public function getColor(): string
+    {
+        return match($this) {
+            self::PAID => 'green',
+            self::NOT_PAID => 'red',
+            self::PENDING => 'yellow',
+        };
+    }
+
+    public function getLabel(): string
+    {
+        return ucfirst(str_replace('_', ' ', $this->value));
+    }
 }

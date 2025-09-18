@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Events\InquiryConfirmed;
+use App\Events\PaymentReceived;
 use App\Listeners\GenerateBookingFileListener;
+use App\Listeners\UpdateBookingFileStatusListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -22,6 +24,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         InquiryConfirmed::class => [
             GenerateBookingFileListener::class,
+        ],
+        PaymentReceived::class => [
+            UpdateBookingFileStatusListener::class,
         ],
     ];
 

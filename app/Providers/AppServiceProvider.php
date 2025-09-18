@@ -7,6 +7,8 @@ use App\Enums\PaymentMethod;
 use App\Payments\PaymentFactory;
 use App\Payments\PaymentGateway;
 use App\Channels\WhatsappChannel;
+use App\Notifications\Channels\WhatsAppChannel as WhatsAppNotificationChannel;
+use App\Notifications\Channels\SmsChannel;
 use App\Services\Recaptcha\RecaptchaService;
 use App\Models\BookingFile;
 use App\Observers\BookingFileObserver;
@@ -30,6 +32,14 @@ class AppServiceProvider extends ServiceProvider
         $app = $this->app;
         $this->app->make(ChannelManager::class)->extend('whatsapp', function () use ($app) {
             return $app->make(WhatsappChannel::class);
+        });
+
+        $this->app->make(ChannelManager::class)->extend('whatsapp_notification', function () use ($app) {
+            return $app->make(WhatsAppNotificationChannel::class);
+        });
+
+        $this->app->make(ChannelManager::class)->extend('sms', function () use ($app) {
+            return $app->make(SmsChannel::class);
         });
 
         $this->app->bind(PaymentGateway::class,

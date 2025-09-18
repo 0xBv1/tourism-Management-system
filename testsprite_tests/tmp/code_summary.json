@@ -1,0 +1,373 @@
+{
+  "tech_stack": [
+    "PHP 8.1",
+    "Laravel 9",
+    "MySQL",
+    "Redis",
+    "Vite",
+    "Tailwind CSS",
+    "Alpine.js",
+    "Laravel Passport",
+    "Laravel Sanctum",
+    "Spatie Permissions",
+    "DataTables",
+    "Google Translate API",
+    "PayPal SDK",
+    "Twilio SDK",
+    "WhatsApp API",
+    "PDF Generation (DomPDF)",
+    "Excel Export/Import",
+    "Queue System",
+    "Activity Logging"
+  ],
+  "features": [
+    {
+      "name": "Authentication API",
+      "description": "Client authentication system with login, register, password reset, and profile management",
+      "files": [
+        "app/Http/Controllers/Api/AuthController.php",
+        "app/Http/Controllers/Api/ProfileController.php",
+        "app/Http/Controllers/Api/PasswordController.php",
+        "app/Http/Requests/Api/LoginRequest.php",
+        "app/Http/Requests/Api/RegisterRequest.php",
+        "app/Models/Client.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Authentication API",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/api/auth/login": {
+            "post": {
+              "summary": "Client Login",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "email": {"type": "string", "format": "email"},
+                        "password": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {"description": "Login successful"},
+                "400": {"description": "Invalid credentials"}
+              }
+            }
+          },
+          "/api/auth/register": {
+            "post": {
+              "summary": "Client Registration",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "name": {"type": "string"},
+                        "email": {"type": "string", "format": "email"},
+                        "password": {"type": "string"},
+                        "phone": {"type": "string"},
+                        "nationality": {"type": "string"},
+                        "birthdate": {"type": "string", "format": "date"}
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "201": {"description": "Registration successful"},
+                "400": {"description": "Validation error"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Country Management API",
+      "description": "API for managing countries with caching and query building",
+      "files": [
+        "app/Http/Controllers/Api/CountryController.php",
+        "app/Models/Country.php",
+        "app/Services/Cache/AppCache.php",
+        "app/Services/Query/QueryBuilder.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/countries": {
+            "get": {
+              "summary": "Get all countries",
+              "responses": {
+                "200": {"description": "List of countries"}
+              }
+            }
+          },
+          "/api/countries/{id}": {
+            "get": {
+              "summary": "Get country by ID",
+              "parameters": [
+                {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+              ],
+              "responses": {
+                "200": {"description": "Country details"},
+                "404": {"description": "Country not found"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "City Management API",
+      "description": "API for managing cities with search functionality",
+      "files": [
+        "app/Http/Controllers/Api/CityController.php",
+        "app/Models/City.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/cities": {
+            "get": {
+              "summary": "Get cities with optional search",
+              "parameters": [
+                {"name": "id", "in": "query", "schema": {"type": "integer"}},
+                {"name": "search", "in": "query", "schema": {"type": "string"}}
+              ],
+              "responses": {
+                "200": {"description": "List of cities"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Payment Processing API",
+      "description": "Payment processing with PayPal and Fawaterk integration",
+      "files": [
+        "app/Http/Controllers/Api/Payment/PaypalController.php",
+        "app/Http/Controllers/Api/Payment/FawaterkController.php",
+        "app/Models/Payment.php",
+        "app/Services/FinanceService.php",
+        "app/Enums/PaymentStatus.php",
+        "app/Enums/PaymentMethod.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/payments/paypal/capture": {
+            "get": {
+              "summary": "Capture PayPal payment",
+              "responses": {
+                "200": {"description": "Payment captured successfully"}
+              }
+            }
+          },
+          "/api/payments/fawaterk/methods": {
+            "get": {
+              "summary": "Get Fawaterk payment methods",
+              "responses": {
+                "200": {"description": "Available payment methods"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Booking Management System",
+      "description": "Complete booking system with inquiry to booking conversion",
+      "files": [
+        "app/Http/Controllers/Dashboard/BookingController.php",
+        "app/Models/BookingFile.php",
+        "app/Models/Inquiry.php",
+        "app/Services/BookingService.php",
+        "app/Enums/BookingStatus.php",
+        "app/Enums/InquiryStatus.php",
+        "app/Mail/Client/BookingConfirmationMail.php",
+        "app/Notifications/Client/BookingConfirmedNotification.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/dashboard/bookings": {
+            "get": {
+              "summary": "List all bookings",
+              "responses": {
+                "200": {"description": "List of bookings"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Resource Management System",
+      "description": "Management of hotels, guides, vehicles, and representatives",
+      "files": [
+        "app/Http/Controllers/Dashboard/HotelController.php",
+        "app/Http/Controllers/Dashboard/GuideController.php",
+        "app/Http/Controllers/Dashboard/VehicleController.php",
+        "app/Http/Controllers/Dashboard/RepresentativeController.php",
+        "app/Models/Hotel.php",
+        "app/Models/Guide.php",
+        "app/Models/Vehicle.php",
+        "app/Models/Representative.php",
+        "app/Services/ResourceAssignmentService.php",
+        "app/Models/ResourceBooking.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/dashboard/hotels": {
+            "get": {"summary": "List hotels"},
+            "post": {"summary": "Create hotel"}
+          },
+          "/dashboard/guides": {
+            "get": {"summary": "List guides"},
+            "post": {"summary": "Create guide"}
+          },
+          "/dashboard/vehicles": {
+            "get": {"summary": "List vehicles"},
+            "post": {"summary": "Create vehicle"}
+          }
+        }
+      }
+    },
+    {
+      "name": "User Management System",
+      "description": "Admin user management with roles and permissions",
+      "files": [
+        "app/Http/Controllers/Dashboard/UserController.php",
+        "app/Models/User.php",
+        "app/Http/Controllers/Dashboard/RoleController.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/dashboard/users": {
+            "get": {"summary": "List users"},
+            "post": {"summary": "Create user"}
+          }
+        }
+      }
+    },
+    {
+      "name": "Reporting System",
+      "description": "Comprehensive reporting and analytics",
+      "files": [
+        "app/Http/Controllers/Dashboard/ReportsController.php",
+        "app/Services/ReportService.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/dashboard/reports": {
+            "get": {"summary": "Generate reports"}
+          }
+        }
+      }
+    },
+    {
+      "name": "Settings Management",
+      "description": "Application settings and configuration",
+      "files": [
+        "app/Http/Controllers/Api/SettingController.php",
+        "app/Http/Controllers/Dashboard/SettingsController.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/settings": {
+            "get": {"summary": "Get application settings"}
+          }
+        }
+      }
+    },
+    {
+      "name": "Translation System",
+      "description": "Multi-language support with Google Translate integration",
+      "files": [
+        "app/Services/Translation/TranslationFactory.php",
+        "app/Services/Translation/Translator.php",
+        "app/Services/Translation/Google/GoogleTranslator.php",
+        "app/Jobs/TranslateChangesJob.php",
+        "app/Jobs/TranslateModelByLocaleJob.php",
+        "app/Console/Commands/AutoTranslateCommand.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/translate": {
+            "post": {"summary": "Translate content"}
+          }
+        }
+      }
+    },
+    {
+      "name": "WhatsApp Integration",
+      "description": "WhatsApp messaging and notifications",
+      "files": [
+        "app/Services/Whatsapp/WhatsappMessaging.php",
+        "app/Channels/WhatsappChannel.php",
+        "app/Notifications/Channels/WhatsAppChannel.php",
+        "app/Exceptions/Whatsapp/FailedSendMessageException.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/api/whatsapp/send": {
+            "post": {"summary": "Send WhatsApp message"}
+          }
+        }
+      }
+    },
+    {
+      "name": "Coupon Management",
+      "description": "Coupon and discount management system",
+      "files": [
+        "app/Http/Controllers/Dashboard/CouponController.php",
+        "app/Models/Coupon.php",
+        "app/Enums/CouponType.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/dashboard/coupons": {
+            "get": {"summary": "List coupons"},
+            "post": {"summary": "Create coupon"}
+          }
+        }
+      }
+    },
+    {
+      "name": "File Management",
+      "description": "File upload and management system",
+      "files": [
+        "app/Models/BookingFile.php",
+        "app/Http/Controllers/Dashboard/BookingFilesController.php",
+        "app/DataTables/BookingFilesDataTable.php"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "paths": {
+          "/dashboard/booking-files": {
+            "get": {"summary": "List booking files"},
+            "post": {"summary": "Upload booking file"}
+          }
+        }
+      }
+    }
+  ]
+}

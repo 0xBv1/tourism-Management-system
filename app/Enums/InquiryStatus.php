@@ -21,5 +21,24 @@ enum InquiryStatus: string
             array_map(fn($case) => ucfirst($case->value), self::cases())
         );
     }
+
+    public function getColor(): string
+    {
+        return match($this) {
+            self::PENDING => 'yellow',
+            self::CONFIRMED => 'blue',
+            self::CANCELLED => 'red',
+            self::COMPLETED => 'green',
+        };
+    }
+
+    public function getLabel(): string
+    {
+        return ucfirst($this->value);
+    }
 }
+
+
+
+
 

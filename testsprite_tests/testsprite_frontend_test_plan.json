@@ -1,0 +1,481 @@
+[
+  {
+    "id": "TC001",
+    "title": "Admin Login - Successful Authentication",
+    "description": "Verify that an admin user can log in successfully with correct credentials using the Authentication API.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the admin login endpoint."
+      },
+      {
+        "type": "action",
+        "description": "Submit valid admin user email and password."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response status is 200 and contains authentication token."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify admin user session is established and user is redirected to the dashboard."
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Admin Login - Failed Authentication with Invalid Credentials",
+    "description": "Verify that login fails with appropriate error for invalid admin credentials.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the admin login endpoint."
+      },
+      {
+        "type": "action",
+        "description": "Submit invalid email or password."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response status is 400 with 'Invalid credentials' error message."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Inquiry Creation - Successful CRUD by Authorized User",
+    "description": "Verify that an authorized admin user can create, read, update, and delete inquiries with proper data validation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin user with inquiry permissions."
+      },
+      {
+        "type": "action",
+        "description": "Create a new inquiry with valid fields through the Inquiry Management interface."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify inquiry is created and listed in inquiries."
+      },
+      {
+        "type": "action",
+        "description": "Update the inquiry details."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify inquiry updates are saved and reflected."
+      },
+      {
+        "type": "action",
+        "description": "Delete the inquiry."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify inquiry is removed from the system."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Inquiry Creation - Validation Errors on Missing Required Fields",
+    "description": "Verify submission errors and validation messages when required inquiry fields are missing or invalid.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to create new inquiry with missing required fields (e.g., customer name, contact)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify error responses indicating required fields must not be empty."
+      },
+      {
+        "type": "action",
+        "description": "Submit inquiry with invalid data format."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify error messages on invalid field formats."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Booking Generation from Confirmed Inquiry",
+    "description": "Verify that confirming an inquiry triggers event-driven automatic booking file generation and status update.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Confirm an existing inquiry via the Inquiry Management interface."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking file is automatically generated and linked to the booking."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify inquiry status is updated to confirmed."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking status is correctly set and log entries are generated."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Booking Checklist and Payment Tracking",
+    "description": "Verify that booking checklist items can be updated and payments tracked with real-time status and audit logging.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access booking checklist and mark items as completed."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify checklist updates are saved and visible."
+      },
+      {
+        "type": "action",
+        "description": "Add payment records via supported payment gateways."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment status updates on booking and receipt generation."
+      },
+      {
+        "type": "assertion",
+        "description": "Check audit logs include checklist and payment changes."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Resource Management - Hotel Assignment with Availability Check",
+    "description": "Verify hotels can be created, edited, and assigned to bookings without overlapping availability conflicts.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create a hotel resource via Resource Management."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify hotel appears correctly in hotel list."
+      },
+      {
+        "type": "action",
+        "description": "Assign the hotel resource to a booking with specified dates."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the system checks availability and allows assignment if no conflicts."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to assign the hotel to overlapping booking dates."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system prevents booking conflicts and displays error."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Payment Processing Integration with PayPal",
+    "description": "Verify successful payment capture through PayPal SDK, status updates, and receipt generation.",
+    "category": "integration",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Initiate PayPal payment for a booking."
+      },
+      {
+        "type": "action",
+        "description": "Call the PayPal capture endpoint."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment is captured successfully and booking payment status updated."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify receipt is generated and stored."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Multi-Channel Notification Dispatch and Error Handling",
+    "description": "Verify notifications are dispatched via email, WhatsApp, SMS, and in-app channels for booking and payment events, with failure handling.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger a booking confirmation event."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify notifications are sent on all configured channels."
+      },
+      {
+        "type": "action",
+        "description": "Simulate failure in one channel (e.g., WhatsApp down)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system logs the failure and retries or gracefully degrades."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Role-Based Access Control Enforcement",
+    "description": "Verify granular roles and permissions prevent unauthorized access to restricted modules and actions.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as a user with limited permissions."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access restricted modules like finance or admin user management."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied and appropriate error messages or redirects occur."
+      },
+      {
+        "type": "action",
+        "description": "Login as an admin user with full permissions."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all modules and actions are accessible."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Reporting Data Accuracy and Export Validation",
+    "description": "Verify that generated reports accurately reflect database records and exports are produced in correct formats.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Generate various reports (inquiries, bookings, finance, resource utilization) from the Reporting System."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify report data matches underlying database records."
+      },
+      {
+        "type": "action",
+        "description": "Export reports to supported formats (Excel, PDF)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify exported files are correctly formatted and contain expected data."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Queue Job Processing and Background Task Completion",
+    "description": "Verify that asynchronous jobs including notifications, translations, and cache warming complete successfully without errors.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger background jobs such as message dispatch or translation."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify jobs are processed by queue workers and complete successfully."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no errors are logged during job processing."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Security - CSRF Protection on Forms and API Endpoints",
+    "description": "Verify that all forms and API endpoints enforce CSRF token validation to prevent Cross-Site Request Forgery attacks.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to submit form data or API requests without valid CSRF token."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify requests are rejected or fail with proper CSRF error."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Resource Assignment Conflict Detection and Prevention",
+    "description": "Verify that the system prevents assigning multiple resources (hotels, vehicles, guides) with overlapping booking dates that violate availability.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Assign a guide to a booking for specific dates."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify guide is assigned and calendar view updated."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to assign the same guide to overlapping dates in another booking."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system rejects overlapping assignment with appropriate message."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "UI Responsiveness and Tailwind CSS Compliance",
+    "description": "Verify UI components conform to Tailwind CSS guidelines are responsive across devices and screen sizes.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open various management interfaces on desktop, tablet, and mobile devices."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI layout adapts properly and complies with design guidelines."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify interactive components respond correctly to user input."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Translation Job Execution and Content Localization",
+    "description": "Verify that translation jobs execute properly using Google Translate API and localize model content by locale.",
+    "category": "integration",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger translation job for content using TranslateChangesJob or AutoTranslateCommand."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify content is translated and stored in the correct locale."
+      },
+      {
+        "type": "action",
+        "description": "Submit translation API requests with sample text."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response returns translated content accurately."
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Coupon Creation and Application in Bookings",
+    "description": "Verify coupons can be created with different types and applied correctly to bookings for discounts.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create coupons with percentage and fixed amount discounts."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify coupons are listed and details accurate."
+      },
+      {
+        "type": "action",
+        "description": "Apply coupon during booking payment."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify discount is applied correctly to payment amount."
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "File Upload and Management in Booking Files",
+    "description": "Verify that booking files can be uploaded, listed, downloaded, and deleted smoothly without data loss or corruption.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Upload valid booking files through Booking Files interface."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify files are listed with correct metadata."
+      },
+      {
+        "type": "action",
+        "description": "Download uploaded files and verify content integrity."
+      },
+      {
+        "type": "action",
+        "description": "Delete files and verify removal from the system."
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Performance Testing with Large Data Sets and Caching",
+    "description": "Verify system maintains high performance and responsiveness using caching and pagination when handling large data volumes.",
+    "category": "performance",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Load inquiries, bookings, and resource lists containing thousands of records."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify pagination is applied and UI remains responsive."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify caching layers effectively reduce database query load."
+      }
+    ]
+  }
+]

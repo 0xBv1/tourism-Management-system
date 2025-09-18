@@ -45,6 +45,11 @@ class BookingFile extends Model
         return $this->hasMany(Payment::class, 'booking_id');
     }
 
+    public function resourceBookings(): HasMany
+    {
+        return $this->hasMany(ResourceBooking::class);
+    }
+
     public function scopePending($query)
     {
         return $query->where('status', BookingStatus::PENDING);

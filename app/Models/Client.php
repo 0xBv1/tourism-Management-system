@@ -52,4 +52,9 @@ class Client extends Authenticatable
     {
         return $this->belongsToMany(Tour::class, 'client_tour_wishlist');
     }
+
+    public function inquiries(): HasMany
+    {
+        return $this->hasMany(Inquiry::class);
+    }
 }

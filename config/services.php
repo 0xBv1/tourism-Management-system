@@ -32,10 +32,15 @@ return [
     ],
 
     'whatsapp' => [
-        'token' => env('WHATSAPP_GRAPH_TOKEN'),
-        'url' => env('WHATSAPP_GRAPH_URL', 'https://graph.facebook.com'),
-        'version' => env('WHATSAPP_GRAPH_VERSION', 'v17.0'),
-        'phone_id' => env('WHATSAPP_GRAPH_PHONE_ID', '140666609120726'),
+        'api_url' => env('WHATSAPP_API_URL', 'https://graph.facebook.com'),
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+    ],
+
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'from' => env('TWILIO_FROM'),
     ],
 
     'google_translate' => [

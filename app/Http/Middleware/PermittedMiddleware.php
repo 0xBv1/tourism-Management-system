@@ -16,6 +16,21 @@ class PermittedMiddleware
         'dashboard.sitemap.generate',
         'dashboard.car-routes.template',
         'dashboard.service-approvals.update-status',
+        'dashboard.hotels.calendar',
+        'dashboard.vehicles.calendar',
+        'dashboard.guides.calendar',
+        'dashboard.representatives.calendar',
+        'dashboard.reports.index',
+        'dashboard.reports.inquiries',
+        'dashboard.reports.bookings',
+        'dashboard.reports.finance',
+        'dashboard.reports.operational',
+        'dashboard.reports.performance',
+        'dashboard.reports.export',
+        'dashboard.reports.resource-utilization',
+        'dashboard.reports.resource-utilization.export',
+        'dashboard.reports.resource-details',
+
     ];
     public function handle(Request $request, Closure $next)
     {
@@ -25,7 +40,8 @@ class PermittedMiddleware
                 ->replace('store', 'create')
                 ->replace('index', 'list')
                 ->replace('update', 'edit')
-                ->replace('destroy', 'delete');
+                ->replace('destroy', 'delete')
+                ->replace('resource-utilization.export', 'export');
 
         } catch (\Exception $exception) {
             report($exception);

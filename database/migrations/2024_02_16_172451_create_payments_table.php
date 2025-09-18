@@ -10,10 +10,15 @@ return new class extends Migration {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->string('invoice_id')->nullable()->index();
-            $table->foreignId('booking_id')->nullable()->constrained('bookings')->nullOnDelete();
+            $table->foreignId('booking_id')->nullable()->constrained('booking_files')->nullOnDelete();
             $table->string('gateway');
+            $table->decimal('amount', 10, 2);
+            $table->string('status')->default('not_paid');
+            $table->timestamp('paid_at')->nullable();
             $table->text('transaction_request')->nullable();
             $table->text('transaction_verification')->nullable();
+            $table->string('reference_number')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
