@@ -79,10 +79,15 @@ class ReportsController extends Controller
             $endDate = Carbon::parse($endDate);
         }
 
-        $inquiries = Inquiry::with(['client', 'bookingFile'])
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $inquiriesQuery = Inquiry::with(['client', 'bookingFile'])
+            ->whereBetween('created_at', [$startDate, $endDate]);
+            
+        // Filter inquiries based on user role for reports
+        if (auth()->user()->hasRole(['Reservation', 'Operation'])) {
+            $inquiriesQuery->where('assigned_to', auth()->id());
+        }
+        
+        $inquiries = $inquiriesQuery->orderBy('created_at', 'desc')->get();
 
         $statusBreakdown = InquiryStatus::cases();
         $statusData = [];

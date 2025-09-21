@@ -14,7 +14,22 @@
                 <div class="col-sm-12">
                     <x-dashboard.partials.message-alert />
                     <div class="card">
-                        <x-dashboard.partials.table-card-header model="vehicle" />
+                        <div class="card-header">
+                            <h5>Vehicles Management</h5>
+                            @if(admin()->roles->count() > 0)
+                                <small class="text-muted">
+                                    <i class="fa fa-user-tag"></i> 
+                                    Role: {{ admin()->roles->pluck('name')->join(', ') }}
+                                </small>
+                            @endif
+                            <div class="card-header-right">
+                                @if(admin()->can('vehicles.create'))
+                                    <a href="{{ route('dashboard.vehicles.create') }}" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-plus"></i> Create Vehicle
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                         <div class="card-body order-datatable overflow-x-auto">
                             <div class="">
                                 {!! $dataTable->table(['class'=>'display']) !!}

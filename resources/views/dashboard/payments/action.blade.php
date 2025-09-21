@@ -3,11 +3,11 @@
         <i class="fa fa-eye"></i>
     </a>
     
-    @can('payments.edit')
+    @if(admin()->can('payments.edit'))
     <a href="{{ route('dashboard.payments.edit', $id) }}" class="btn btn-sm btn-warning me-1" title="Edit">
         <i class="fa fa-edit"></i>
     </a>
-    @endcan
+    @endif
     
     @if($status === 'not_paid')
     <button type="button" class="btn btn-sm btn-success me-1 mark-as-paid-btn" 
@@ -16,12 +16,12 @@
     </button>
     @endif
     
-    @can('payments.delete')
+    @if(admin()->can('payments.delete'))
     <button type="button" class="btn btn-sm btn-danger delete-btn" 
             data-payment-id="{{ $id }}" title="Delete">
         <i class="fa fa-trash"></i>
     </button>
-    @endcan
+    @endif
 </div>
 
 <script>

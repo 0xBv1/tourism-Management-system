@@ -15,6 +15,21 @@
                 <div class="col-sm-12">
                     <x-dashboard.partials.message-alert />
                     
+                    <!-- Role Indicator -->
+                    @if(admin()->roles->count() > 0)
+                        <div class="alert alert-info">
+                            <i class="fa fa-user-tag"></i> 
+                            <strong>Current Role:</strong> {{ admin()->roles->pluck('name')->join(', ') }}
+                        </div>
+                    @endif
+                    
+                    @if(auth()->user()->hasRole(['Reservation', 'Operation']))
+                        <div class="alert alert-warning">
+                            <i class="fa fa-filter"></i> 
+                            <strong>Filtered Report:</strong> This report shows only inquiries assigned to you.
+                        </div>
+                    @endif
+                    
                     <!-- Filter Form -->
                     <div class="card">
                         <div class="card-header">

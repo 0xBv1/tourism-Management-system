@@ -34,6 +34,8 @@ class InquiryRequest extends FormRequest
             "status" => "Status",
             "admin_notes" => "Admin Notes",
             "assigned_to" => "Assigned To",
+            "user1_id" => "Confirmation User 1",
+            "user2_id" => "Confirmation User 2",
         ];
     }
 
@@ -53,6 +55,8 @@ class InquiryRequest extends FormRequest
             'status' => ['required', Rule::enum(InquiryStatus::class)],
             'admin_notes' => ['nullable', 'string'],
             'assigned_to' => ['nullable', 'exists:users,id'],
+            'user1_id' => ['nullable', 'exists:users,id'],
+            'user2_id' => ['nullable', 'exists:users,id', 'different:user1_id'],
         ];
     }
 

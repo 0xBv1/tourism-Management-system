@@ -1,13 +1,19 @@
 <div class="d-flex justify-content-center">
-    <a href="{{ route('dashboard.inquiries.show', $id) }}" class="btn btn-primary btn-sm me-1" title="View">
-        <i class="fa fa-eye"></i>
-    </a>
-    <a href="{{ route('dashboard.inquiries.edit', $id) }}" class="btn btn-warning btn-sm me-1" title="Edit">
-        <i class="fa fa-edit"></i>
-    </a>
-    <button type="button" class="btn btn-danger btn-sm" onclick="deleteInquiry({{ $id }})" title="Delete">
-        <i class="fa fa-trash"></i>
-    </button>
+    @if(admin()->can('inquiries.show'))
+        <a href="{{ route('dashboard.inquiries.show', $id) }}" class="btn btn-primary btn-sm me-1" title="View">
+            <i class="fa fa-eye"></i>
+        </a>
+    @endif
+    @if(admin()->can('inquiries.edit'))
+        <a href="{{ route('dashboard.inquiries.edit', $id) }}" class="btn btn-warning btn-sm me-1" title="Edit">
+            <i class="fa fa-edit"></i>
+        </a>
+    @endif
+    @if(admin()->can('inquiries.delete'))
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteInquiry({{ $id }})" title="Delete">
+            <i class="fa fa-trash"></i>
+        </button>
+    @endif
 </div>
 
 <script>

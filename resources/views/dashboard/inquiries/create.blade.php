@@ -17,6 +17,12 @@
                     <div class="card">
                         <div class="card-header">
                             <h5>Create New Inquiry</h5>
+                            @if(admin()->roles->count() > 0)
+                                <small class="text-muted">
+                                    <i class="fa fa-user-tag"></i> 
+                                    Role: {{ admin()->roles->pluck('name')->join(', ') }}
+                                </small>
+                            @endif
                         </div>
                         <div class="card-body">
                             <form action="{{ route('dashboard.inquiries.store') }}" method="POST">
@@ -92,34 +98,38 @@
                                     @enderror
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="assigned_to" class="form-label">Assign To</label>
-                                            <select class="form-control @error('assigned_to') is-invalid @enderror" 
-                                                    id="assigned_to" name="assigned_to">
-                                                <option value="">Select User</option>
-                                                @foreach($users as $user)
-                                                    <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
-                                                        {{ $user->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @error('assigned_to')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="assigned_to" class="form-label">Assign To</label>
+                                                <select class="form-control @error('assigned_to') is-invalid @enderror" 
+                                                        id="assigned_to" name="assigned_to">
+                                                    <option value="">Select User</option>
+                                                    @foreach($users as $user)
+                                                        <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
+                                                            {{ $user->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('assigned_to')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
 
-                                <div class="mb-3">
-                                    <label for="admin_notes" class="form-label">Admin Notes</label>
-                                    <textarea class="form-control @error('admin_notes') is-invalid @enderror" 
-                                              id="admin_notes" name="admin_notes" rows="3">{{ old('admin_notes') }}</textarea>
-                                    @error('admin_notes')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                @if(admin()->can('inquiries.edit'))
+                                    <div class="mb-3">
+                                        <label for="admin_notes" class="form-label">Admin Notes</label>
+                                        <textarea class="form-control @error('admin_notes') is-invalid @enderror" 
+                                                  id="admin_notes" name="admin_notes" rows="3">{{ old('admin_notes') }}</textarea>
+                                        @error('admin_notes')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                @endif
 
                                 <div class="text-end">
                                     <a href="{{ route('dashboard.inquiries.index') }}" class="btn btn-secondary me-2">Cancel</a>

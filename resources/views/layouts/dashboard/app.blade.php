@@ -42,6 +42,74 @@
 @stack('js-upper')
 <!--script admin-->
 <script>window.supportedLocales = {!! collect(config('translatable.locales'))->toJson() !!} </script>
+
+<!-- Real-time Notifications -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for new notifications every 30 seconds
+    setInterval(function() {
+        fetchNotifications();
+    }, 30000);
+    
+    function fetchNotifications() {
+        fetch('/dashboard/notifications/unread-count')
+            .then(response => response.json())
+            .then(data => {
+                updateNotificationBadge(data.count);
+            })
+            .catch(error => {
+                console.log('Error fetching notifications:', error);
+            });
+    }
+    
+    function updateNotificationBadge(count) {
+        const badge = document.querySelector('.notification-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+    
+    // Mark notification as read when clicked
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.notification-dropdown li')) {
+            const notificationId = e.target.closest('li').dataset.notificationId;
+            if (notificationId) {
+                markAsRead(notificationId);
+            }
+        }
+    });
+    
+    function markAsRead(notificationId) {
+        fetch('/dashboard/notifications/' + notificationId + '/mark-as-read', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the notification from the UI
+                const notificationElement = document.querySelector('[data-notification-id="' + notificationId + '"]');
+                if (notificationElement) {
+                    notificationElement.remove();
+                }
+                // Update badge count
+                fetchNotifications();
+            }
+        })
+        .catch(error => {
+            console.log('Error marking notification as read:', error);
+        });
+    }
+});
+</script>
 <script src="{{ str(config('tinymce.sdk-url'))->replace('API_KEY', setting(\App\Enums\SettingKey::TINY_EDITOR->value, true)) }}" referrerpolicy="origin"></script>
 <script src="{{ asset('assets/admin/js/admin.js') }}?ver=1.1.0"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>

@@ -30,6 +30,7 @@ class PermittedMiddleware
         'dashboard.reports.resource-utilization',
         'dashboard.reports.resource-utilization.export',
         'dashboard.reports.resource-details',
+        'dashboard.debug.user-roles',
 
     ];
     public function handle(Request $request, Closure $next)

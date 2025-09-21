@@ -19,10 +19,18 @@
                     <div class="card">
                         <div class="card-header">
                             <h5>Guide Information</h5>
+                            @if(admin()->roles->count() > 0)
+                                <small class="text-muted">
+                                    <i class="fa fa-user-tag"></i> 
+                                    Role: {{ admin()->roles->pluck('name')->join(', ') }}
+                                </small>
+                            @endif
                             <div class="card-header-right">
-                                <a href="{{ route('dashboard.guides.edit', $guide) }}" class="btn btn-primary btn-sm">
-                                    <i class="fa fa-edit"></i> Edit
-                                </a>
+                                @if(admin()->can('guides.edit'))
+                                    <a href="{{ route('dashboard.guides.edit', $guide) }}" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                @endif
                                 <a href="{{ route('dashboard.guides.index') }}" class="btn btn-secondary btn-sm">
                                     <i class="fa fa-list"></i> Back to List
                                 </a>

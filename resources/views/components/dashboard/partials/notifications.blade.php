@@ -12,21 +12,34 @@
             @endif
         </li>
         @forelse($unread_notifications as $notification)
-            <li>
+            <li data-notification-id="{{ $notification->id }}">
                 <div class="media">
                     <div class="media-body">
                         <h6 class="mt-0">
-                            <span>
-                                <i class="shopping-color" data-feather="shopping-bag"></i>
-                            </span>Your order ready for Ship..!
+                            <!-- <span>
+                                <i class="{{ $notification->data['icon'] ?? 'fa-bell' }}" 
+                                   style="color: {{ $notification->data['color'] ?? '#007bff' }}"></i>
+                            </span> -->
+                            {{ $notification->data['title'] ?? 'Notification' }}
                         </h6>
-                        <p class="mb-0">Lorem ipsum dolor sit amet, consectetuer.</p>
+                        <p class="mb-0">{{ $notification->data['message_text'] ?? $notification->data['message'] ?? 'No message' }}</p>
+                        <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                        @if(isset($notification->data['action_url']))
+                            <div class="mt-2">
+                                <a href="{{ $notification->data['action_url'] }}" class="btn btn-sm btn-primary">
+                                    View Details
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </li>
         @empty
             <li>
-                No Unread Notifications
+                <div class="text-center py-3">
+                    <i class="fa fa-bell-slash text-muted"></i>
+                    <p class="mb-0 text-muted">No Unread Notifications</p>
+                </div>
             </li>
         @endforelse
 

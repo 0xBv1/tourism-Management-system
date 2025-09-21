@@ -15,6 +15,14 @@
                 <div class="col-sm-12">
                     <x-dashboard.partials.message-alert />
                     
+                    <!-- Role Indicator -->
+                    @if(admin()->roles->count() > 0)
+                        <div class="alert alert-info">
+                            <i class="fa fa-user-tag"></i> 
+                            <strong>Current Role:</strong> {{ admin()->roles->pluck('name')->join(', ') }}
+                        </div>
+                    @endif
+                    
                     <!-- Summary Cards -->
                     <div class="row">
                         <div class="col-md-3">

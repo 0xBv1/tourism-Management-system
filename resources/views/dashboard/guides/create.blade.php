@@ -17,6 +17,12 @@
                     <div class="card">
                         <div class="card-header">
                             <h5>Create Guide</h5>
+                            @if(admin()->roles->count() > 0)
+                                <small class="text-muted">
+                                    <i class="fa fa-user-tag"></i> 
+                                    Role: {{ admin()->roles->pluck('name')->join(', ') }}
+                                </small>
+                            @endif
                         </div>
                         <div class="card-body">
                             <form action="{{ route('dashboard.guides.store') }}" method="POST" enctype="multipart/form-data">

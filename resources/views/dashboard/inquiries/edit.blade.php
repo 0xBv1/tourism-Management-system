@@ -18,6 +18,12 @@
                     <div class="card">
                         <div class="card-header">
                             <h5>Edit Inquiry #{{ $inquiry->id }}</h5>
+                            @if(admin()->roles->count() > 0)
+                                <small class="text-muted">
+                                    <i class="fa fa-user-tag"></i> 
+                                    Role: {{ admin()->roles->pluck('name')->join(', ') }}
+                                </small>
+                            @endif
                         </div>
                         <div class="card-body">
                             <form action="{{ route('dashboard.inquiries.update', $inquiry) }}" method="POST">
@@ -94,34 +100,83 @@
                                     @enderror
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="assigned_to" class="form-label">Assign To</label>
-                                            <select class="form-control @error('assigned_to') is-invalid @enderror" 
-                                                    id="assigned_to" name="assigned_to">
-                                                <option value="">Select User</option>
-                                                @foreach($users as $user)
-                                                    <option value="{{ $user->id }}" {{ old('assigned_to', $inquiry->assigned_to) == $user->id ? 'selected' : '' }}>
-                                                        {{ $user->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @error('assigned_to')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="assigned_to" class="form-label">Assign To</label>
+                                                <select class="form-control @error('assigned_to') is-invalid @enderror" 
+                                                        id="assigned_to" name="assigned_to">
+                                                    <option value="">Select User</option>
+                                                    @foreach($users as $user)
+                                                        <option value="{{ $user->id }}" {{ old('assigned_to', $inquiry->assigned_to) == $user->id ? 'selected' : '' }}>
+                                                            {{ $user->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('assigned_to')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                    
+                                    <!-- Confirmation Users Section -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="user1_id" class="form-label">Confirmation User 1</label>
+                                                <select class="form-control @error('user1_id') is-invalid @enderror" 
+                                                        id="user1_id" name="user1_id">
+                                                    <option value="">Select User 1</option>
+                                                    @foreach($users as $user)
+                                                        <option value="{{ $user->id }}" {{ old('user1_id', $inquiry->user1_id) == $user->id ? 'selected' : '' }}>
+                                                            {{ $user->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('user1_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="user2_id" class="form-label">Confirmation User 2</label>
+                                                <select class="form-control @error('user2_id') is-invalid @enderror" 
+                                                        id="user2_id" name="user2_id">
+                                                    <option value="">Select User 2</option>
+                                                    @foreach($users as $user)
+                                                        <option value="{{ $user->id }}" {{ old('user2_id', $inquiry->user2_id) == $user->id ? 'selected' : '' }}>
+                                                            {{ $user->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('user2_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    @if($inquiry->user1_id && $inquiry->user2_id)
+                                        <div class="alert alert-info">
+                                            <i class="fa fa-info-circle"></i>
+                                            <strong>Note:</strong> Setting new confirmation users will reset the confirmation status. Both users will need to confirm again.
+                                        </div>
+                                    @endif
+                                @endif
 
-                                <div class="mb-3">
-                                    <label for="admin_notes" class="form-label">Admin Notes</label>
-                                    <textarea class="form-control @error('admin_notes') is-invalid @enderror" 
-                                              id="admin_notes" name="admin_notes" rows="3">{{ old('admin_notes', $inquiry->admin_notes) }}</textarea>
-                                    @error('admin_notes')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                @if(admin()->can('inquiries.edit'))
+                                    <div class="mb-3">
+                                        <label for="admin_notes" class="form-label">Admin Notes</label>
+                                        <textarea class="form-control @error('admin_notes') is-invalid @enderror" 
+                                                  id="admin_notes" name="admin_notes" rows="3">{{ old('admin_notes', $inquiry->admin_notes) }}</textarea>
+                                        @error('admin_notes')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                @endif
 
                                 <div class="text-end">
                                     <a href="{{ route('dashboard.inquiries.show', $inquiry) }}" class="btn btn-secondary me-2">Cancel</a>

@@ -25,7 +25,16 @@ class InquiryDataTable extends DataTable
 
     public function query(Inquiry $model): QueryBuilder
     {
-        return $model->newQuery()->with(['client', 'assignedUser']);
+        $query = $model->newQuery()->with(['client', 'assignedUser']);
+        
+        // Filter inquiries based on user role
+        if (auth()->user()->hasRole(['Reservation', 'Operation'])) {
+            // For Reservation and Operation roles, show only inquiries assigned to the current user
+            $query->where('assigned_to', auth()->id());
+        }
+        // For other roles (Admin, Administrator, Sales, Finance), show all inquiries
+        
+        return $query;
     }
 
     public function html(): HtmlBuilder

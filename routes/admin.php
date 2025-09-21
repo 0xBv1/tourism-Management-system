@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Dashboard\AutoTranslationController;
 use App\Http\Controllers\Dashboard\BookingController;
+use App\Http\Controllers\Dashboard\ChatController;
 use App\Http\Controllers\Dashboard\InquiryController;
 use App\Http\Controllers\Dashboard\MainController;
 use App\Http\Controllers\Dashboard\RoleController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Dashboard\RepresentativeController;
 use App\Http\Controllers\Dashboard\ResourceAssignmentController;
 use App\Http\Controllers\Dashboard\ResourceReportController;
 use App\Http\Controllers\Dashboard\PaymentController;
+use App\Http\Controllers\Dashboard\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 //controllers
@@ -34,6 +36,24 @@ Route::group([
     Route::post('translate', [AutoTranslationController::class, 'translate'])->name('model.auto.translate');
     Route::get('sitemap/generate', SitemapController::class)->name('sitemap.generate');
     
+    // Notification Routes
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    
+    // Debug route for testing
+    Route::get('debug/user-roles', function() {
+        $user = auth()->user();
+        return response()->json([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'user_email' => $user->email,
+            'roles' => $user->roles->pluck('name'),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
+        ]);
+    })->name('debug.user-roles');
+    
     // User Management
     Route::resource('users', UserController::class)->except('show');
     Route::resource('roles', RoleController::class)->except('show');
@@ -41,6 +61,15 @@ Route::group([
     // Inquiry Management
     Route::resource('inquiries', InquiryController::class);
     Route::post('inquiries/{inquiry}/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
+    Route::post('inquiries/{inquiry}/set-confirmation-users', [InquiryController::class, 'setConfirmationUsers'])->name('inquiries.set-confirmation-users');
+    
+    // Chat Management
+    Route::prefix('inquiries/{inquiry}')->name('inquiries.')->group(function () {
+        Route::get('chats', [ChatController::class, 'index'])->name('chats.index');
+        Route::post('chats', [ChatController::class, 'store'])->name('chats.store');
+        Route::post('chats/mark-all-read', [ChatController::class, 'markAllAsRead'])->name('chats.mark-all-read');
+    });
+    Route::post('chats/{chat}/mark-read', [ChatController::class, 'markAsRead'])->name('chats.mark-read');
     
     // Booking Management
     Route::resource('bookings', BookingController::class)->only(['index', 'show', 'update']);

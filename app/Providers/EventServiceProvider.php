@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Events\ChatMessageSent;
 use App\Events\InquiryConfirmed;
+use App\Events\NewInquiryCreated;
 use App\Events\PaymentReceived;
 use App\Listeners\GenerateBookingFileListener;
+use App\Listeners\SendChatMessageNotification;
+use App\Listeners\SendNewInquiryNotification;
 use App\Listeners\UpdateBookingFileStatusListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -27,6 +31,12 @@ class EventServiceProvider extends ServiceProvider
         ],
         PaymentReceived::class => [
             UpdateBookingFileStatusListener::class,
+        ],
+        ChatMessageSent::class => [
+            SendChatMessageNotification::class,
+        ],
+        NewInquiryCreated::class => [
+            SendNewInquiryNotification::class,
         ],
     ];
 

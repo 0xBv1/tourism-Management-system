@@ -35,7 +35,7 @@ class FetchCountriesCommand extends Command
                     'code' => $country['cca2'],
                 ], [
                     'name' => $country['name']['common'] ?? null,
-                    'flag' => $country['flag'],
+                    'flag' => $country['cca2'], // Use country code instead of emoji flag
                     'code' => $country['cca2'],
                     'phone_code' => $phoneCode,
                 ]);

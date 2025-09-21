@@ -6,6 +6,7 @@ use App\Events\InquiryConfirmed;
 use App\Models\BookingFile;
 use App\Models\User;
 use App\Notifications\Admin\InquiryConfirmedNotification;
+use App\Enums\BookingStatus;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Notification;
@@ -43,7 +44,7 @@ class GenerateBookingFileListener implements ShouldQueue
             'inquiry_id' => $inquiry->id,
             'file_name' => 'booking_' . $inquiry->id . '_' . now()->format('Y-m-d_H-i-s') . '.pdf',
             'file_path' => 'booking-files/booking_' . $inquiry->id . '_' . now()->format('Y-m-d_H-i-s') . '.pdf',
-            'status' => 'generated',
+            'status' => BookingStatus::CONFIRMED,
             'generated_at' => now(),
         ]);
         

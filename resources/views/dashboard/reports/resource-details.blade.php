@@ -13,6 +13,14 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-12">
+                    <!-- Role Indicator -->
+                    @if(admin()->roles->count() > 0)
+                        <div class="alert alert-info">
+                            <i class="fa fa-user-tag"></i> 
+                            <strong>Current Role:</strong> {{ admin()->roles->pluck('name')->join(', ') }}
+                        </div>
+                    @endif
+                    
                     <div class="card">
                         <div class="card-header">
                             <h5>{{ $resource->name }} - Utilization Details</h5>

@@ -19,7 +19,18 @@
                     <div class="card">
                         <div class="card-header">
                             <h5>Payment #{{ $payment->id }}</h5>
+                            @if(admin()->roles->count() > 0)
+                                <small class="text-muted">
+                                    <i class="fa fa-user-tag"></i> 
+                                    Role: {{ admin()->roles->pluck('name')->join(', ') }}
+                                </small>
+                            @endif
                             <div class="card-header-right">
+                                @if(admin()->can('payments.edit'))
+                                    <a href="{{ route('dashboard.payments.edit', $payment) }}" class="btn btn-primary btn-sm me-2">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                @endif
                                 <span class="badge bg-{{ $payment->status_color }} fs-6">{{ $payment->status_label }}</span>
                             </div>
                         </div>

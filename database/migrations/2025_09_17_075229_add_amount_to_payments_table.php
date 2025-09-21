@@ -14,9 +14,15 @@ return new class extends Migration
     public function up()
     {
         Schema::table('payments', function (Blueprint $table) {
-            $table->decimal('amount', 10, 2)->nullable()->after('gateway');
-            $table->string('status')->default('pending')->after('amount');
-            $table->timestamp('paid_at')->nullable()->after('status');
+            if (!Schema::hasColumn('payments', 'amount')) {
+                $table->decimal('amount', 10, 2)->nullable()->after('gateway');
+            }
+            if (!Schema::hasColumn('payments', 'status')) {
+                $table->string('status')->default('pending')->after('amount');
+            }
+            if (!Schema::hasColumn('payments', 'paid_at')) {
+                $table->timestamp('paid_at')->nullable()->after('status');
+            }
         });
     }
 

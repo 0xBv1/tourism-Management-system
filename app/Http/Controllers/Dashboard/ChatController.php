@@ -1,0 +1,134 @@
+<?php
+
+namespace App\Http\Controllers\Dashboard;
+
+use App\Events\ChatMessageSent;
+use App\Http\Controllers\Controller;
+use App\Models\Chat;
+use App\Models\Inquiry;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class ChatController extends Controller
+{
+    /**
+     * Display a listing of chat messages for an inquiry.
+     */
+    public function index(Inquiry $inquiry): JsonResponse
+    {
+        try {
+            $this->authorize('view', $inquiry);
+            
+            $chats = $inquiry->chats()
+                ->with('sender')
+                ->orderBy('created_at')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $chats
+            ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: ' . $e->getMessage(),
+                'user_roles' => auth()->user()->roles->pluck('name'),
+                'inquiry_id' => $inquiry->id
+            ], 403);
+        }
+    }
+
+    /**
+     * Store a newly created chat message.
+     */
+public function store(Request $request, Inquiry $inquiry): JsonResponse
+    {
+        try {
+            $this->authorize('view', $inquiry);
+
+            // Check if inquiry is confirmed - disable chat for confirmed inquiries
+            if ($inquiry->status->value === 'confirmed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Chat is disabled for confirmed inquiries. No new messages can be sent.'
+                ], 403);
+            }
+
+            $request->validate([
+                'message' => 'required|string|max:1000'
+            ]);
+
+            $chat = Chat::create([
+                'inquiry_id' => $inquiry->id,
+                'sender_id' => auth()->id(),
+                'message' => $request->message,
+            ]);
+
+            $chat->load('sender');
+
+            // Fire the chat message sent event (with error handling)
+            try {
+                event(new ChatMessageSent($chat, $inquiry, auth()->user()));
+            } catch (\Exception $e) {
+                // Log the error but don't fail the request
+                \Log::error('Failed to fire ChatMessageSent event: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Message sent successfully',
+                'data' => $chat
+            ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: ' . $e->getMessage()
+            ], 403);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Chat message creation failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send message. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Mark a chat message as read.
+     */
+    public function markAsRead(Chat $chat): JsonResponse
+    {
+        $this->authorize('view', $chat->inquiry);
+        
+        $chat->markAsRead();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Message marked as read'
+        ]);
+    }
+
+    /**
+     * Mark all messages in an inquiry as read for the current user.
+     */
+    public function markAllAsRead(Inquiry $inquiry): JsonResponse
+    {
+        $this->authorize('view', $inquiry);
+        
+        $inquiry->chats()
+            ->where('sender_id', '!=', auth()->id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All messages marked as read'
+        ]);
+    }
+}
