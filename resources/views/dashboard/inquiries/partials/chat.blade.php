@@ -25,6 +25,30 @@
                         required
                         maxlength="1000"
                     ></textarea>
+                    
+                    <!-- Visibility Control -->
+                    <div class="mt-2">
+                        <label class="form-label small">Message Visibility:</label>
+                        <select id="message-visibility" name="visibility" class="form-select form-select-sm">
+                            <option value="all">Everyone</option>
+                            @if(admin()->hasRole(['Admin', 'Administrator']))
+                                <option value="reservation">Reservation Only</option>
+                                <option value="operation">Operation Only</option>
+                                <option value="admin">Admin Only</option>
+                            @elseif(admin()->hasRole(['Reservation']))
+                                <option value="reservation">Reservation Only</option>
+                            @elseif(admin()->hasRole(['Operation']))
+                                <option value="operation">Operation Only</option>
+                            @endif
+                        </select>
+                        <small class="form-text text-muted">
+                            @if(admin()->hasRole(['Admin', 'Administrator']))
+                                You can choose who can see this message.
+                            @else
+                                Messages are private to your role by default.
+                            @endif
+                        </small>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary" id="send-btn">
                     <i class="fa fa-paper-plane"></i> Send
@@ -53,6 +77,7 @@
                 <div class="d-flex align-items-center mb-1">
                     <strong class="sender-name me-2"></strong>
                     <small class="text-muted message-time"></small>
+                    <span class="badge badge-info ms-1 visibility-badge"></span>
                     <span class="badge badge-success ms-2 read-status" style="display: none;">Read</span>
                 </div>
                 <div class="message-content p-2 rounded" style="background-color: white; border: 1px solid #dee2e6;">
@@ -166,11 +191,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageTime = template.querySelector('.message-time');
         const messageContent = template.querySelector('.message-content');
         const readStatus = template.querySelector('.read-status');
+        const visibilityBadge = template.querySelector('.visibility-badge');
 
         messageDiv.setAttribute('data-message-id', message.id);
         senderName.textContent = message.sender.name;
         messageTime.textContent = new Date(message.created_at).toLocaleString();
         messageContent.textContent = message.message;
+
+        // Set visibility badge
+        const visibilityText = getVisibilityText(message.visibility);
+        visibilityBadge.textContent = visibilityText;
+        visibilityBadge.className = `badge ms-1 ${getVisibilityBadgeClass(message.visibility)}`;
 
         // Style based on sender
         if (message.sender_id === currentUserId) {
@@ -187,6 +218,28 @@ document.addEventListener('DOMContentLoaded', function() {
         return messageDiv;
     }
 
+    // Get visibility display text
+    function getVisibilityText(visibility) {
+        const visibilityMap = {
+            'all': 'Everyone',
+            'reservation': 'Reservation',
+            'operation': 'Operation',
+            'admin': 'Admin'
+        };
+        return visibilityMap[visibility] || visibility;
+    }
+
+    // Get visibility badge class
+    function getVisibilityBadgeClass(visibility) {
+        const classMap = {
+            'all': 'badge-primary',
+            'reservation': 'badge-info',
+            'operation': 'badge-warning',
+            'admin': 'badge-danger'
+        };
+        return classMap[visibility] || 'badge-secondary';
+    }
+
     // Update unread count
     function updateUnreadCount(count) {
         unreadCount.textContent = count;
@@ -200,6 +253,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = messageInput.value.trim();
         if (!message) return;
 
+        const visibility = document.getElementById('message-visibility').value;
+
         sendBtn.disabled = true;
         sendBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
 
@@ -209,7 +264,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({ 
+                message: message,
+                visibility: visibility
+            })
         })
         .then(response => response.json())
         .then(data => {

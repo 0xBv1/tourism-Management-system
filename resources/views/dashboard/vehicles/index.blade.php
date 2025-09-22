@@ -23,6 +23,11 @@
                                 </small>
                             @endif
                             <div class="card-header-right">
+                                @if(admin()->can('vehicles.calendar'))
+                                    <a href="{{ route('dashboard.vehicles.calendar') }}" class="btn btn-info btn-sm me-2">
+                                        <i class="fa fa-calendar"></i> Availability Calendar
+                                    </a>
+                                @endif
                                 @if(admin()->can('vehicles.create'))
                                     <a href="{{ route('dashboard.vehicles.create') }}" class="btn btn-primary btn-sm">
                                         <i class="fa fa-plus"></i> Create Vehicle

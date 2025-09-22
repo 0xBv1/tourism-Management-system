@@ -23,6 +23,11 @@
                                 </small>
                             @endif
                             <div class="card-header-right">
+                                @if(admin()->can('representatives.calendar'))
+                                    <a href="{{ route('dashboard.representatives.calendar') }}" class="btn btn-info btn-sm me-2">
+                                        <i class="fa fa-calendar"></i> Availability Calendar
+                                    </a>
+                                @endif
                                 @if(admin()->can('representatives.create'))
                                     <a href="{{ route('dashboard.representatives.create') }}" class="btn btn-primary btn-sm">
                                         <i class="fa fa-plus"></i> Create Representative

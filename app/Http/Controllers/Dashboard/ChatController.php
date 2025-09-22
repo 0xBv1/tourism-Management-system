@@ -19,7 +19,9 @@ class ChatController extends Controller
         try {
             $this->authorize('view', $inquiry);
             
+            // Filter chats based on user's role and visibility
             $chats = $inquiry->chats()
+                ->visibleTo(auth()->user())
                 ->with('sender')
                 ->orderBy('created_at')
                 ->get();
@@ -47,13 +49,18 @@ class ChatController extends Controller
             $this->authorize('view', $inquiry);
 
             $request->validate([
-                'message' => 'required|string|max:1000'
+                'message' => 'required|string|max:1000',
+                'visibility' => 'nullable|string|in:all,reservation,operation,admin'
             ]);
+
+            // Determine visibility based on sender's role
+            $visibility = $this->determineMessageVisibility(auth()->user(), $request->input('visibility'));
 
             $chat = Chat::create([
                 'inquiry_id' => $inquiry->id,
                 'sender_id' => auth()->id(),
                 'message' => $request->message,
+                'visibility' => $visibility,
             ]);
 
             $chat->load('sender');
@@ -122,5 +129,60 @@ class ChatController extends Controller
             'success' => true,
             'message' => 'All messages marked as read'
         ]);
+    }
+
+    /**
+     * Determine the visibility of a message based on sender's role and request.
+     */
+    private function determineMessageVisibility(User $sender, ?string $requestedVisibility = null): string
+    {
+        $senderRoles = $sender->roles->pluck('name')->toArray();
+        
+        // If user explicitly requested a visibility, use it (if they have permission)
+        if ($requestedVisibility && $this->canSetVisibility($sender, $requestedVisibility)) {
+            return $requestedVisibility;
+        }
+        
+        // Default visibility based on sender's role
+        if (in_array('Admin', $senderRoles) || in_array('Administrator', $senderRoles)) {
+            return 'all'; // Admin messages are visible to all
+        }
+        
+        if (in_array('Reservation', $senderRoles)) {
+            return 'reservation'; // Reservation messages are only visible to Reservation and Admin
+        }
+        
+        if (in_array('Operation', $senderRoles)) {
+            return 'operation'; // Operation messages are only visible to Operation and Admin
+        }
+        
+        // Default to 'all' for other roles
+        return 'all';
+    }
+
+    /**
+     * Check if a user can set a specific visibility.
+     */
+    private function canSetVisibility(User $user, string $visibility): bool
+    {
+        $userRoles = $user->roles->pluck('name')->toArray();
+        
+        // Admin can set any visibility
+        if (in_array('Admin', $userRoles) || in_array('Administrator', $userRoles)) {
+            return true;
+        }
+        
+        // Regular users can only set visibility for their own role or 'all'
+        if ($visibility === 'all') {
+            return true;
+        }
+        
+        foreach ($userRoles as $role) {
+            if ($visibility === strtolower($role)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

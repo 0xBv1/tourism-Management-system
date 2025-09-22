@@ -174,18 +174,34 @@
                                         <div class="card-body">
                                             @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-bold">Assigned To:</label>
-                                                    <p class="form-control-plaintext">
-                                                        @if($inquiry->assignedUser)
-                                                            <strong>{{ $inquiry->assignedUser->name }}</strong>
-                                                            <br>
-                                                            <small class="text-muted">
-                                                                Role: {{ $inquiry->assignedUser->roles->first()?->name ?? 'No Role' }}
-                                                            </small>
+                                                    <label class="form-label fw-bold">User Assignments:</label>
+                                                    <div class="form-control-plaintext">
+                                                        @php
+                                                            $assignedUsers = $inquiry->getAllAssignedUsers();
+                                                        @endphp
+                                                        
+                                                        @if(count($assignedUsers) > 0)
+                                                            @foreach($assignedUsers as $assignment)
+                                                                <div class="mb-2 p-2 border rounded bg-light">
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                        <div>
+                                                                            <strong>{{ $assignment['user']->name }}</strong>
+                                                                            <br>
+                                                                            <small class="text-muted">
+                                                                                <i class="fa fa-user-tag"></i> 
+                                                                                {{ $assignment['role'] }}
+                                                                            </small>
+                                                                        </div>
+                                                                        <span class="badge badge-primary">{{ $assignment['role'] }}</span>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
                                                         @else
-                                                            <span class="text-muted">Unassigned</span>
+                                                            <span class="text-muted">
+                                                                <i class="fa fa-info-circle"></i> No users assigned
+                                                            </span>
                                                         @endif
-                                                    </p>
+                                                    </div>
                                                 </div>
                                             @endif
                                             

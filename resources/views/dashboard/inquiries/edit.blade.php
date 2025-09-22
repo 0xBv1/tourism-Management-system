@@ -163,11 +163,83 @@
                                 </div>
 
                                 @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <h6 class="mb-3">
+                                                <i class="fa fa-users"></i> User Assignments
+                                                <small class="text-muted">(Optional - Assign users to specific roles)</small>
+                                            </h6>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="assigned_reservation_id" class="form-label">Reservation User</label>
+                                                <select class="form-control @error('assigned_reservation_id') is-invalid @enderror" 
+                                                        id="assigned_reservation_id" name="assigned_reservation_id">
+                                                    <option value="">Select Reservation User</option>
+                                                    @if(isset($usersByRole['Reservation']))
+                                                        @foreach($usersByRole['Reservation'] as $user)
+                                                            <option value="{{ $user->id }}" {{ old('assigned_reservation_id', $inquiry->assigned_reservation_id) == $user->id ? 'selected' : '' }}>
+                                                                {{ $user->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                                @error('assigned_reservation_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="assigned_operator_id" class="form-label">Operator User</label>
+                                                <select class="form-control @error('assigned_operator_id') is-invalid @enderror" 
+                                                        id="assigned_operator_id" name="assigned_operator_id">
+                                                    <option value="">Select Operator User</option>
+                                                    @if(isset($usersByRole['Operation']))
+                                                        @foreach($usersByRole['Operation'] as $user)
+                                                            <option value="{{ $user->id }}" {{ old('assigned_operator_id', $inquiry->assigned_operator_id) == $user->id ? 'selected' : '' }}>
+                                                                {{ $user->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                                @error('assigned_operator_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="assigned_admin_id" class="form-label">Admin User</label>
+                                                <select class="form-control @error('assigned_admin_id') is-invalid @enderror" 
+                                                        id="assigned_admin_id" name="assigned_admin_id">
+                                                    <option value="">Select Admin User</option>
+                                                    @if(isset($usersByRole['Admin']))
+                                                        @foreach($usersByRole['Admin'] as $user)
+                                                            <option value="{{ $user->id }}" {{ old('assigned_admin_id', $inquiry->assigned_admin_id) == $user->id ? 'selected' : '' }}>
+                                                                {{ $user->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                                @error('assigned_admin_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Legacy assignment field for backward compatibility -->
                                     <div class="mb-3">
-                                        <label for="assigned_to" class="form-label">Assign to User</label>
+                                        <label for="assigned_to" class="form-label">General Assignment</label>
                                         <select class="form-control @error('assigned_to') is-invalid @enderror" 
                                                 id="assigned_to" name="assigned_to">
-                                            <option value="">Select User</option>
+                                            <option value="">Select User (General Assignment)</option>
                                             @foreach($users as $user)
                                                 <option value="{{ $user->id }}" {{ old('assigned_to', $inquiry->assigned_to) == $user->id ? 'selected' : '' }}>
                                                     {{ $user->name }} - {{ $user->roles->first()?->name ?? 'No Role' }}
@@ -177,6 +249,7 @@
                                         @error('assigned_to')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                        <small class="form-text text-muted">This is a general assignment field for backward compatibility.</small>
                                     </div>
                                 @endif
 

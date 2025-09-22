@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesAndPermissionsSeeder::class);
         $this->call(AdminSeeder::class);
         $this->call(CountrySeeder::class);
+        $this->call(CitySeeder::class);
         $this->call(SettingsSeeder::class);
         $this->call(PermissionsSeeder::class);
         $this->call(ChatSeeder::class);

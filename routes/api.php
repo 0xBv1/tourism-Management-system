@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\PasswordController;
 use App\Http\Controllers\Api\Payment\PaypalController;
 use App\Http\Controllers\Api\Payment\FawaterkController;
+use App\Http\Controllers\Api\CalendarController;
 
 //controllers
 Route::group(['as' => 'api.', 'middleware' => ['api.localize']], function () {
@@ -48,6 +49,9 @@ Route::group(['as' => 'api.', 'middleware' => ['api.localize']], function () {
     });
     
     Route::get('settings', [SettingController::class, 'index'])->name('settings');
+    
+    // Calendar API
+    Route::get('calendar/availability', [CalendarController::class, 'getAvailability'])->name('calendar.availability');
     
     //RoutePlace
 });

@@ -17,9 +17,14 @@
                         <div class="card-header">
                             <h5>Hotel Availability Calendar</h5>
                             <div class="card-header-right">
-                                <a href="{{ route('dashboard.hotels.index') }}" class="btn btn-secondary btn-sm">
+                                <a href="{{ route('dashboard.hotels.index') }}" class="btn btn-secondary btn-sm me-2">
                                     <i class="fa fa-list"></i> Back to List
                                 </a>
+                                @if(admin()->can('hotels.create'))
+                                    <a href="{{ route('dashboard.hotels.create') }}" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-plus"></i> Create Hotel
+                                    </a>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body">
@@ -67,9 +72,16 @@ document.addEventListener('DOMContentLoaded', function() {
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         events: function(info, successCallback, failureCallback) {
-            // This would typically fetch events from your API
-            // For now, we'll show a placeholder
-            successCallback([]);
+            // Fetch events from API
+            fetch(`/api/calendar/availability?resource_type=hotel&start=${info.startStr}&end=${info.endStr}`)
+                .then(response => response.json())
+                .then(data => {
+                    successCallback(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching calendar events:', error);
+                    failureCallback(error);
+                });
         },
         eventDidMount: function(info) {
             // Customize event appearance based on status
@@ -84,14 +96,48 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar.render();
     
     // Filter functionality
+    let currentFilters = {
+        resource_id: '',
+        city_id: ''
+    };
+
     document.getElementById('hotel_filter').addEventListener('change', function() {
-        // Implement hotel filtering logic
-        console.log('Hotel filter changed:', this.value);
+        currentFilters.resource_id = this.value;
+        calendar.refetchEvents();
     });
     
     document.getElementById('city_filter').addEventListener('change', function() {
-        // Implement city filtering logic
-        console.log('City filter changed:', this.value);
+        // Get city ID from the selected city name
+        const cityName = this.value;
+        const cityId = getCityIdByName(cityName);
+        currentFilters.city_id = cityId;
+        calendar.refetchEvents();
+    });
+
+    // Helper function to get city ID by name
+    function getCityIdByName(cityName) {
+        const cityOptions = @json($hotels->pluck('city.id', 'city.name')->filter());
+        return cityOptions[cityName] || '';
+    }
+
+    // Update the events function to use filters
+    calendar.setOption('events', function(info, successCallback, failureCallback) {
+        const params = new URLSearchParams({
+            resource_type: 'hotel',
+            start: info.startStr,
+            end: info.endStr,
+            ...currentFilters
+        });
+        
+        fetch(`/api/calendar/availability?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                successCallback(data);
+            })
+            .catch(error => {
+                console.error('Error fetching calendar events:', error);
+                failureCallback(error);
+            });
     });
 });
 </script>

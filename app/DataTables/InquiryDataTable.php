@@ -19,7 +19,7 @@ class InquiryDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->editColumn('status', fn(Inquiry $inquiry) => '<span class="badge badge-' . $this->getStatusColor($inquiry->status->value) . '">' . ucfirst($inquiry->status->value) . '</span>')
             ->editColumn('created_at', fn(Inquiry $inquiry) => $inquiry->created_at->format('M Y, d'))
-            ->editColumn('assigned_to', fn(Inquiry $inquiry) => $inquiry->assignedUser?->name ?? 'Unassigned')
+            ->editColumn('assigned_to', fn(Inquiry $inquiry) => $this->formatAssignedUsers($inquiry))
             ->editColumn('arrival_date', fn(Inquiry $inquiry) => $inquiry->arrival_date?->format('M d, Y') ?? 'Not set')
             ->editColumn('departure_date', fn(Inquiry $inquiry) => $inquiry->departure_date?->format('M d, Y') ?? 'Not set')
             ->editColumn('guest_name', fn(Inquiry $inquiry) => $isRestrictedRole ? '<span class="text-muted">*** Restricted ***</span>' : $inquiry->guest_name)
@@ -27,17 +27,22 @@ class InquiryDataTable extends DataTable
             ->editColumn('phone', fn(Inquiry $inquiry) => $isRestrictedRole ? '<span class="text-muted">*** Restricted ***</span>' : $inquiry->phone)
             ->addColumn('action', 'dashboard.inquiries.action')
             ->setRowId('id')
-            ->rawColumns(['action', 'status', 'guest_name', 'email', 'phone']);
+            ->rawColumns(['action', 'status', 'guest_name', 'email', 'phone', 'assigned_to']);
     }
 
     public function query(Inquiry $model): QueryBuilder
     {
-        $query = $model->newQuery()->with(['client', 'assignedUser']);
+        $query = $model->newQuery()->with(['client', 'assignedUser', 'assignedReservation', 'assignedOperator', 'assignedAdmin']);
         
         // Filter inquiries based on user role
         if (auth()->user()->hasRole(['Reservation', 'Operation'])) {
             // For Reservation and Operation roles, show only inquiries assigned to the current user
-            $query->where('assigned_to', auth()->id());
+            $query->where(function($q) {
+                $q->where('assigned_to', auth()->id())
+                  ->orWhere('assigned_reservation_id', auth()->id())
+                  ->orWhere('assigned_operator_id', auth()->id())
+                  ->orWhere('assigned_admin_id', auth()->id());
+            });
         }
         // For other roles (Admin, Administrator, Sales, Finance), show all inquiries
         
@@ -97,6 +102,34 @@ class InquiryDataTable extends DataTable
             'cancelled' => 'danger',
             default => 'secondary'
         };
+    }
+
+    private function formatAssignedUsers(Inquiry $inquiry): string
+    {
+        $assignedUsers = $inquiry->getAllAssignedUsers();
+        
+        if (empty($assignedUsers)) {
+            return '<span class="text-muted">Unassigned</span>';
+        }
+        
+        $html = '<div class="assigned-users">';
+        foreach ($assignedUsers as $assignment) {
+            $roleColor = match($assignment['role']) {
+                'Reservation' => 'info',
+                'Operator' => 'warning',
+                'Admin' => 'danger',
+                'General' => 'primary',
+                default => 'secondary'
+            };
+            
+            $html .= '<div class="mb-1">';
+            $html .= '<span class="badge badge-' . $roleColor . ' me-1">' . $assignment['role'] . '</span>';
+            $html .= '<small>' . $assignment['user']->name . '</small>';
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+        
+        return $html;
     }
 }
 

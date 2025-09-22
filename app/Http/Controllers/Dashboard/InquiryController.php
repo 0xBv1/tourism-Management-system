@@ -38,8 +38,19 @@ class InquiryController extends Controller
             })
             ->get();
         
+        // Group users by their roles for better organization
+        $usersByRole = collect();
+        foreach($users as $user) {
+            foreach($user->roles as $role) {
+                if (!isset($usersByRole[$role->name])) {
+                    $usersByRole[$role->name] = collect();
+                }
+                $usersByRole[$role->name]->push($user);
+            }
+        }
+        
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.create', compact('users', 'statuses'));
+        return view('dashboard.inquiries.create', compact('users', 'usersByRole', 'statuses'));
     }
 
     /**
@@ -73,14 +84,26 @@ class InquiryController extends Controller
      */
     public function show(Inquiry $inquiry)
     {
-        $inquiry->load(['client', 'assignedUser.roles']);
+        $inquiry->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles']);
         $users = User::with('roles')
             ->whereHas('roles', function($query) {
                 $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
             })
             ->get();
+        
+        // Group users by their roles for better organization
+        $usersByRole = collect();
+        foreach($users as $user) {
+            foreach($user->roles as $role) {
+                if (!isset($usersByRole[$role->name])) {
+                    $usersByRole[$role->name] = collect();
+                }
+                $usersByRole[$role->name]->push($user);
+            }
+        }
+        
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.show', compact('inquiry', 'users', 'statuses'));
+        return view('dashboard.inquiries.show', compact('inquiry', 'users', 'usersByRole', 'statuses'));
     }
 
     /**
@@ -98,8 +121,19 @@ class InquiryController extends Controller
             })
             ->get();
         
+        // Group users by their roles for better organization
+        $usersByRole = collect();
+        foreach($users as $user) {
+            foreach($user->roles as $role) {
+                if (!isset($usersByRole[$role->name])) {
+                    $usersByRole[$role->name] = collect();
+                }
+                $usersByRole[$role->name]->push($user);
+            }
+        }
+        
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.edit', compact('inquiry', 'users', 'statuses'));
+        return view('dashboard.inquiries.edit', compact('inquiry', 'users', 'usersByRole', 'statuses'));
     }
 
     /**
@@ -172,10 +206,26 @@ class InquiryController extends Controller
      */
     public function showConfirmForm(Inquiry $inquiry)
     {
-        $inquiry->load(['client', 'assignedUser.roles']);
-        $users = User::with('roles')->get();
+        $inquiry->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles']);
+        $users = User::with('roles')
+            ->whereHas('roles', function($query) {
+                $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
+            })
+            ->get();
+        
+        // Group users by their roles for better organization
+        $usersByRole = collect();
+        foreach($users as $user) {
+            foreach($user->roles as $role) {
+                if (!isset($usersByRole[$role->name])) {
+                    $usersByRole[$role->name] = collect();
+                }
+                $usersByRole[$role->name]->push($user);
+            }
+        }
+        
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.confirm', compact('inquiry', 'users', 'statuses'));
+        return view('dashboard.inquiries.confirm', compact('inquiry', 'users', 'usersByRole', 'statuses'));
     }
 
     /**

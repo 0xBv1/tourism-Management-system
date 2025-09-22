@@ -84,17 +84,17 @@ Route::group([
     Route::post('redirect-rules/import', [RedirectRuleController::class, 'import'])->name('redirect-rules.import');
     
     // Resource Management
-    Route::resource('hotels', HotelController::class);
+    // Calendar routes must be defined before resource routes to avoid conflicts
     Route::get('hotels/calendar', [HotelController::class, 'calendar'])->name('hotels.calendar');
-    
-    Route::resource('vehicles', VehicleController::class);
     Route::get('vehicles/calendar', [VehicleController::class, 'calendar'])->name('vehicles.calendar');
-    
-    Route::resource('guides', GuideController::class);
     Route::get('guides/calendar', [GuideController::class, 'calendar'])->name('guides.calendar');
-    
-    Route::resource('representatives', RepresentativeController::class);
     Route::get('representatives/calendar', [RepresentativeController::class, 'calendar'])->name('representatives.calendar');
+    
+    // Resource routes
+    Route::resource('hotels', HotelController::class);
+    Route::resource('vehicles', VehicleController::class);
+    Route::resource('guides', GuideController::class);
+    Route::resource('representatives', RepresentativeController::class);
     
     // Resource Assignment
     Route::group(['prefix' => 'resource-assignments', 'as' => 'resource-assignments.'], function () {
