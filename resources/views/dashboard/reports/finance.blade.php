@@ -173,6 +173,7 @@
                                     <thead>
                                         <tr>
                                             <th>ID</th>
+                                            <th>Invoice ID</th>
                                             <th>Reference</th>
                                             <th>Client</th>
                                             <th>Amount</th>
@@ -186,6 +187,7 @@
                                         @forelse($payments as $payment)
                                         <tr>
                                             <td>{{ $payment->id }}</td>
+                                            <td>{{ $payment->invoice_id ?? 'N/A' }}</td>
                                             <td>{{ $payment->reference_number ?? 'N/A' }}</td>
                                             <td>{{ $payment->booking->inquiry->client->name ?? 'N/A' }}</td>
                                             <td>{{ $payment->formatted_amount }}</td>
@@ -200,7 +202,7 @@
                                         </tr>
                                         @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No payments found for the selected period.</td>
+                                            <td colspan="9" class="text-center">No payments found for the selected period.</td>
                                         </tr>
                                         @endforelse
                                     </tbody>

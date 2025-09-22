@@ -19,6 +19,7 @@ class Inquiry extends Model
         'email',
         'phone',
         'arrival_date',
+        'departure_date',
         'number_pax',
         'tour_name',
         'nationality',
@@ -38,6 +39,7 @@ class Inquiry extends Model
     protected $casts = [
         'status' => InquiryStatus::class,
         'arrival_date' => 'date',
+        'departure_date' => 'date',
         'total_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'remaining_amount' => 'decimal:2',
@@ -58,6 +60,16 @@ class Inquiry extends Model
     public function bookingFile(): BelongsTo
     {
         return $this->belongsTo(BookingFile::class);
+    }
+
+    public function syncBookingFileData(): void
+    {
+        if ($this->bookingFile) {
+            $this->bookingFile->update([
+                'total_amount' => $this->total_amount,
+                'currency' => 'USD', // Default currency, can be made configurable
+            ]);
+        }
     }
 
     public function chats(): HasMany

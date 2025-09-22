@@ -30,11 +30,54 @@ class BookingController extends Controller
      */
     public function show(BookingFile $booking)
     {
-        $booking->load(['inquiry.client', 'payments']);
+        $booking->load(['inquiry.client', 'payments', 'resourceBookings']);
         $statuses = BookingStatus::options();
         $inquiries = Inquiry::with('client')->get();
         
+        // Sync data from inquiry if needed
+        $this->syncBookingFromInquiry($booking);
+        
+        // Debug information
+        if (config('app.debug')) {
+            \Log::info('BookingFile loaded', [
+                'id' => $booking->id,
+                'file_name' => $booking->file_name,
+                'status' => $booking->status->value,
+                'has_inquiry' => $booking->inquiry ? 'yes' : 'no',
+                'has_client' => $booking->inquiry && $booking->inquiry->client ? 'yes' : 'no',
+                'payments_count' => $booking->payments->count(),
+                'file_exists' => $booking->fileExists(),
+                'total_amount' => $booking->total_amount,
+                'inquiry_total_amount' => $booking->inquiry ? $booking->inquiry->total_amount : null,
+            ]);
+        }
+        
         return view('dashboard.bookings.show', compact('booking', 'statuses', 'inquiries'));
+    }
+
+    /**
+     * Sync booking data from inquiry
+     */
+    private function syncBookingFromInquiry(BookingFile $booking): void
+    {
+        if ($booking->inquiry) {
+            $updateData = [];
+            
+            // Sync total amount if booking doesn't have it
+            if (!$booking->total_amount && $booking->inquiry->total_amount) {
+                $updateData['total_amount'] = $booking->inquiry->total_amount;
+            }
+            
+            // Sync currency if not set
+            if (!$booking->currency) {
+                $updateData['currency'] = 'USD'; // Default currency
+            }
+            
+            // Update if there are changes
+            if (!empty($updateData)) {
+                $booking->update($updateData);
+            }
+        }
     }
 
     /**
@@ -90,7 +133,7 @@ class BookingController extends Controller
      */
     public function download(BookingFile $booking)
     {
-        if (!file_exists($booking->file_path)) {
+        if (!$booking->fileExists()) {
             session()->flash('message', 'File not found!');
             session()->flash('type', 'error');
             return back();
@@ -98,7 +141,7 @@ class BookingController extends Controller
 
         $booking->update(['downloaded_at' => now()]);
         
-        return response()->download($booking->file_path, $booking->file_name);
+        return response()->download($booking->full_file_path, $booking->file_name);
     }
 
     /**

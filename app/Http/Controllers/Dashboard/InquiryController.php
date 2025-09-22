@@ -10,6 +10,7 @@ use App\Http\Requests\Dashboard\InquiryRequest;
 use App\Models\Inquiry;
 use App\Models\User;
 use App\Enums\InquiryStatus;
+use Illuminate\Http\Request;
 
 class InquiryController extends Controller
 {
@@ -30,7 +31,13 @@ class InquiryController extends Controller
      */
     public function create()
     {
-        $users = User::with('roles')->get();
+        // Get users with specific roles only
+        $users = User::with('roles')
+            ->whereHas('roles', function($query) {
+                $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
+            })
+            ->get();
+        
         $statuses = InquiryStatus::options();
         return view('dashboard.inquiries.create', compact('users', 'statuses'));
     }
@@ -44,18 +51,15 @@ class InquiryController extends Controller
     public function store(InquiryRequest $request)
     {
         $data = $request->getSanitized();
-        
-        // Remove assigned_role from data as we don't store it in the database
-        unset($data['assigned_role']);
-        
+
         // Payment fields are not required in create form, so we don't need to calculate remaining amount here
         // This will be handled in the confirmation process
-        
+
         $inquiry = Inquiry::create($data);
-        
+
         // Fire event for new inquiry notification
         event(new NewInquiryCreated($inquiry));
-        
+
         session()->flash('message', 'Inquiry Created Successfully!');
         session()->flash('type', 'success');
         return redirect()->route('dashboard.inquiries.show', $inquiry);
@@ -70,7 +74,11 @@ class InquiryController extends Controller
     public function show(Inquiry $inquiry)
     {
         $inquiry->load(['client', 'assignedUser.roles']);
-        $users = User::with('roles')->get();
+        $users = User::with('roles')
+            ->whereHas('roles', function($query) {
+                $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
+            })
+            ->get();
         $statuses = InquiryStatus::options();
         return view('dashboard.inquiries.show', compact('inquiry', 'users', 'statuses'));
     }
@@ -83,7 +91,13 @@ class InquiryController extends Controller
      */
     public function edit(Inquiry $inquiry)
     {
-        $users = User::with('roles')->get();
+        // Get users with specific roles only
+        $users = User::with('roles')
+            ->whereHas('roles', function($query) {
+                $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
+            })
+            ->get();
+        
         $statuses = InquiryStatus::options();
         return view('dashboard.inquiries.edit', compact('inquiry', 'users', 'statuses'));
     }
@@ -99,9 +113,6 @@ class InquiryController extends Controller
     {
         $oldStatus = $inquiry->status;
         $data = $request->getSanitized();
-        
-        // Remove assigned_role from data as we don't store it in the database
-        unset($data['assigned_role']);
         
         // Payment fields are not required in edit form, so we don't need to calculate remaining amount here
         // This will be handled in the confirmation process

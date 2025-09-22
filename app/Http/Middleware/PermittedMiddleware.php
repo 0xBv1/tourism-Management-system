@@ -31,6 +31,8 @@ class PermittedMiddleware
         'dashboard.reports.resource-utilization.export',
         'dashboard.reports.resource-details',
         'dashboard.debug.user-roles',
+        'dashboard.inquiries.confirm-form',
+        'dashboard.inquiries.process-confirmation',
 
     ];
     public function handle(Request $request, Closure $next)

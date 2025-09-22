@@ -121,4 +121,101 @@ class BookingFile extends Model
         $completed = array_filter($this->checklist);
         return (int) round((count($completed) / count($this->checklist)) * 100);
     }
+
+    public function getClientAttribute()
+    {
+        return $this->inquiry?->client;
+    }
+
+    public function getClientNameAttribute(): string
+    {
+        return $this->inquiry?->client?->name ?? 'N/A';
+    }
+
+    public function getInquirySubjectAttribute(): string
+    {
+        return $this->inquiry?->subject ?? 'N/A';
+    }
+
+    public function getPaymentStatusAttribute(): string
+    {
+        if ($this->isFullyPaid()) {
+            return 'Fully Paid';
+        } elseif ($this->total_paid > 0) {
+            return 'Partially Paid';
+        } else {
+            return 'Not Paid';
+        }
+    }
+
+    public function getFormattedTotalAmountAttribute(): string
+    {
+        return $this->currency . ' ' . number_format($this->total_amount, 2);
+    }
+
+    public function getFormattedTotalPaidAttribute(): string
+    {
+        return $this->currency . ' ' . number_format($this->total_paid, 2);
+    }
+
+    public function getFormattedRemainingAmountAttribute(): string
+    {
+        return $this->currency . ' ' . number_format($this->remaining_amount, 2);
+    }
+
+    public function syncPaymentData(): void
+    {
+        $totalPaid = $this->payments()->where('status', 'paid')->sum('amount');
+        $remainingAmount = $this->total_amount - $totalPaid;
+
+        // Update inquiry with payment data
+        if ($this->inquiry) {
+            $this->inquiry->update([
+                'paid_amount' => $totalPaid,
+                'remaining_amount' => $remainingAmount,
+            ]);
+        }
+    }
+
+    public function calculateTotalFromResourceBookings(): float
+    {
+        return $this->resourceBookings()->sum('total_price');
+    }
+
+    public function syncTotalAmountFromResourceBookings(): void
+    {
+        $calculatedTotal = $this->calculateTotalFromResourceBookings();
+        if ($calculatedTotal > 0) {
+            $this->update(['total_amount' => $calculatedTotal]);
+        }
+    }
+
+    public function getFullFilePathAttribute(): string
+    {
+        return storage_path('app/public/' . $this->file_path);
+    }
+
+    public function fileExists(): bool
+    {
+        return file_exists($this->full_file_path);
+    }
+
+    public function getFileUrlAttribute(): string
+    {
+        return asset('storage/' . $this->file_path);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::retrieved(function ($booking) {
+            // Sync data from inquiry if booking data is missing
+            if ($booking->inquiry && (!$booking->total_amount || $booking->total_amount == 0)) {
+                if ($booking->inquiry->total_amount) {
+                    $booking->total_amount = $booking->inquiry->total_amount;
+                }
+            }
+        });
+    }
 }

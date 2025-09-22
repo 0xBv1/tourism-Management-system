@@ -56,9 +56,43 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
+                                                <label class="form-label fw-bold">File Status:</label>
+                                                <p class="form-control-plaintext">
+                                                    @if($booking->fileExists())
+                                                        <span class="badge bg-success">
+                                                            <i class="fa fa-check"></i> File Available
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-danger">
+                                                            <i class="fa fa-times"></i> File Not Found
+                                                        </span>
+                                                    @endif
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">File Path:</label>
+                                                <p class="form-control-plaintext text-muted small">
+                                                    {{ $booking->file_path }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
                                                 <label class="form-label fw-bold">Total Amount:</label>
                                                 <p class="form-control-plaintext">
-                                                    {{ $booking->total_amount ? $booking->currency . ' ' . number_format($booking->total_amount, 2) : 'Not set' }}
+                                                    @if($booking->total_amount)
+                                                        {{ $booking->currency }} {{ number_format($booking->total_amount, 2) }}
+                                                    @elseif($booking->inquiry && $booking->inquiry->total_amount)
+                                                        {{ $booking->currency }} {{ number_format($booking->inquiry->total_amount, 2) }}
+                                                        <small class="text-muted">(from inquiry)</small>
+                                                    @else
+                                                        Not set
+                                                    @endif
                                                 </p>
                                             </div>
                                         </div>
@@ -66,7 +100,11 @@
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold">Amount Paid:</label>
                                                 <p class="form-control-plaintext">
-                                                    {{ $booking->currency }} {{ number_format($booking->total_paid, 2) }}
+                                                    @if($booking->inquiry && $booking->inquiry->paid_amount)
+                                                        {{ $booking->currency }} {{ number_format($booking->inquiry->paid_amount, 2) }}
+                                                    @else
+                                                        {{ $booking->currency }} {{ number_format($booking->total_paid, 2) }}
+                                                    @endif
                                                 </p>
                                             </div>
                                         </div>
@@ -77,8 +115,12 @@
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold">Remaining Amount:</label>
                                                 <p class="form-control-plaintext">
-                                                    <span class="text-{{ $booking->remaining_amount > 0 ? 'danger' : 'success' }}">
-                                                        {{ $booking->currency }} {{ number_format($booking->remaining_amount, 2) }}
+                                                    @php
+                                                        $remainingAmount = $booking->inquiry && $booking->inquiry->remaining_amount ? 
+                                                            $booking->inquiry->remaining_amount : $booking->remaining_amount;
+                                                    @endphp
+                                                    <span class="text-{{ $remainingAmount > 0 ? 'danger' : 'success' }}">
+                                                        {{ $booking->currency }} {{ number_format($remainingAmount, 2) }}
                                                     </span>
                                                 </p>
                                             </div>
@@ -87,8 +129,12 @@
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold">Payment Status:</label>
                                                 <p class="form-control-plaintext">
-                                                    <span class="badge bg-{{ $booking->isFullyPaid() ? 'success' : 'warning' }}">
-                                                        {{ $booking->isFullyPaid() ? 'Fully Paid' : 'Pending Payment' }}
+                                                    @php
+                                                        $isFullyPaid = $booking->inquiry && $booking->inquiry->remaining_amount ? 
+                                                            $booking->inquiry->remaining_amount <= 0 : $booking->isFullyPaid();
+                                                    @endphp
+                                                    <span class="badge bg-{{ $isFullyPaid ? 'success' : 'warning' }}">
+                                                        {{ $isFullyPaid ? 'Fully Paid' : 'Pending Payment' }}
                                                     </span>
                                                 </p>
                                             </div>
@@ -104,6 +150,102 @@
                                         </div>
                                     @endif
 
+                                    <!-- Inquiry Information Section -->
+                                    @if($booking->inquiry)
+                                        <div class="mb-4">
+                                            <h6 class="fw-bold text-primary">Inquiry Details</h6>
+                                            
+                                            <!-- Guest Information -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Guest Name:</label>
+                                                        <p class="form-control-plaintext">{{ $booking->inquiry->guest_name ?? 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Email:</label>
+                                                        <p class="form-control-plaintext">{{ $booking->inquiry->email ?? 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Phone:</label>
+                                                        <p class="form-control-plaintext">{{ $booking->inquiry->phone ?? 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Subject:</label>
+                                                        <p class="form-control-plaintext">{{ $booking->inquiry->subject ?? 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Tour Name:</label>
+                                                        <p class="form-control-plaintext">{{ $booking->inquiry->tour_name ?? 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Nationality:</label>
+                                                        <p class="form-control-plaintext">{{ $booking->inquiry->nationality ?? 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Arrival Date:</label>
+                                                        <p class="form-control-plaintext">
+                                                            {{ $booking->inquiry->arrival_date ? $booking->inquiry->arrival_date->format('M d, Y') : 'N/A' }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Departure Date:</label>
+                                                        <p class="form-control-plaintext">
+                                                            {{ $booking->inquiry->departure_date ? $booking->inquiry->departure_date->format('M d, Y') : 'N/A' }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Number of Pax:</label>
+                                                        <p class="form-control-plaintext">{{ $booking->inquiry->number_pax ?? 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Payment Method:</label>
+                                                        <p class="form-control-plaintext">{{ $booking->inquiry->payment_method ?? 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @if($booking->inquiry->message)
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Message:</label>
+                                                    <div class="border p-3 rounded bg-light">
+                                                        {{ $booking->inquiry->message }}
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+
                                     <!-- Checklist Section -->
                                     <div class="mb-4">
                                         <h6 class="fw-bold">Checklist Progress</h6>
@@ -114,26 +256,40 @@
                                             </div>
                                         </div>
                                         
-                                        @if($booking->checklist)
-                                            <div class="row">
-                                                @foreach($booking->checklist as $item => $completed)
-                                                    <div class="col-md-6 mb-2">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input checklist-item" 
-                                                                   type="checkbox" 
-                                                                   data-item="{{ $item }}"
-                                                                   data-booking="{{ $booking->id }}"
-                                                                   {{ $completed ? 'checked' : '' }}>
-                                                            <label class="form-check-label {{ $completed ? 'text-decoration-line-through' : '' }}">
-                                                                {{ ucfirst(str_replace('_', ' ', $item)) }}
-                                                            </label>
-                                                        </div>
+                                        @php
+                                            $defaultChecklist = [
+                                                'accommodation_booked' => 'Accommodation Booked',
+                                                'tours_scheduled' => 'Tours Scheduled',
+                                                'transportation_arranged' => 'Transportation Arranged',
+                                                'insurance_processed' => 'Insurance Processed',
+                                                'final_documents_sent' => 'Final Documents Sent',
+                                                'payment_confirmed' => 'Payment Confirmed',
+                                                'client_notified' => 'Client Notified'
+                                            ];
+                                            
+                                            $checklist = $booking->checklist ?? [];
+                                            $allChecklistItems = array_merge($defaultChecklist, $checklist);
+                                        @endphp
+                                        
+                                        <div class="row">
+                                            @foreach($allChecklistItems as $item => $label)
+                                                @php
+                                                    $isCompleted = isset($checklist[$item]) ? $checklist[$item] : false;
+                                                @endphp
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input checklist-item" 
+                                                               type="checkbox" 
+                                                               data-item="{{ $item }}"
+                                                               data-booking="{{ $booking->id }}"
+                                                               {{ $isCompleted ? 'checked' : '' }}>
+                                                        <label class="form-check-label {{ $isCompleted ? 'text-decoration-line-through' : '' }}">
+                                                            {{ is_string($label) ? $label : ucfirst(str_replace('_', ' ', $item)) }}
+                                                        </label>
                                                     </div>
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            <p class="text-muted">No checklist items available.</p>
-                                        @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -252,8 +408,37 @@
                                         </tbody>
                                     </table>
                                 </div>
+                            @elseif($booking->inquiry && ($booking->inquiry->paid_amount > 0 || $booking->inquiry->remaining_amount > 0))
+                                <!-- Show inquiry payment data when no direct payments exist -->
+                                <div class="alert alert-info">
+                                    <h6><i class="fa fa-info-circle"></i> Payment Information from Inquiry</h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <strong>Total Amount:</strong><br>
+                                            {{ $booking->currency }} {{ number_format($booking->inquiry->total_amount, 2) }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Amount Paid:</strong><br>
+                                            <span class="text-success">{{ $booking->currency }} {{ number_format($booking->inquiry->paid_amount, 2) }}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Remaining:</strong><br>
+                                            <span class="text-{{ $booking->inquiry->remaining_amount > 0 ? 'danger' : 'success' }}">
+                                                {{ $booking->currency }} {{ number_format($booking->inquiry->remaining_amount, 2) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    @if($booking->inquiry->payment_method)
+                                        <div class="mt-2">
+                                            <strong>Payment Method:</strong> {{ $booking->inquiry->payment_method }}
+                                        </div>
+                                    @endif
+                                </div>
                             @else
-                                <p class="text-muted">No payments recorded for this booking.</p>
+                                <div class="alert alert-warning">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                    No payments recorded for this booking.
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -269,7 +454,15 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label fw-bold">Client:</label>
-                                            <p class="form-control-plaintext">{{ $booking->inquiry->client->name ?? 'N/A' }}</p>
+                                            <p class="form-control-plaintext">
+                                                @if($booking->inquiry->client)
+                                                    {{ $booking->inquiry->client->name }}
+                                                @elseif($booking->inquiry->guest_name)
+                                                    {{ $booking->inquiry->guest_name }}
+                                                @else
+                                                    N/A
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -279,11 +472,41 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Message:</label>
-                                    <div class="border p-3 rounded">
-                                        {{ $booking->inquiry->message ?? 'N/A' }}
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Email:</label>
+                                            <p class="form-control-plaintext">{{ $booking->inquiry->email ?? 'N/A' }}</p>
+                                        </div>
                                     </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Phone:</label>
+                                            <p class="form-control-plaintext">{{ $booking->inquiry->phone ?? 'N/A' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if($booking->inquiry->message)
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Message:</label>
+                                        <div class="border p-3 rounded">
+                                            {{ $booking->inquiry->message }}
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5>Related Inquiry</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                    No related inquiry found for this booking file.
                                 </div>
                             </div>
                         </div>

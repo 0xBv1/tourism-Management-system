@@ -53,8 +53,9 @@ class UpdateBookingFileStatusListener implements ShouldQueue
                 'amount' => $payment->amount,
                 'gateway' => $payment->gateway,
                 'status' => $payment->status->value,
+                'booking_status' => $bookingFile->status->value,
             ])
-            ->log('Payment received');
+            ->log('Payment received for booking #' . $bookingFile->id);
     }
 }
 

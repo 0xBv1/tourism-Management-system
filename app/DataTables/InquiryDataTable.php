@@ -14,14 +14,20 @@ class InquiryDataTable extends DataTable
 {
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
+        $isRestrictedRole = auth()->user()->hasRole(['Reservation', 'Operation']);
+        
         return (new EloquentDataTable($query))
             ->editColumn('status', fn(Inquiry $inquiry) => '<span class="badge badge-' . $this->getStatusColor($inquiry->status->value) . '">' . ucfirst($inquiry->status->value) . '</span>')
             ->editColumn('created_at', fn(Inquiry $inquiry) => $inquiry->created_at->format('M Y, d'))
             ->editColumn('assigned_to', fn(Inquiry $inquiry) => $inquiry->assignedUser?->name ?? 'Unassigned')
             ->editColumn('arrival_date', fn(Inquiry $inquiry) => $inquiry->arrival_date?->format('M d, Y') ?? 'Not set')
+            ->editColumn('departure_date', fn(Inquiry $inquiry) => $inquiry->departure_date?->format('M d, Y') ?? 'Not set')
+            ->editColumn('guest_name', fn(Inquiry $inquiry) => $isRestrictedRole ? '<span class="text-muted">*** Restricted ***</span>' : $inquiry->guest_name)
+            ->editColumn('email', fn(Inquiry $inquiry) => $isRestrictedRole ? '<span class="text-muted">*** Restricted ***</span>' : $inquiry->email)
+            ->editColumn('phone', fn(Inquiry $inquiry) => $isRestrictedRole ? '<span class="text-muted">*** Restricted ***</span>' : $inquiry->phone)
             ->addColumn('action', 'dashboard.inquiries.action')
             ->setRowId('id')
-            ->rawColumns(['action', 'status']);
+            ->rawColumns(['action', 'status', 'guest_name', 'email', 'phone']);
     }
 
     public function query(Inquiry $model): QueryBuilder
@@ -64,6 +70,7 @@ class InquiryDataTable extends DataTable
             Column::make('phone'),
             Column::make('tour_name')->title('Tour Name'),
             Column::make('arrival_date')->title('Arrival Date'),
+            Column::make('departure_date')->title('Departure Date'),
             Column::make('number_pax')->title('Pax'),
             Column::make('nationality'),
             Column::make('status'),

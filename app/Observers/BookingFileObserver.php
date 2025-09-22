@@ -36,16 +36,24 @@ class BookingFileObserver
         $changes = $bookingFile->getChanges();
         $original = $bookingFile->getOriginal();
 
+        // Sync payment data when total_amount changes
+        if (isset($changes['total_amount'])) {
+            $bookingFile->syncPaymentData();
+        }
+
         // Log status changes
         if (isset($changes['status'])) {
+            $oldStatus = is_object($original['status']) ? $original['status']->value : $original['status'];
+            $newStatus = is_object($changes['status']) ? $changes['status']->value : $changes['status'];
+            
             activity()
                 ->performedOn($bookingFile)
                 ->withProperties([
-                    'old_status' => $original['status'],
-                    'new_status' => $changes['status'],
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus,
                     'inquiry_id' => $bookingFile->inquiry_id,
                 ])
-                ->log('Booking file status changed from ' . $original['status'] . ' to ' . $changes['status']);
+                ->log('Booking file status changed from ' . $oldStatus . ' to ' . $newStatus);
         }
 
         // Log checklist updates

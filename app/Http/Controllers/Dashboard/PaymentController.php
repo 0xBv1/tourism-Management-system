@@ -47,15 +47,25 @@ class PaymentController extends Controller
     public function store(PaymentRequest $request)
     {
         $this->authorize('payments.create');
-        $payment = Payment::create($request->getSanitized());
         
-        // If payment is marked as paid, trigger the event
-        if ($payment->status === PaymentStatus::PAID) {
-            event(new PaymentReceived($payment));
+        try {
+            $payment = Payment::create($request->getSanitized());
+            
+            // Sync payment data with booking file
+            $this->syncPaymentWithBooking($payment);
+            
+            // If payment is marked as paid, trigger the event
+            if ($payment->status === PaymentStatus::PAID) {
+                event(new PaymentReceived($payment));
+            }
+            
+            session()->flash('message', 'Payment Created Successfully!');
+            session()->flash('type', 'success');
+        } catch (\Exception $e) {
+            session()->flash('message', 'Error creating payment: ' . $e->getMessage());
+            session()->flash('type', 'error');
         }
         
-        session()->flash('message', 'Payment Created Successfully!');
-        session()->flash('type', 'success');
         return redirect()->route('dashboard.payments.index');
     }
 
@@ -92,16 +102,26 @@ class PaymentController extends Controller
     public function update(PaymentRequest $request, Payment $payment)
     {
         $this->authorize('payments.edit');
-        $oldStatus = $payment->status;
-        $payment->update($request->getSanitized());
         
-        // If payment status changed to paid, trigger the event
-        if ($oldStatus !== PaymentStatus::PAID && $payment->status === PaymentStatus::PAID) {
-            event(new PaymentReceived($payment));
+        try {
+            $oldStatus = $payment->status;
+            $payment->update($request->getSanitized());
+            
+            // Sync payment data with booking file
+            $this->syncPaymentWithBooking($payment);
+            
+            // If payment status changed to paid, trigger the event
+            if ($oldStatus !== PaymentStatus::PAID && $payment->status === PaymentStatus::PAID) {
+                event(new PaymentReceived($payment));
+            }
+            
+            session()->flash('message', 'Payment Updated Successfully!');
+            session()->flash('type', 'success');
+        } catch (\Exception $e) {
+            session()->flash('message', 'Error updating payment: ' . $e->getMessage());
+            session()->flash('type', 'error');
         }
         
-        session()->flash('message', 'Payment Updated Successfully!');
-        session()->flash('type', 'success');
         return redirect()->route('dashboard.payments.index');
     }
 
@@ -123,12 +143,61 @@ class PaymentController extends Controller
     public function markAsPaid(Payment $payment)
     {
         $this->authorize('payments.mark-as-paid');
-        $payment->markAsPaid();
-        event(new PaymentReceived($payment));
         
-        return response()->json([
-            'message' => 'Payment marked as paid successfully!'
-        ]);
+        try {
+            $payment->markAsPaid();
+            
+            // Sync payment data with booking file
+            $this->syncPaymentWithBooking($payment);
+            
+            event(new PaymentReceived($payment));
+            
+            return response()->json([
+                'message' => 'Payment marked as paid successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error marking payment as paid: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Sync payment data with booking file
+     */
+    private function syncPaymentWithBooking(Payment $payment): void
+    {
+        if ($payment->booking) {
+            // Sync payment data to booking file
+            $payment->booking->syncPaymentData();
+            
+            // Update booking status based on payment status
+            $this->updateBookingStatusBasedOnPayment($payment);
+        }
+    }
+
+    /**
+     * Update booking status based on payment
+     */
+    private function updateBookingStatusBasedOnPayment(Payment $payment): void
+    {
+        $booking = $payment->booking;
+        
+        if (!$booking) {
+            return;
+        }
+
+        // If payment is paid, update booking status
+        if ($payment->status === PaymentStatus::PAID) {
+            $currentStatus = $booking->status;
+            
+            // Update status based on current status and payment amount
+            if ($currentStatus === BookingStatus::PENDING) {
+                $booking->update(['status' => BookingStatus::CONFIRMED]);
+            } elseif ($currentStatus === BookingStatus::CONFIRMED && $booking->isFullyPaid()) {
+                $booking->update(['status' => BookingStatus::IN_PROGRESS]);
+            }
+        }
     }
 
     /**

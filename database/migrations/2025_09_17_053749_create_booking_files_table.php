@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('inquiry_id')->constrained()->onDelete('cascade');
             $table->string('file_name');
             $table->string('file_path');
-            $table->enum('status', ['generated', 'sent', 'downloaded'])->default('generated');
+            $table->enum('status', ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'refunded'])->default('pending');
             $table->timestamp('generated_at');
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('downloaded_at')->nullable();

@@ -33,6 +33,7 @@ class PaymentRequest extends FormRequest
             'reference_number' => ['nullable', 'string', 'max:255'],
             'transaction_request' => ['nullable', 'array'],
             'transaction_verification' => ['nullable', 'array'],
+            'invoice_id' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -42,6 +43,11 @@ class PaymentRequest extends FormRequest
     public function getSanitized(): array
     {
         $data = $this->validated();
+        
+        // Generate invoice ID if not provided
+        if (empty($data['invoice_id'])) {
+            $data['invoice_id'] = $this->generateInvoiceId();
+        }
         
         // Set paid_at if status is paid and paid_at is not provided
         if ($data['status'] === PaymentStatus::PAID->value && empty($data['paid_at'])) {
@@ -54,6 +60,18 @@ class PaymentRequest extends FormRequest
         }
         
         return $data;
+    }
+
+    /**
+     * Generate a unique invoice ID
+     */
+    private function generateInvoiceId(): string
+    {
+        $prefix = 'INV';
+        $date = now()->format('Ymd');
+        $random = str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        
+        return $prefix . '-' . $date . '-' . $random;
     }
 }
 

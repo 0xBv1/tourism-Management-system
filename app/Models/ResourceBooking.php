@@ -43,7 +43,7 @@ class ResourceBooking extends Model
 
     public function bookingFile(): BelongsTo
     {
-        return $this->belongsTo(BookingFile::class);
+        return $this->belongsTo(BookingFile::class, 'booking_file_id');
     }
 
     public function resource(): MorphTo

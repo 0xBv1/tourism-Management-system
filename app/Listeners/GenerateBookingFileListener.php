@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class GenerateBookingFileListener implements ShouldQueue
 {
@@ -35,20 +36,20 @@ class GenerateBookingFileListener implements ShouldQueue
     {
         $inquiry = $event->inquiry;
         
-        // Generate booking file content
-        $bookingContent = $this->generateBookingFileContent($inquiry);
+        // Generate PDF content
+        $pdfContent = $this->generateBookingFilePDF($inquiry);
         
         // Create booking file record
         $bookingFile = BookingFile::create([
             'inquiry_id' => $inquiry->id,
             'file_name' => 'booking_' . $inquiry->id . '_' . now()->format('Y-m-d_H-i-s') . '.pdf',
             'file_path' => 'booking-files/booking_' . $inquiry->id . '_' . now()->format('Y-m-d_H-i-s') . '.pdf',
-            'status' => 'generated',
+            'status' => 'pending',
             'generated_at' => now(),
         ]);
         
-        // Store the file
-        Storage::disk('public')->put($bookingFile->file_path, $bookingContent);
+        // Store the PDF file
+        Storage::disk('public')->put($bookingFile->file_path, $pdfContent);
         
         // Update inquiry with booking file reference
         $inquiry->update(['booking_file_id' => $bookingFile->id]);
@@ -61,38 +62,27 @@ class GenerateBookingFileListener implements ShouldQueue
     }
     
     /**
-     * Generate booking file content
+     * Generate booking file PDF
      *
      * @param \App\Models\Inquiry $inquiry
      * @return string
      */
-    private function generateBookingFileContent($inquiry): string
+    private function generateBookingFilePDF($inquiry): string
     {
-        $content = "BOOKING CONFIRMATION\n";
-        $content .= "==================\n\n";
-        $content .= "Booking ID: #{$inquiry->id}\n";
-        $content .= "Date: " . now()->format('Y-m-d H:i:s') . "\n\n";
-        $content .= "Customer Information:\n";
-        $content .= "Name: {$inquiry->name}\n";
-        $content .= "Email: {$inquiry->email}\n";
-        $content .= "Phone: {$inquiry->phone}\n\n";
-        $content .= "Inquiry Details:\n";
-        $content .= "Subject: {$inquiry->subject}\n";
-        $content .= "Message: {$inquiry->message}\n\n";
-        $content .= "Status: Confirmed\n";
-        $content .= "Confirmed At: " . $inquiry->confirmed_at->format('Y-m-d H:i:s') . "\n\n";
-        
-        if ($inquiry->assignedUser) {
-            $content .= "Assigned To: {$inquiry->assignedUser->name}\n";
-        }
-        
-        if ($inquiry->admin_notes) {
-            $content .= "Admin Notes: {$inquiry->admin_notes}\n";
-        }
-        
-        $content .= "\n\nThis booking has been confirmed and is ready for processing.\n";
-        $content .= "Generated on: " . now()->format('Y-m-d H:i:s') . "\n";
-        
-        return $content;
+        $data = [
+            'inquiry' => $inquiry,
+            'generated_at' => now(),
+            'booking_id' => $inquiry->id,
+        ];
+
+        $pdf = Pdf::loadView('emails.booking-confirmation-pdf', $data);
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'Arial',
+        ]);
+
+        return $pdf->output();
     }
 }

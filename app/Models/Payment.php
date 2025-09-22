@@ -96,5 +96,10 @@ class Payment extends Model
             'status' => PaymentStatus::PAID,
             'paid_at' => now(),
         ]);
+        
+        // Sync with booking file if exists
+        if ($this->booking) {
+            $this->booking->syncPaymentData();
+        }
     }
 }

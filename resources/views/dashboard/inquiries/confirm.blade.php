@@ -30,7 +30,7 @@
                             <div class="row mb-4">
                                 <div class="col-md-12">
                                     <h6>Inquiry Details:</h6>
-                                    <div class="border p-3 rounded bg-light">
+                                    <div class="border p-3 rounded bg-dark">
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <strong>Guest Name:</strong> {{ $inquiry->guest_name }}<br>

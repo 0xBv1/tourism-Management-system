@@ -29,46 +29,71 @@
                             <form action="{{ route('dashboard.inquiries.update', $inquiry) }}" method="POST">
                                 @csrf
                                 @method('PUT')
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="guest_name" class="form-label">Guest Name <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control @error('guest_name') is-invalid @enderror" 
-                                                   id="guest_name" name="guest_name" value="{{ old('guest_name', $inquiry->guest_name) }}" required>
-                                            @error('guest_name')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                @if(!admin()->hasRole(['Reservation', 'Operation']))
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="guest_name" class="form-label">Guest Name <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control @error('guest_name') is-invalid @enderror" 
+                                                       id="guest_name" name="guest_name" value="{{ old('guest_name', $inquiry->guest_name) }}" required>
+                                                @error('guest_name')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                                <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                                                       id="email" name="email" value="{{ old('email', $inquiry->email) }}" required>
+                                                @error('email')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                            <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                                   id="email" name="email" value="{{ old('email', $inquiry->email) }}" required>
-                                            @error('email')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control @error('phone') is-invalid @enderror" 
+                                                       id="phone" name="phone" value="{{ old('phone', $inquiry->phone) }}" required>
+                                                @error('phone')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @else
+                                    <div class="alert alert-warning">
+                                        <i class="fa fa-lock"></i>
+                                        <strong>Access Restricted:</strong> You cannot edit personal guest information with your current role.
+                                    </div>
+                                    
+                                    <!-- Hidden fields to maintain form data -->
+                                    <input type="hidden" name="guest_name" value="{{ $inquiry->guest_name }}">
+                                    <input type="hidden" name="email" value="{{ $inquiry->email }}">
+                                    <input type="hidden" name="phone" value="{{ $inquiry->phone }}">
+                                @endif
                                 
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                                   id="phone" name="phone" value="{{ old('phone', $inquiry->phone) }}" required>
-                                            @error('phone')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="arrival_date" class="form-label">Arrival Date</label>
                                             <input type="date" class="form-control @error('arrival_date') is-invalid @enderror" 
                                                    id="arrival_date" name="arrival_date" value="{{ old('arrival_date', $inquiry->arrival_date?->format('Y-m-d')) }}">
                                             @error('arrival_date')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="departure_date" class="form-label">Departure Date</label>
+                                            <input type="date" class="form-control @error('departure_date') is-invalid @enderror" 
+                                                   id="departure_date" name="departure_date" value="{{ old('departure_date', $inquiry->departure_date?->format('Y-m-d')) }}">
+                                            @error('departure_date')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -138,37 +163,20 @@
                                 </div>
 
                                 @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="assigned_role" class="form-label">Assign to Role</label>
-                                                <select class="form-control @error('assigned_role') is-invalid @enderror" 
-                                                        id="assigned_role" name="assigned_role">
-                                                    <option value="">Select Role</option>
-                                                    <option value="Administrator" {{ old('assigned_role', $inquiry->assignedUser?->roles->first()?->name) == 'Administrator' ? 'selected' : '' }}>Administrator</option>
-                                                    <option value="Admin" {{ old('assigned_role', $inquiry->assignedUser?->roles->first()?->name) == 'Admin' ? 'selected' : '' }}>Admin</option>
-                                                    <option value="Sales" {{ old('assigned_role', $inquiry->assignedUser?->roles->first()?->name) == 'Sales' ? 'selected' : '' }}>Sales</option>
-                                                    <option value="Reservation" {{ old('assigned_role', $inquiry->assignedUser?->roles->first()?->name) == 'Reservation' ? 'selected' : '' }}>Reservation</option>
-                                                    <option value="Operation" {{ old('assigned_role', $inquiry->assignedUser?->roles->first()?->name) == 'Operation' ? 'selected' : '' }}>Operation</option>
-                                                    <option value="Finance" {{ old('assigned_role', $inquiry->assignedUser?->roles->first()?->name) == 'Finance' ? 'selected' : '' }}>Finance</option>
-                                                </select>
-                                                @error('assigned_role')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="assigned_to" class="form-label">Assign to User</label>
-                                                <select class="form-control @error('assigned_to') is-invalid @enderror" 
-                                                        id="assigned_to" name="assigned_to" disabled>
-                                                    <option value="">Select Role First</option>
-                                                </select>
-                                                @error('assigned_to')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
+                                    <div class="mb-3">
+                                        <label for="assigned_to" class="form-label">Assign to User</label>
+                                        <select class="form-control @error('assigned_to') is-invalid @enderror" 
+                                                id="assigned_to" name="assigned_to">
+                                            <option value="">Select User</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}" {{ old('assigned_to', $inquiry->assigned_to) == $user->id ? 'selected' : '' }}>
+                                                    {{ $user->name }} - {{ $user->roles->first()?->name ?? 'No Role' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('assigned_to')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 @endif
 
@@ -187,108 +195,6 @@
     </div>
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const roleSelect = document.getElementById('assigned_role');
-    const userSelect = document.getElementById('assigned_to');
-    
-    // Store all users data
-    const allUsers = @json($users->map(function($user) {
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'roles' => $user->roles->pluck('name')->toArray()
-        ];
-    }));
-    
-    // Current assigned user data
-    const currentAssignedUser = @json($inquiry->assignedUser ? [
-        'id' => $inquiry->assignedUser->id,
-        'name' => $inquiry->assignedUser->name,
-        'roles' => $inquiry->assignedUser->roles->pluck('name')->toArray()
-    ] : null);
-    
-    // Initialize on page load
-    function initializeUserSelect() {
-        const selectedRole = roleSelect.value;
-        userSelect.innerHTML = '<option value="">Select User</option>';
-        
-        if (selectedRole) {
-            userSelect.disabled = false;
-            
-            // Filter users by selected role
-            const filteredUsers = allUsers.filter(user => 
-                user.roles.includes(selectedRole)
-            );
-            
-            filteredUsers.forEach(user => {
-                const option = document.createElement('option');
-                option.value = user.id;
-                option.textContent = user.name;
-                
-                // Select current assigned user if it matches
-                if (currentAssignedUser && user.id == currentAssignedUser.id) {
-                    option.selected = true;
-                }
-                
-                userSelect.appendChild(option);
-            });
-            
-            if (filteredUsers.length === 0) {
-                userSelect.innerHTML = '<option value="">No users found for this role</option>';
-                userSelect.disabled = true;
-            }
-        } else {
-            userSelect.disabled = true;
-            userSelect.innerHTML = '<option value="">Select Role First</option>';
-        }
-    }
-    
-    // Initialize on page load
-    initializeUserSelect();
-    
-    roleSelect.addEventListener('change', function() {
-        const selectedRole = this.value;
-        userSelect.innerHTML = '<option value="">Select User</option>';
-        
-        if (selectedRole) {
-            userSelect.disabled = false;
-            
-            // Filter users by selected role
-            const filteredUsers = allUsers.filter(user => 
-                user.roles.includes(selectedRole)
-            );
-            
-            filteredUsers.forEach(user => {
-                const option = document.createElement('option');
-                option.value = user.id;
-                option.textContent = user.name;
-                userSelect.appendChild(option);
-            });
-            
-            if (filteredUsers.length === 0) {
-                userSelect.innerHTML = '<option value="">No users found for this role</option>';
-                userSelect.disabled = true;
-            }
-        } else {
-            userSelect.disabled = true;
-            userSelect.innerHTML = '<option value="">Select Role First</option>';
-        }
-    });
-    
-    // Handle form submission - ensure user is selected if role is selected
-    const form = document.querySelector('form');
-    form.addEventListener('submit', function(e) {
-        if (roleSelect.value && !userSelect.value) {
-            e.preventDefault();
-            alert('Please select a user after selecting a role.');
-            userSelect.focus();
-        }
-    });
-});
-</script>
-@endpush
 
 
 

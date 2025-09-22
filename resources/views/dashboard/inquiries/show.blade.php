@@ -17,12 +17,7 @@
                     <div class="card">
                         <div class="card-header">
                             <h5>{{ $inquiry->inquiry_id ?? 'Inquiry #' . $inquiry->id }}</h5>
-                            @if(admin()->roles->count() > 0)
-                                <small class="text-muted">
-                                    <i class="fa fa-user-tag"></i> 
-                                    Role: {{ admin()->roles->pluck('name')->join(', ') }}
-                                </small>
-                            @endif
+                            
                             <div class="card-header-right">
                                 <div class="btn-group">
                                     @if(admin()->can('inquiries.edit'))
@@ -48,32 +43,48 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-8">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Guest Name:</label>
-                                                <p class="form-control-plaintext">{{ $inquiry->guest_name }}</p>
+                                    @if(!admin()->hasRole(['Reservation', 'Operation']))
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Guest Name:</label>
+                                                    <p class="form-control-plaintext">{{ $inquiry->guest_name }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Email:</label>
+                                                    <p class="form-control-plaintext">{{ $inquiry->email }}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Email:</label>
-                                                <p class="form-control-plaintext">{{ $inquiry->email }}</p>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Phone:</label>
+                                                    <p class="form-control-plaintext">{{ $inquiry->phone }}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    @else
+                                        <div class="alert alert-info">
+                                            <i class="fa fa-info-circle"></i>
+                                            <strong>Access Restricted:</strong> Personal guest information is not available for your role.
+                                        </div>
+                                    @endif
                                     
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label fw-bold">Phone:</label>
-                                                <p class="form-control-plaintext">{{ $inquiry->phone }}</p>
+                                                <label class="form-label fw-bold">Arrival Date:</label>
+                                                <p class="form-control-plaintext">{{ $inquiry->arrival_date?->format('M d, Y') ?? 'Not specified' }}</p>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label fw-bold">Arrival Date:</label>
-                                                <p class="form-control-plaintext">{{ $inquiry->arrival_date?->format('M d, Y') ?? 'Not specified' }}</p>
+                                                <label class="form-label fw-bold">Departure Date:</label>
+                                                <p class="form-control-plaintext">{{ $inquiry->departure_date?->format('M d, Y') ?? 'Not specified' }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -117,10 +128,12 @@
                                         <p class="form-control-plaintext">{{ $inquiry->subject }}</p>
                                     </div>
 
+                                    {{-- Payment Information section hidden as requested --}}
+                                    {{-- 
                                     @if($inquiry->status->value === 'confirmed' && ($inquiry->total_amount || $inquiry->paid_amount || $inquiry->payment_method))
                                         <div class="mb-3">
                                             <label class="form-label fw-bold">Payment Information:</label>
-                                            <div class="border p-3 rounded bg-light">
+                                            <div class="border p-3 rounded bg-dark">
                                                 <div class="row">
                                                     @if($inquiry->total_amount)
                                                         <div class="col-md-4">
@@ -149,6 +162,7 @@
                                             </div>
                                         </div>
                                     @endif
+                                    --}}
 
                                 </div>
                                 
