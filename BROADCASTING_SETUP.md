@@ -91,3 +91,4 @@ php artisan queue:work
 1. **Messages not appearing in real-time**: Check if broadcasting is enabled and queue is running
 2. **Authentication errors**: Ensure user is properly authenticated
 3. **CORS issues**: Configure CORS settings in `config/cors.php`
+

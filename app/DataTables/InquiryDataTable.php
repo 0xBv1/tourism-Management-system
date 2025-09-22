@@ -18,6 +18,7 @@ class InquiryDataTable extends DataTable
             ->editColumn('status', fn(Inquiry $inquiry) => '<span class="badge badge-' . $this->getStatusColor($inquiry->status->value) . '">' . ucfirst($inquiry->status->value) . '</span>')
             ->editColumn('created_at', fn(Inquiry $inquiry) => $inquiry->created_at->format('M Y, d'))
             ->editColumn('assigned_to', fn(Inquiry $inquiry) => $inquiry->assignedUser?->name ?? 'Unassigned')
+            ->editColumn('arrival_date', fn(Inquiry $inquiry) => $inquiry->arrival_date?->format('M d, Y') ?? 'Not set')
             ->addColumn('action', 'dashboard.inquiries.action')
             ->setRowId('id')
             ->rawColumns(['action', 'status']);
@@ -58,10 +59,13 @@ class InquiryDataTable extends DataTable
     {
         return [
             Column::make('id'),
-            Column::make('name'),
+            Column::make('guest_name')->title('Guest Name'),
             Column::make('email'),
             Column::make('phone'),
-            Column::make('subject'),
+            Column::make('tour_name')->title('Tour Name'),
+            Column::make('arrival_date')->title('Arrival Date'),
+            Column::make('number_pax')->title('Pax'),
+            Column::make('nationality'),
             Column::make('status'),
             Column::make('assigned_to'),
             Column::make('created_at'),
@@ -84,7 +88,6 @@ class InquiryDataTable extends DataTable
             'pending' => 'warning',
             'confirmed' => 'success',
             'cancelled' => 'danger',
-            'completed' => 'info',
             default => 'secondary'
         };
     }

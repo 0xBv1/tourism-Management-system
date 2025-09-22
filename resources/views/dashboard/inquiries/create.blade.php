@@ -30,10 +30,10 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                                   id="name" name="name" value="{{ old('name') }}" required>
-                                            @error('name')
+                                            <label for="guest_name" class="form-label">Guest Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control @error('guest_name') is-invalid @enderror" 
+                                                   id="guest_name" name="guest_name" value="{{ old('guest_name') }}" required>
+                                            @error('guest_name')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -57,6 +57,52 @@
                                             <input type="text" class="form-control @error('phone') is-invalid @enderror" 
                                                    id="phone" name="phone" value="{{ old('phone') }}" required>
                                             @error('phone')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="arrival_date" class="form-label">Arrival Date</label>
+                                            <input type="date" class="form-control @error('arrival_date') is-invalid @enderror" 
+                                                   id="arrival_date" name="arrival_date" value="{{ old('arrival_date') }}">
+                                            @error('arrival_date')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="number_pax" class="form-label">Number of Pax</label>
+                                            <input type="number" class="form-control @error('number_pax') is-invalid @enderror" 
+                                                   id="number_pax" name="number_pax" value="{{ old('number_pax') }}" min="1">
+                                            @error('number_pax')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="tour_name" class="form-label">Tour Name</label>
+                                            <input type="text" class="form-control @error('tour_name') is-invalid @enderror" 
+                                                   id="tour_name" name="tour_name" value="{{ old('tour_name') }}">
+                                            @error('tour_name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="nationality" class="form-label">Nationality</label>
+                                            <input type="text" class="form-control @error('nationality') is-invalid @enderror" 
+                                                   id="nationality" name="nationality" value="{{ old('nationality') }}">
+                                            @error('nationality')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -89,28 +135,32 @@
                                     @enderror
                                 </div>
 
-                                <div class="mb-3">
-                                    <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
-                                    <textarea class="form-control @error('message') is-invalid @enderror" 
-                                              id="message" name="message" rows="5" required>{{ old('message') }}</textarea>
-                                    @error('message')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
                                 @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label for="assigned_to" class="form-label">Assign To</label>
+                                                <label for="assigned_role" class="form-label">Assign to Role</label>
+                                                <select class="form-control @error('assigned_role') is-invalid @enderror" 
+                                                        id="assigned_role" name="assigned_role">
+                                                    <option value="">Select Role</option>
+                                                    <option value="Administrator" {{ old('assigned_role') == 'Administrator' ? 'selected' : '' }}>Administrator</option>
+                                                    <option value="Admin" {{ old('assigned_role') == 'Admin' ? 'selected' : '' }}>Admin</option>
+                                                    <option value="Sales" {{ old('assigned_role') == 'Sales' ? 'selected' : '' }}>Sales</option>
+                                                    <option value="Reservation" {{ old('assigned_role') == 'Reservation' ? 'selected' : '' }}>Reservation</option>
+                                                    <option value="Operation" {{ old('assigned_role') == 'Operation' ? 'selected' : '' }}>Operation</option>
+                                                    <option value="Finance" {{ old('assigned_role') == 'Finance' ? 'selected' : '' }}>Finance</option>
+                                                </select>
+                                                @error('assigned_role')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="assigned_to" class="form-label">Assign to User</label>
                                                 <select class="form-control @error('assigned_to') is-invalid @enderror" 
-                                                        id="assigned_to" name="assigned_to">
-                                                    <option value="">Select User</option>
-                                                    @foreach($users as $user)
-                                                        <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
-                                                            {{ $user->name }}
-                                                        </option>
-                                                    @endforeach
+                                                        id="assigned_to" name="assigned_to" disabled>
+                                                    <option value="">Select Role First</option>
                                                 </select>
                                                 @error('assigned_to')
                                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -120,16 +170,6 @@
                                     </div>
                                 @endif
 
-                                @if(admin()->can('inquiries.edit'))
-                                    <div class="mb-3">
-                                        <label for="admin_notes" class="form-label">Admin Notes</label>
-                                        <textarea class="form-control @error('admin_notes') is-invalid @enderror" 
-                                                  id="admin_notes" name="admin_notes" rows="3">{{ old('admin_notes') }}</textarea>
-                                        @error('admin_notes')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                @endif
 
                                 <div class="text-end">
                                     <a href="{{ route('dashboard.inquiries.index') }}" class="btn btn-secondary me-2">Cancel</a>
@@ -144,6 +184,64 @@
         <!-- Container-fluid Ends-->
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('assigned_role');
+    const userSelect = document.getElementById('assigned_to');
+    
+    // Store all users data
+    const allUsers = @json($users->map(function($user) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'roles' => $user->roles->pluck('name')->toArray()
+        ];
+    }));
+    
+    roleSelect.addEventListener('change', function() {
+        const selectedRole = this.value;
+        userSelect.innerHTML = '<option value="">Select User</option>';
+        
+        if (selectedRole) {
+            userSelect.disabled = false;
+            
+            // Filter users by selected role
+            const filteredUsers = allUsers.filter(user => 
+                user.roles.includes(selectedRole)
+            );
+            
+            filteredUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.name;
+                userSelect.appendChild(option);
+            });
+            
+            if (filteredUsers.length === 0) {
+                userSelect.innerHTML = '<option value="">No users found for this role</option>';
+                userSelect.disabled = true;
+            }
+        } else {
+            userSelect.disabled = true;
+            userSelect.innerHTML = '<option value="">Select Role First</option>';
+        }
+    });
+    
+    // Handle form submission - ensure user is selected if role is selected
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        if (roleSelect.value && !userSelect.value) {
+            e.preventDefault();
+            alert('Please select a user after selecting a role.');
+            userSelect.focus();
+        }
+    });
+});
+</script>
+@endpush
+
 
 
 

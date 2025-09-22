@@ -10,7 +10,6 @@ use App\Http\Requests\Dashboard\InquiryRequest;
 use App\Models\Inquiry;
 use App\Models\User;
 use App\Enums\InquiryStatus;
-use App\Notifications\InquiryUserConfirmationNotification;
 
 class InquiryController extends Controller
 {
@@ -31,7 +30,7 @@ class InquiryController extends Controller
      */
     public function create()
     {
-        $users = User::all();
+        $users = User::with('roles')->get();
         $statuses = InquiryStatus::options();
         return view('dashboard.inquiries.create', compact('users', 'statuses'));
     }
@@ -44,7 +43,15 @@ class InquiryController extends Controller
      */
     public function store(InquiryRequest $request)
     {
-        $inquiry = Inquiry::create($request->getSanitized());
+        $data = $request->getSanitized();
+        
+        // Remove assigned_role from data as we don't store it in the database
+        unset($data['assigned_role']);
+        
+        // Payment fields are not required in create form, so we don't need to calculate remaining amount here
+        // This will be handled in the confirmation process
+        
+        $inquiry = Inquiry::create($data);
         
         // Fire event for new inquiry notification
         event(new NewInquiryCreated($inquiry));
@@ -62,8 +69,8 @@ class InquiryController extends Controller
      */
     public function show(Inquiry $inquiry)
     {
-        $inquiry->load(['client', 'assignedUser']);
-        $users = User::all();
+        $inquiry->load(['client', 'assignedUser.roles']);
+        $users = User::with('roles')->get();
         $statuses = InquiryStatus::options();
         return view('dashboard.inquiries.show', compact('inquiry', 'users', 'statuses'));
     }
@@ -76,7 +83,7 @@ class InquiryController extends Controller
      */
     public function edit(Inquiry $inquiry)
     {
-        $users = User::all();
+        $users = User::with('roles')->get();
         $statuses = InquiryStatus::options();
         return view('dashboard.inquiries.edit', compact('inquiry', 'users', 'statuses'));
     }
@@ -93,19 +100,11 @@ class InquiryController extends Controller
         $oldStatus = $inquiry->status;
         $data = $request->getSanitized();
         
-        // Check if confirmation users are being changed
-        $confirmationUsersChanged = false;
-        if (isset($data['user1_id']) || isset($data['user2_id'])) {
-            $newUser1Id = $data['user1_id'] ?? $inquiry->user1_id;
-            $newUser2Id = $data['user2_id'] ?? $inquiry->user2_id;
-            
-            if ($newUser1Id !== $inquiry->user1_id || $newUser2Id !== $inquiry->user2_id) {
-                $confirmationUsersChanged = true;
-                // Reset confirmation status when users change
-                $data['user1_confirmed_at'] = null;
-                $data['user2_confirmed_at'] = null;
-            }
-        }
+        // Remove assigned_role from data as we don't store it in the database
+        unset($data['assigned_role']);
+        
+        // Payment fields are not required in edit form, so we don't need to calculate remaining amount here
+        // This will be handled in the confirmation process
         
         $inquiry->update($data);
         
@@ -115,17 +114,7 @@ class InquiryController extends Controller
             event(new InquiryConfirmed($inquiry));
         }
         
-        // Update completed_at if status is completed
-        if ($inquiry->status === InquiryStatus::COMPLETED) {
-            $inquiry->update(['completed_at' => now()]);
-        }
-        
-        $message = 'Inquiry Updated Successfully!';
-        if ($confirmationUsersChanged) {
-            $message .= ' Confirmation users have been updated and confirmation status has been reset.';
-        }
-        
-        session()->flash('message', $message);
+        session()->flash('message', 'Inquiry Updated Successfully!');
         session()->flash('type', 'success');
         return redirect()->route('dashboard.inquiries.show', $inquiry);
     }
@@ -145,101 +134,69 @@ class InquiryController extends Controller
     }
 
     /**
-     * Confirm an inquiry by current user
+     * Confirm an inquiry
      *
      * @param  \App\Models\Inquiry  $inquiry
      * @return \Illuminate\Http\Response
      */
     public function confirm(Inquiry $inquiry)
     {
-        $userId = auth()->id();
+        $inquiry->update([
+            'status' => InquiryStatus::CONFIRMED,
+            'confirmed_at' => now()
+        ]);
         
-        // Check if confirmation users are set
-        if (!$inquiry->user1_id || !$inquiry->user2_id) {
-            session()->flash('message', 'Confirmation users have not been assigned to this inquiry. Please contact an administrator to assign confirmation users.');
-            session()->flash('type', 'warning');
-            return back();
-        }
+        event(new InquiryConfirmed($inquiry));
         
-        // Check if user is assigned to this inquiry
-        if ($inquiry->user1_id !== $userId && $inquiry->user2_id !== $userId) {
-            session()->flash('message', 'You are not authorized to confirm this inquiry! Only the assigned confirmation users can confirm this inquiry.');
-            session()->flash('type', 'error');
-            return back();
-        }
-        
-        // Check if user has already confirmed
-        if ($inquiry->hasUserConfirmed($userId)) {
-            session()->flash('message', 'You have already confirmed this inquiry!');
-            session()->flash('type', 'warning');
-            return back();
-        }
-        
-        // Confirm by user
-        $confirmed = $inquiry->confirmByUser($userId);
-        
-        if ($confirmed) {
-            // Get the other user to notify
-            $otherUserId = ($inquiry->user1_id === $userId) ? $inquiry->user2_id : $inquiry->user1_id;
-            $otherUser = User::find($otherUserId);
-            
-            // Check if both users have confirmed
-            if ($inquiry->isFullyConfirmed()) {
-                $inquiry->update([
-                    'status' => InquiryStatus::CONFIRMED,
-                    'confirmed_at' => now()
-                ]);
-                
-                event(new InquiryConfirmed($inquiry));
-                
-                // Notify both users that inquiry is fully confirmed
-                if ($otherUser) {
-                    $otherUser->notify(new InquiryUserConfirmationNotification($inquiry, auth()->user(), true));
-                }
-                auth()->user()->notify(new InquiryUserConfirmationNotification($inquiry, auth()->user(), true));
-                
-                session()->flash('message', 'Inquiry fully confirmed by both users!');
-                session()->flash('type', 'success');
-            } else {
-                // Notify the other user about the confirmation
-                if ($otherUser) {
-                    $otherUser->notify(new InquiryUserConfirmationNotification($inquiry, auth()->user(), false));
-                }
-                
-                session()->flash('message', 'Your confirmation has been recorded. Waiting for the other user to confirm.');
-                session()->flash('type', 'info');
-            }
-        } else {
-            session()->flash('message', 'Failed to confirm inquiry!');
-            session()->flash('type', 'error');
-        }
-        
+        session()->flash('message', 'Inquiry Confirmed Successfully!');
+        session()->flash('type', 'success');
         return back();
     }
 
     /**
-     * Set users for confirmation (admin only)
+     * Show confirmation form with payment details
+     *
+     * @param  \App\Models\Inquiry  $inquiry
+     * @return \Illuminate\Http\Response
+     */
+    public function showConfirmForm(Inquiry $inquiry)
+    {
+        $inquiry->load(['client', 'assignedUser.roles']);
+        $users = User::with('roles')->get();
+        $statuses = InquiryStatus::options();
+        return view('dashboard.inquiries.confirm', compact('inquiry', 'users', 'statuses'));
+    }
+
+    /**
+     * Process confirmation with payment details
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Inquiry  $inquiry
      * @return \Illuminate\Http\Response
      */
-    public function setConfirmationUsers(Request $request, Inquiry $inquiry)
+    public function processConfirmation(Request $request, Inquiry $inquiry)
     {
         $request->validate([
-            'user1_id' => 'required|exists:users,id',
-            'user2_id' => 'required|exists:users,id|different:user1_id',
+            'total_amount' => 'required|numeric|min:0',
+            'paid_amount' => 'required|numeric|min:0|max:' . $request->total_amount,
+            'payment_method' => 'required|string|max:50',
         ]);
-        
+
+        $remainingAmount = $request->total_amount - $request->paid_amount;
+
         $inquiry->update([
-            'user1_id' => $request->user1_id,
-            'user2_id' => $request->user2_id,
-            'user1_confirmed_at' => null,
-            'user2_confirmed_at' => null,
+            'status' => InquiryStatus::CONFIRMED,
+            'total_amount' => $request->total_amount,
+            'paid_amount' => $request->paid_amount,
+            'remaining_amount' => $remainingAmount,
+            'payment_method' => $request->payment_method,
+            'confirmed_at' => now()
         ]);
         
-        session()->flash('message', 'Confirmation users set successfully!');
+        event(new InquiryConfirmed($inquiry));
+        
+        session()->flash('message', 'Inquiry Confirmed with Payment Details Successfully!');
         session()->flash('type', 'success');
-        return back();
+        return redirect()->route('dashboard.inquiries.show', $inquiry);
     }
 }

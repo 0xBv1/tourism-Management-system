@@ -26,16 +26,21 @@ class InquiryRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            "name" => "Name",
+            "guest_name" => "Guest Name",
             "email" => "Email",
             "phone" => "Phone",
+            "arrival_date" => "Arrival Date",
+            "number_pax" => "Number of Pax",
+            "tour_name" => "Tour Name",
+            "nationality" => "Nationality",
             "subject" => "Subject",
-            "message" => "Message",
             "status" => "Status",
-            "admin_notes" => "Admin Notes",
+            "assigned_role" => "Assigned Role",
             "assigned_to" => "Assigned To",
-            "user1_id" => "Confirmation User 1",
-            "user2_id" => "Confirmation User 2",
+            "total_amount" => "Total Amount",
+            "paid_amount" => "Paid Amount",
+            "remaining_amount" => "Remaining Amount",
+            "payment_method" => "Payment Method",
         ];
     }
 
@@ -47,16 +52,21 @@ class InquiryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'guest_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
+            'arrival_date' => ['nullable', 'date', 'after_or_equal:today'],
+            'number_pax' => ['nullable', 'integer', 'min:1'],
+            'tour_name' => ['nullable', 'string', 'max:255'],
+            'nationality' => ['nullable', 'string', 'max:100'],
             'subject' => ['required', 'string', 'max:255'],
-            'message' => ['required', 'string'],
             'status' => ['required', Rule::enum(InquiryStatus::class)],
-            'admin_notes' => ['nullable', 'string'],
+            'assigned_role' => ['nullable', 'string', 'in:Administrator,Admin,Sales,Reservation,Operation,Finance'],
             'assigned_to' => ['nullable', 'exists:users,id'],
-            'user1_id' => ['nullable', 'exists:users,id'],
-            'user2_id' => ['nullable', 'exists:users,id', 'different:user1_id'],
+            'total_amount' => ['nullable', 'numeric', 'min:0'],
+            'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            'remaining_amount' => ['nullable', 'numeric'],
+            'payment_method' => ['nullable', 'string', 'max:50'],
         ];
     }
 

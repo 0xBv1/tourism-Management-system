@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -69,16 +69,6 @@ return [
 
         'array' => [
             'transport' => 'array',
-        ],
-
-        'mailpit' => [
-            'transport' => 'smtp',
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 1025),
-            'encryption' => null,
-            'username' => null,
-            'password' => null,
-            'timeout' => null,
         ],
 
         'failover' => [

@@ -14,32 +14,35 @@ class Inquiry extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
+        'inquiry_id',
+        'guest_name',
         'email',
         'phone',
+        'arrival_date',
+        'number_pax',
+        'tour_name',
+        'nationality',
         'subject',
-        'message',
         'status',
-        'admin_notes',
         'client_id',
         'assigned_to',
         'booking_file_id',
+        'total_amount',
+        'paid_amount',
+        'remaining_amount',
+        'payment_method',
         'confirmed_at',
         'completed_at',
-        'user_confirmations',
-        'user1_confirmed_at',
-        'user2_confirmed_at',
-        'user1_id',
-        'user2_id',
     ];
 
     protected $casts = [
         'status' => InquiryStatus::class,
+        'arrival_date' => 'date',
+        'total_amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
         'confirmed_at' => 'datetime',
         'completed_at' => 'datetime',
-        'user_confirmations' => 'array',
-        'user1_confirmed_at' => 'datetime',
-        'user2_confirmed_at' => 'datetime',
     ];
 
     public function client(): BelongsTo
@@ -50,16 +53,6 @@ class Inquiry extends Model
     public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
-    }
-
-    public function user1(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user1_id');
-    }
-
-    public function user2(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user2_id');
     }
 
     public function bookingFile(): BelongsTo
@@ -82,10 +75,6 @@ class Inquiry extends Model
         return $query->where('status', InquiryStatus::CONFIRMED);
     }
 
-    public function scopeCompleted($query)
-    {
-        return $query->where('status', InquiryStatus::COMPLETED);
-    }
 
     public function scopeCancelled($query)
     {
@@ -93,60 +82,40 @@ class Inquiry extends Model
     }
 
     /**
-     * Check if both users have confirmed
+     * Generate custom inquiry ID
      */
-    public function isFullyConfirmed(): bool
+    public function generateInquiryId(): string
     {
-        return $this->user1_confirmed_at !== null && $this->user2_confirmed_at !== null;
+        $guestName = str_replace(' ', '', $this->guest_name);
+        $nationality = str_replace(' ', '', $this->nationality);
+        return "Inquiry #{$this->id}.{$guestName}.{$nationality}";
     }
 
     /**
-     * Check if a specific user has confirmed
+     * Calculate remaining amount
      */
-    public function hasUserConfirmed(int $userId): bool
+    public function calculateRemainingAmount(): float
     {
-        if ($this->user1_id === $userId) {
-            return $this->user1_confirmed_at !== null;
-        }
-        
-        if ($this->user2_id === $userId) {
-            return $this->user2_confirmed_at !== null;
-        }
-        
-        return false;
+        return $this->total_amount - $this->paid_amount;
     }
 
     /**
-     * Confirm by a specific user
+     * Boot method to set inquiry_id and calculate remaining amount
      */
-    public function confirmByUser(int $userId): bool
+    protected static function boot()
     {
-        if ($this->user1_id === $userId) {
-            $this->update(['user1_confirmed_at' => now()]);
-            return true;
-        }
-        
-        if ($this->user2_id === $userId) {
-            $this->update(['user2_confirmed_at' => now()]);
-            return true;
-        }
-        
-        return false;
-    }
+        parent::boot();
 
-    /**
-     * Get confirmation status for display
-     */
-    public function getConfirmationStatus(): array
-    {
-        return [
-            'user1_confirmed' => $this->user1_confirmed_at !== null,
-            'user2_confirmed' => $this->user2_confirmed_at !== null,
-            'fully_confirmed' => $this->isFullyConfirmed(),
-            'user1_name' => $this->user1?->name ?? 'User 1',
-            'user2_name' => $this->user2?->name ?? 'User 2',
-            'user1_confirmed_at' => $this->user1_confirmed_at,
-            'user2_confirmed_at' => $this->user2_confirmed_at,
-        ];
+        static::created(function ($inquiry) {
+            if (empty($inquiry->inquiry_id)) {
+                $inquiry->update(['inquiry_id' => $inquiry->generateInquiryId()]);
+            }
+        });
+
+        static::updating(function ($inquiry) {
+            if ($inquiry->total_amount && $inquiry->paid_amount) {
+                $inquiry->remaining_amount = $inquiry->calculateRemainingAmount();
+            }
+        });
     }
 }

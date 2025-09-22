@@ -253,3 +253,4 @@ Potential improvements for future versions:
 ## 🎉 Success!
 
 The chat system is now fully implemented and ready for use! Users with Sales, Reservation, or Operation roles can now communicate seamlessly within each Inquiry, improving collaboration and customer service efficiency.
+

@@ -41,18 +41,10 @@ class ChatController extends Controller
     /**
      * Store a newly created chat message.
      */
-public function store(Request $request, Inquiry $inquiry): JsonResponse
+    public function store(Request $request, Inquiry $inquiry): JsonResponse
     {
         try {
             $this->authorize('view', $inquiry);
-
-            // Check if inquiry is confirmed - disable chat for confirmed inquiries
-            if ($inquiry->status->value === 'confirmed') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Chat is disabled for confirmed inquiries. No new messages can be sent.'
-                ], 403);
-            }
 
             $request->validate([
                 'message' => 'required|string|max:1000'

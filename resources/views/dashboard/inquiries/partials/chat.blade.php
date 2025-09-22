@@ -2,63 +2,41 @@
     <div class="card-header">
         <h6 class="mb-0">
             <i class="fa fa-comments"></i> Chat Messages
-            @if($inquiry->status->value === 'confirmed')
-                <span class="badge badge-warning ms-2">
-                    <i class="fa fa-lock"></i> Closed
-                </span>
-            @else
-                <span class="badge badge-primary ms-2" id="unread-count">0</span>
-            @endif
+            <span class="badge badge-primary ms-2" id="unread-count">0</span>
         </h6>
     </div>
     <div class="card-body">
         <!-- Chat Messages Container -->
         <div id="chat-messages" class="chat-messages" style="height: 400px; overflow-y: auto; border: 1px solid #e9ecef; padding: 15px; margin-bottom: 15px; background-color: #f8f9fa;">
-            @if($inquiry->status->value === 'confirmed')
-                <div class="text-center text-muted py-4">
-                    <i class="fa fa-lock fa-2x mb-2"></i>
-                    <p class="mb-0">Chat has been closed for this confirmed inquiry</p>
-                    <small>Previous messages are shown below for reference</small>
-                </div>
-            @endif
             <!-- Messages will be loaded here via AJAX -->
         </div>
 
         @if(admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
-            @if($inquiry->status->value === 'confirmed')
-                <!-- Chat Disabled for Confirmed Inquiries -->
-                <div class="alert alert-warning">
-                    <i class="fa fa-lock"></i> 
-                    <strong>Chat Disabled:</strong> This inquiry has been confirmed and chat is no longer available.
-                    <br><small class="text-muted">Chat is automatically disabled once an inquiry reaches confirmed status.</small>
+            <!-- Chat Input Form -->
+            <form id="chat-form" class="d-flex">
+                @csrf
+                <div class="flex-grow-1 me-2">
+                    <textarea 
+                        id="chat-message" 
+                        name="message" 
+                        class="form-control" 
+                        rows="2" 
+                        placeholder="Type your message here..." 
+                        required
+                        maxlength="1000"
+                    ></textarea>
                 </div>
-            @else
-                <!-- Chat Input Form -->
-                <form id="chat-form" class="d-flex">
-                    @csrf
-                    <div class="flex-grow-1 me-2">
-                        <textarea 
-                            id="chat-message" 
-                            name="message" 
-                            class="form-control" 
-                            rows="2" 
-                            placeholder="Type your message here..." 
-                            required
-                            maxlength="1000"
-                        ></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="send-btn">
-                        <i class="fa fa-paper-plane"></i> Send
-                    </button>
-                </form>
+                <button type="submit" class="btn btn-primary" id="send-btn">
+                    <i class="fa fa-paper-plane"></i> Send
+                </button>
+            </form>
 
-                <!-- Mark All as Read Button -->
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="mark-all-read-btn">
-                        <i class="fa fa-check-double"></i> Mark All as Read
-                    </button>
-                </div>
-            @endif
+            <!-- Mark All as Read Button -->
+            <div class="mt-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="mark-all-read-btn">
+                    <i class="fa fa-check-double"></i> Mark All as Read
+                </button>
+            </div>
         @else
             <div class="alert alert-info">
                 <i class="fa fa-info-circle"></i> You don't have permission to participate in this chat.
@@ -88,7 +66,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const inquiryId = {{ $inquiry->id }};
     const currentUserId = {{ auth()->id() }};
-    const inquiryStatus = '{{ $inquiry->status->value }}';
     const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('chat-message');
@@ -102,20 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastMessageCount = 0;
     let pollInterval = null;
     let isPageVisible = true;
-
-    // Check if chat is disabled for confirmed inquiries
-    if (inquiryStatus === 'confirmed') {
-        // Disable all chat functionality for confirmed inquiries
-        if (chatForm) {
-            chatForm.style.display = 'none';
-        }
-        if (markAllReadBtn) {
-            markAllReadBtn.style.display = 'none';
-        }
-        // Still load messages for viewing but disable polling
-        loadMessages();
-        return; // Exit early for confirmed inquiries
-    }
 
     // Load messages on page load
     loadMessages();

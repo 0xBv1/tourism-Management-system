@@ -61,7 +61,8 @@ Route::group([
     // Inquiry Management
     Route::resource('inquiries', InquiryController::class);
     Route::post('inquiries/{inquiry}/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
-    Route::post('inquiries/{inquiry}/set-confirmation-users', [InquiryController::class, 'setConfirmationUsers'])->name('inquiries.set-confirmation-users');
+    Route::get('inquiries/{inquiry}/confirm-form', [InquiryController::class, 'showConfirmForm'])->name('inquiries.confirm-form');
+    Route::post('inquiries/{inquiry}/process-confirmation', [InquiryController::class, 'processConfirmation'])->name('inquiries.process-confirmation');
     
     // Chat Management
     Route::prefix('inquiries/{inquiry}')->name('inquiries.')->group(function () {

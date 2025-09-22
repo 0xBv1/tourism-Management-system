@@ -7,7 +7,6 @@ enum InquiryStatus: string
     case PENDING = 'pending';
     case CONFIRMED = 'confirmed';
     case CANCELLED = 'cancelled';
-    case COMPLETED = 'completed';
 
     public static function all(): array
     {
@@ -28,7 +27,6 @@ enum InquiryStatus: string
             self::PENDING => 'yellow',
             self::CONFIRMED => 'blue',
             self::CANCELLED => 'red',
-            self::COMPLETED => 'green',
         };
     }
 

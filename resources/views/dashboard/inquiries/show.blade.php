@@ -16,7 +16,7 @@
                     <x-dashboard.partials.message-alert />
                     <div class="card">
                         <div class="card-header">
-                            <h5>Inquiry #{{ $inquiry->id }}</h5>
+                            <h5>{{ $inquiry->inquiry_id ?? 'Inquiry #' . $inquiry->id }}</h5>
                             @if(admin()->roles->count() > 0)
                                 <small class="text-muted">
                                     <i class="fa fa-user-tag"></i> 
@@ -30,22 +30,17 @@
                                             <i class="fa fa-edit"></i> Edit
                                         </a>
                                     @endif
-                                    @if($inquiry->status->value !== 'confirmed' && admin()->can('inquiries.confirm') && $inquiry->user1_id && $inquiry->user2_id && ($inquiry->user1_id === auth()->id() || $inquiry->user2_id === auth()->id()) && !$inquiry->hasUserConfirmed(auth()->id()))
+                                    @if($inquiry->status->value !== 'confirmed' && admin()->can('inquiries.confirm'))
+                                        <a href="{{ route('dashboard.inquiries.confirm-form', $inquiry) }}" class="btn btn-success btn-sm ms-1">
+                                            <i class="fa fa-check"></i> Confirm with Payment
+                                        </a>
                                         <form action="{{ route('dashboard.inquiries.confirm', $inquiry) }}" method="POST" class="d-inline">
                                             @csrf
-                                            <button type="submit" class="btn btn-success btn-sm ms-1" 
-                                                    onclick="return confirm('Are you sure you want to confirm this inquiry?')">
-                                                <i class="fa fa-check"></i> Confirm
+                                            <button type="submit" class="btn btn-outline-success btn-sm ms-1" 
+                                                    onclick="return confirm('Are you sure you want to confirm this inquiry without payment details?')">
+                                                <i class="fa fa-check"></i> Quick Confirm
                                             </button>
                                         </form>
-                                    @elseif($inquiry->status->value !== 'confirmed' && $inquiry->user1_id && $inquiry->user2_id && $inquiry->hasUserConfirmed(auth()->id()))
-                                        <span class="badge badge-success badge-sm ms-1">
-                                            <i class="fa fa-check"></i> You Confirmed
-                                        </span>
-                                    @elseif($inquiry->status->value !== 'confirmed' && (!$inquiry->user1_id || !$inquiry->user2_id))
-                                        <span class="badge badge-warning badge-sm ms-1">
-                                            <i class="fa fa-exclamation-triangle"></i> No Confirmation Users
-                                        </span>
                                     @endif
                                 </div>
                             </div>
@@ -56,8 +51,8 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label fw-bold">Name:</label>
-                                                <p class="form-control-plaintext">{{ $inquiry->name }}</p>
+                                                <label class="form-label fw-bold">Guest Name:</label>
+                                                <p class="form-control-plaintext">{{ $inquiry->guest_name }}</p>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -77,9 +72,39 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
+                                                <label class="form-label fw-bold">Arrival Date:</label>
+                                                <p class="form-control-plaintext">{{ $inquiry->arrival_date?->format('M d, Y') ?? 'Not specified' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Number of Pax:</label>
+                                                <p class="form-control-plaintext">{{ $inquiry->number_pax ?? 'Not specified' }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Tour Name:</label>
+                                                <p class="form-control-plaintext">{{ $inquiry->tour_name ?? 'Not specified' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Nationality:</label>
+                                                <p class="form-control-plaintext">{{ $inquiry->nationality ?? 'Not specified' }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
                                                 <label class="form-label fw-bold">Status:</label>
                                                 <p class="form-control-plaintext">
-                                                    <span class="badge badge-{{ $inquiry->status->value === 'pending' ? 'warning' : ($inquiry->status->value === 'confirmed' ? 'success' : ($inquiry->status->value === 'cancelled' ? 'danger' : 'info')) }}">
+                                                    <span class="badge badge-{{ $inquiry->status->value === 'pending' ? 'warning' : ($inquiry->status->value === 'confirmed' ? 'success' : 'danger') }}">
                                                         {{ ucfirst($inquiry->status->value) }}
                                                     </span>
                                                 </p>
@@ -92,21 +117,39 @@
                                         <p class="form-control-plaintext">{{ $inquiry->subject }}</p>
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Message:</label>
-                                        <div class="border p-3 rounded">
-                                            {{ $inquiry->message }}
-                                        </div>
-                                    </div>
-
-                                    @if($inquiry->admin_notes && admin()->can('inquiries.edit'))
+                                    @if($inquiry->status->value === 'confirmed' && ($inquiry->total_amount || $inquiry->paid_amount || $inquiry->payment_method))
                                         <div class="mb-3">
-                                            <label class="form-label fw-bold">Admin Notes:</label>
+                                            <label class="form-label fw-bold">Payment Information:</label>
                                             <div class="border p-3 rounded bg-light">
-                                                {{ $inquiry->admin_notes }}
+                                                <div class="row">
+                                                    @if($inquiry->total_amount)
+                                                        <div class="col-md-4">
+                                                            <strong>Total Amount:</strong><br>
+                                                            <span class="text-primary">${{ number_format($inquiry->total_amount, 2) }}</span>
+                                                        </div>
+                                                    @endif
+                                                    @if($inquiry->paid_amount)
+                                                        <div class="col-md-4">
+                                                            <strong>Paid Amount (Deposit):</strong><br>
+                                                            <span class="text-success">${{ number_format($inquiry->paid_amount, 2) }}</span>
+                                                        </div>
+                                                    @endif
+                                                    @if($inquiry->remaining_amount)
+                                                        <div class="col-md-4">
+                                                            <strong>Remaining Amount:</strong><br>
+                                                            <span class="text-warning">${{ number_format($inquiry->remaining_amount, 2) }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                @if($inquiry->payment_method)
+                                                    <div class="mt-2">
+                                                        <strong>Payment Method:</strong> {{ ucfirst(str_replace('_', ' ', $inquiry->payment_method)) }}
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     @endif
+
                                 </div>
                                 
                                 <div class="col-md-4">
@@ -119,7 +162,15 @@
                                                 <div class="mb-3">
                                                     <label class="form-label fw-bold">Assigned To:</label>
                                                     <p class="form-control-plaintext">
-                                                        {{ $inquiry->assignedUser?->name ?? 'Unassigned' }}
+                                                        @if($inquiry->assignedUser)
+                                                            <strong>{{ $inquiry->assignedUser->name }}</strong>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                Role: {{ $inquiry->assignedUser->roles->first()?->name ?? 'No Role' }}
+                                                            </small>
+                                                        @else
+                                                            <span class="text-muted">Unassigned</span>
+                                                        @endif
                                                     </p>
                                                 </div>
                                             @endif
@@ -136,12 +187,6 @@
                                                 </div>
                                             @endif
                                             
-                                            @if($inquiry->completed_at && (admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation'])))
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">Completed At:</label>
-                                                    <p class="form-control-plaintext">{{ $inquiry->completed_at->format('M d, Y H:i') }}</p>
-                                                </div>
-                                            @endif
                                             
                                             @if($inquiry->client && (admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation', 'Finance'])))
                                                 <div class="mb-3">
@@ -155,138 +200,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- User Confirmation Status Section -->
-                            @if($inquiry->user1_id && $inquiry->user2_id)
-                                <div class="row mt-4">
-                                    <div class="col-sm-12">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6>Confirmation Status</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                @php
-                                                    $confirmationStatus = $inquiry->getConfirmationStatus();
-                                                @endphp
-                                                
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex align-items-center mb-3">
-                                                            <div class="me-3">
-                                                                @if($confirmationStatus['user1_confirmed'])
-                                                                    <i class="fa fa-check-circle text-success fa-2x"></i>
-                                                                @else
-                                                                    <i class="fa fa-clock text-warning fa-2x"></i>
-                                                                @endif
-                                                            </div>
-                                                            <div>
-                                                                <h6 class="mb-1">{{ $confirmationStatus['user1_name'] }}</h6>
-                                                                @if($confirmationStatus['user1_confirmed'])
-                                                                    <small class="text-success">
-                                                                        <i class="fa fa-check"></i> Confirmed
-                                                                        @if($confirmationStatus['user1_confirmed_at'])
-                                                                            - {{ $confirmationStatus['user1_confirmed_at']->format('M d, Y H:i') }}
-                                                                        @endif
-                                                                    </small>
-                                                                @else
-                                                                    <small class="text-warning">
-                                                                        <i class="fa fa-clock"></i> Pending
-                                                                    </small>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div class="col-md-6">
-                                                        <div class="d-flex align-items-center mb-3">
-                                                            <div class="me-3">
-                                                                @if($confirmationStatus['user2_confirmed'])
-                                                                    <i class="fa fa-check-circle text-success fa-2x"></i>
-                                                                @else
-                                                                    <i class="fa fa-clock text-warning fa-2x"></i>
-                                                                @endif
-                                                            </div>
-                                                            <div>
-                                                                <h6 class="mb-1">{{ $confirmationStatus['user2_name'] }}</h6>
-                                                                @if($confirmationStatus['user2_confirmed'])
-                                                                    <small class="text-success">
-                                                                        <i class="fa fa-check"></i> Confirmed
-                                                                        @if($confirmationStatus['user2_confirmed_at'])
-                                                                            - {{ $confirmationStatus['user2_confirmed_at']->format('M d, Y H:i') }}
-                                                                        @endif
-                                                                    </small>
-                                                                @else
-                                                                    <small class="text-warning">
-                                                                        <i class="fa fa-clock"></i> Pending
-                                                                    </small>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                @if($confirmationStatus['fully_confirmed'])
-                                                    <div class="alert alert-success">
-                                                        <i class="fa fa-check-circle"></i>
-                                                        <strong>Fully Confirmed!</strong> Both users have confirmed this inquiry.
-                                                    </div>
-                                                @else
-                                                    <div class="alert alert-info">
-                                                        <i class="fa fa-info-circle"></i>
-                                                        <strong>Waiting for Confirmations:</strong> Both users must confirm before the inquiry is fully confirmed.
-                                                    </div>
-                                                    
-                                                    <!-- User Confirmation Button -->
-                                                    @if(($inquiry->user1_id === auth()->id() || $inquiry->user2_id === auth()->id()) && !$inquiry->hasUserConfirmed(auth()->id()))
-                                                        <div class="text-center">
-                                                            <form action="{{ route('dashboard.inquiries.confirm', $inquiry) }}" method="POST" class="d-inline">
-                                                                @csrf
-                                                                <button type="submit" class="btn btn-success btn-lg" 
-                                                                        onclick="return confirm('Are you sure you want to confirm this inquiry?')">
-                                                                    <i class="fa fa-check"></i> Confirm This Inquiry
-                                                                </button>
-                                                            </form>
-                                                        </div>
-                                                    @elseif($inquiry->hasUserConfirmed(auth()->id()))
-                                                        <div class="text-center">
-                                                            <span class="badge badge-success badge-lg">
-                                                                <i class="fa fa-check"></i> You have confirmed this inquiry
-                                                            </span>
-                                                        </div>
-                                                    @endif
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @else
-                                <!-- No Confirmation Users Set -->
-                                <div class="row mt-4">
-                                    <div class="col-sm-12">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6>Confirmation Status</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="alert alert-warning">
-                                                    <i class="fa fa-exclamation-triangle"></i>
-                                                    <strong>Confirmation Users Not Set:</strong> 
-                                                    No confirmation users have been assigned to this inquiry yet.
-                                                    @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
-                                                        <br><br>
-                                                        <a href="{{ route('dashboard.inquiries.edit', $inquiry) }}" class="btn btn-primary btn-sm">
-                                                            <i class="fa fa-edit"></i> Assign Confirmation Users
-                                                        </a>
-                                                    @else
-                                                        <br><br>
-                                                        Please contact an administrator to assign confirmation users.
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
                         </div>
                     </div>
                 </div>
