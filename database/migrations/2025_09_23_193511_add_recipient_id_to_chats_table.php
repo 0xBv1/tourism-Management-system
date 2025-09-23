@@ -14,7 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('chats', function (Blueprint $table) {
-            //
+            $table->foreignId('recipient_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->index(['inquiry_id', 'recipient_id', 'created_at']);
         });
     }
 
@@ -26,7 +27,9 @@ return new class extends Migration
     public function down()
     {
         Schema::table('chats', function (Blueprint $table) {
-            //
+            $table->dropForeign(['recipient_id']);
+            $table->dropIndex(['inquiry_id', 'recipient_id', 'created_at']);
+            $table->dropColumn('recipient_id');
         });
     }
 };

@@ -13,46 +13,42 @@
 
         @if(admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
             <!-- Chat Input Form -->
-            <form id="chat-form" class="d-flex">
+            <form id="chat-form" class="d-flex flex-column">
                 @csrf
-                <div class="flex-grow-1 me-2">
-                    <textarea 
-                        id="chat-message" 
-                        name="message" 
-                        class="form-control" 
-                        rows="2" 
-                        placeholder="Type your message here..." 
-                        required
-                        maxlength="1000"
-                    ></textarea>
-                    
-                    <!-- Visibility Control -->
-                    <div class="mt-2">
-                        <label class="form-label small">Message Visibility:</label>
-                        <select id="message-visibility" name="visibility" class="form-select form-select-sm">
-                            <option value="all">Everyone</option>
-                            @if(admin()->hasRole(['Admin', 'Administrator']))
-                                <option value="reservation">Reservation Only</option>
-                                <option value="operation">Operation Only</option>
-                                <option value="admin">Admin Only</option>
-                            @elseif(admin()->hasRole(['Reservation']))
-                                <option value="reservation">Reservation Only</option>
-                            @elseif(admin()->hasRole(['Operation']))
-                                <option value="operation">Operation Only</option>
-                            @endif
+                
+                <!-- Recipient Selection (only for Sales users) -->
+                @if(auth()->user()->hasRole('Sales'))
+                    <div class="mb-2">
+                        <label for="recipient-select" class="form-label small">Send to:</label>
+                        <select id="recipient-select" name="recipient_id" class="form-select form-select-sm" required>
+                            <option value="">Select recipient...</option>
                         </select>
-                        <small class="form-text text-muted">
-                            @if(admin()->hasRole(['Admin', 'Administrator']))
-                                You can choose who can see this message.
-                            @else
-                                Messages are private to your role by default.
-                            @endif
-                        </small>
+                        <small class="form-text text-muted">Choose Reservation or Operation user</small>
                     </div>
+                @elseif(auth()->user()->hasAnyRole(['Reservation', 'Operation']))
+                    <div class="mb-2">
+                        <div class="alert alert-info py-2">
+                            <small><i class="fa fa-info-circle"></i> Messages will be sent directly to Sales team</small>
+                        </div>
+                    </div>
+                @endif
+                
+                <div class="d-flex">
+                    <div class="flex-grow-1 me-2">
+                        <textarea 
+                            id="chat-message" 
+                            name="message" 
+                            class="form-control" 
+                            rows="2" 
+                            placeholder="Type your message here..." 
+                            required
+                            maxlength="1000"
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="send-btn">
+                        <i class="fa fa-paper-plane"></i> Send
+                    </button>
                 </div>
-                <button type="submit" class="btn btn-primary" id="send-btn">
-                    <i class="fa fa-paper-plane"></i> Send
-                </button>
             </form>
 
             <!-- Mark All as Read Button -->
@@ -77,10 +73,15 @@
                 <div class="d-flex align-items-center mb-1">
                     <strong class="sender-name me-2"></strong>
                     <small class="text-muted message-time"></small>
-                    <span class="badge badge-info ms-1 visibility-badge"></span>
+                    <span class="badge badge-info ms-2 private-message-badge" style="display: none;">Private</span>
                     <span class="badge badge-success ms-2 read-status" style="display: none;">Read</span>
                 </div>
                 <div class="message-content p-2 rounded" style="background-color: white; border: 1px solid #dee2e6;">
+                </div>
+                <div class="recipient-info mt-1" style="display: none;">
+                    <small class="text-muted">
+                        <i class="fa fa-user"></i> To: <span class="recipient-name"></span>
+                    </small>
                 </div>
             </div>
         </div>
@@ -91,6 +92,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const inquiryId = {{ $inquiry->id }};
     const currentUserId = {{ auth()->id() }};
+    const currentUserRole = '{{ auth()->user()->roles->first()->name ?? "" }}';
     const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('chat-message');
@@ -98,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const markAllReadBtn = document.getElementById('mark-all-read-btn');
     const unreadCount = document.getElementById('unread-count');
     const messageTemplate = document.getElementById('message-template');
+    const recipientSelect = document.getElementById('recipient-select');
 
     // State management
     let isLoading = false;
@@ -105,12 +108,77 @@ document.addEventListener('DOMContentLoaded', function() {
     let pollInterval = null;
     let isPageVisible = true;
 
-    // Load messages on page load
+    // Load messages and recipients on page load
     loadMessages();
+    if (recipientSelect) {
+        loadRecipients();
+    }
 
     // Auto-scroll to bottom
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Load available recipients
+    function loadRecipients() {
+        if (!recipientSelect) return;
+        
+        fetch('/dashboard/chats/recipients', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && recipientSelect) {
+                    recipientSelect.innerHTML = '<option value="">Select recipient...</option>';
+                    data.data.forEach(recipient => {
+                        const option = document.createElement('option');
+                        option.value = recipient.id;
+                        option.textContent = `${recipient.name} (${recipient.email})`;
+                        recipientSelect.appendChild(option);
+                    });
+                    
+                    // Add validation
+                    recipientSelect.addEventListener('change', function() {
+                        const messageInput = document.getElementById('chat-message');
+                        if (this.value && messageInput.value.trim()) {
+                            sendBtn.disabled = false;
+                        } else {
+                            sendBtn.disabled = !this.value;
+                        }
+                    });
+                } else {
+                    console.error('API Error:', data.message || 'Unknown error');
+                    if (recipientSelect) {
+                        recipientSelect.innerHTML = '<option value="">Error loading recipients</option>';
+                        // Show error message to user
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'alert alert-warning mt-2';
+                        errorDiv.innerHTML = '<small><i class="fa fa-exclamation-triangle"></i> Could not load recipients. Please refresh the page.</small>';
+                        recipientSelect.parentNode.appendChild(errorDiv);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading recipients:', error);
+                if (recipientSelect) {
+                    recipientSelect.innerHTML = '<option value="">Error loading recipients</option>';
+                    // Show error message to user
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'alert alert-danger mt-2';
+                    errorDiv.innerHTML = '<small><i class="fa fa-exclamation-triangle"></i> Network error loading recipients. Please check your connection and refresh the page.</small>';
+                    recipientSelect.parentNode.appendChild(errorDiv);
+                }
+            });
     }
 
     // Load chat messages with better error handling
@@ -191,23 +259,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageTime = template.querySelector('.message-time');
         const messageContent = template.querySelector('.message-content');
         const readStatus = template.querySelector('.read-status');
-        const visibilityBadge = template.querySelector('.visibility-badge');
+        const privateBadge = template.querySelector('.private-message-badge');
+        const recipientInfo = template.querySelector('.recipient-info');
+        const recipientName = template.querySelector('.recipient-name');
 
         messageDiv.setAttribute('data-message-id', message.id);
         senderName.textContent = message.sender.name;
         messageTime.textContent = new Date(message.created_at).toLocaleString();
         messageContent.textContent = message.message;
 
-        // Set visibility badge
-        const visibilityText = getVisibilityText(message.visibility);
-        visibilityBadge.textContent = visibilityText;
-        visibilityBadge.className = `badge ms-1 ${getVisibilityBadgeClass(message.visibility)}`;
-
-        // Style based on sender
+        // Style based on sender and role
         if (message.sender_id === currentUserId) {
             messageDiv.classList.add('own-message');
             messageContent.style.backgroundColor = '#007bff';
             messageContent.style.color = 'white';
+        } else {
+            // Different colors for different roles
+            if (message.sender && message.sender.roles) {
+                const senderRole = message.sender.roles[0]?.name;
+                if (senderRole === 'Sales') {
+                    messageContent.style.backgroundColor = '#28a745';
+                    messageContent.style.color = 'white';
+                } else if (senderRole === 'Reservation') {
+                    messageContent.style.backgroundColor = '#ffc107';
+                    messageContent.style.color = 'black';
+                } else if (senderRole === 'Operation') {
+                    messageContent.style.backgroundColor = '#dc3545';
+                    messageContent.style.color = 'white';
+                }
+            }
         }
 
         // Show read status
@@ -215,29 +295,23 @@ document.addEventListener('DOMContentLoaded', function() {
             readStatus.style.display = 'inline';
         }
 
+        // Handle private messages
+        if (message.recipient_id) {
+            privateBadge.style.display = 'inline';
+            
+            // Show recipient info based on role and message context
+            if (currentUserRole === 'Sales') {
+                // Sales can see recipient info for all their messages
+                recipientInfo.style.display = 'block';
+                recipientName.textContent = message.recipient ? message.recipient.name : 'Unknown';
+            } else if (message.recipient_id === currentUserId) {
+                // Show sender info for messages received by current user
+                recipientInfo.style.display = 'block';
+                recipientName.textContent = `From: ${message.sender.name}`;
+            }
+        }
+
         return messageDiv;
-    }
-
-    // Get visibility display text
-    function getVisibilityText(visibility) {
-        const visibilityMap = {
-            'all': 'Everyone',
-            'reservation': 'Reservation',
-            'operation': 'Operation',
-            'admin': 'Admin'
-        };
-        return visibilityMap[visibility] || visibility;
-    }
-
-    // Get visibility badge class
-    function getVisibilityBadgeClass(visibility) {
-        const classMap = {
-            'all': 'badge-primary',
-            'reservation': 'badge-info',
-            'operation': 'badge-warning',
-            'admin': 'badge-danger'
-        };
-        return classMap[visibility] || 'badge-secondary';
     }
 
     // Update unread count
@@ -253,10 +327,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = messageInput.value.trim();
         if (!message) return;
 
-        const visibility = document.getElementById('message-visibility').value;
+        // Validate recipient selection for Sales users
+        if (currentUserRole === 'Sales' && recipientSelect && !recipientSelect.value) {
+            alert('Please select a recipient before sending the message.');
+            return;
+        }
 
         sendBtn.disabled = true;
         sendBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
+
+        const requestData = { message: message };
+        
+        // Add recipient_id if Sales user selected a recipient
+        if (recipientSelect && recipientSelect.value) {
+            requestData.recipient_id = recipientSelect.value;
+        }
 
         fetch(`/dashboard/inquiries/${inquiryId}/chats`, {
             method: 'POST',
@@ -264,15 +349,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ 
-                message: message,
-                visibility: visibility
-            })
+            body: JSON.stringify(requestData)
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 messageInput.value = '';
+                // Reset recipient selection for Sales users
+                if (recipientSelect) {
+                    recipientSelect.value = '';
+                }
                 loadMessages(); // Reload messages to show the new one
             } else {
                 alert('Error sending message: ' + (data.message || 'Unknown error'));
@@ -402,5 +488,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .own-message .sender-name {
     color: #007bff;
+}
+
+/* Role-based message styling */
+.message-content[style*="background-color: #28a745"] {
+    border-left: 4px solid #1e7e34;
+}
+
+.message-content[style*="background-color: #ffc107"] {
+    border-left: 4px solid #e0a800;
+}
+
+.message-content[style*="background-color: #dc3545"] {
+    border-left: 4px solid #c82333;
+}
+
+.private-message-badge {
+    background-color: #6f42c1 !important;
+    color: white !important;
+}
+
+/* Form validation styling */
+.form-select:invalid {
+    border-color: #dc3545;
+}
+
+.form-select:valid {
+    border-color: #28a745;
 }
 </style>

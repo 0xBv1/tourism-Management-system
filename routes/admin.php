@@ -71,6 +71,7 @@ Route::group([
         Route::post('chats/mark-all-read', [ChatController::class, 'markAllAsRead'])->name('chats.mark-all-read');
     });
     Route::post('chats/{chat}/mark-read', [ChatController::class, 'markAsRead'])->name('chats.mark-read');
+    Route::get('chats/recipients', [ChatController::class, 'getRecipients'])->name('chats.recipients');
     
     // Booking Management
     Route::resource('bookings', BookingController::class)->only(['index', 'show', 'update']);

@@ -47,10 +47,19 @@ class NewChatMessageNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
+        $subject = 'New Chat Message - Inquiry #' . $this->inquiry->id;
+        $messageLine = $this->sender->name . ' sent a new message in Inquiry #' . $this->inquiry->id;
+        
+        // Add private message indicator
+        if ($this->chat->recipient_id) {
+            $subject = 'New Private Message - Inquiry #' . $this->inquiry->id;
+            $messageLine = $this->sender->name . ' sent you a private message in Inquiry #' . $this->inquiry->id;
+        }
+
         return (new MailMessage)
-                    ->subject('New Chat Message - Inquiry #' . $this->inquiry->id)
+                    ->subject($subject)
                     ->greeting('Hello ' . $notifiable->name . '!')
-                    ->line($this->sender->name . ' sent a new message in Inquiry #' . $this->inquiry->id)
+                    ->line($messageLine)
                     ->line('Message: ' . $this->chat->message)
                     ->action('View Inquiry', route('dashboard.inquiries.show', $this->inquiry))
                     ->line('Thank you for using our application!');
@@ -64,20 +73,35 @@ class NewChatMessageNotification extends Notification implements ShouldQueue
      */
     public function toArray($notifiable)
     {
+        $title = 'New Chat Message';
+        $messageText = $this->sender->name . ' sent a message in Inquiry #' . $this->inquiry->id;
+        $icon = 'fa-comments';
+        $color = 'info';
+        
+        // Add private message indicators
+        if ($this->chat->recipient_id) {
+            $title = 'New Private Message';
+            $messageText = $this->sender->name . ' sent you a private message in Inquiry #' . $this->inquiry->id;
+            $icon = 'fa-lock';
+            $color = 'warning';
+        }
+
         return [
             'inquiry_id' => $this->inquiry->id,
             'inquiry_name' => $this->inquiry->name,
             'sender_id' => $this->sender->id,
             'sender_name' => $this->sender->name,
+            'recipient_id' => $this->chat->recipient_id,
             'message' => substr($this->chat->message, 0, 100) . '...',
             'chat_id' => $this->chat->id,
             'created_at' => $this->chat->created_at->toISOString(),
             'type' => 'new_chat_message',
-            'title' => 'New Chat Message',
-            'message_text' => $this->sender->name . ' sent a message in Inquiry #' . $this->inquiry->id,
+            'title' => $title,
+            'message_text' => $messageText,
             'action_url' => route('dashboard.inquiries.show', $this->inquiry),
-            'icon' => 'fa-comments',
-            'color' => 'info'
+            'icon' => $icon,
+            'color' => $color,
+            'is_private' => !is_null($this->chat->recipient_id)
         ];
     }
 }

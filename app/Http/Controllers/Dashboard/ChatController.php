@@ -6,6 +6,7 @@ use App\Events\ChatMessageSent;
 use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\Inquiry;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -19,10 +20,12 @@ class ChatController extends Controller
         try {
             $this->authorize('view', $inquiry);
             
-            // Filter chats based on user's role and visibility
+            $user = auth()->user();
+            
+            // Apply role-based filtering using the Chat model scope
             $chats = $inquiry->chats()
-                ->visibleTo(auth()->user())
-                ->with('sender')
+                ->visibleTo($user)
+                ->with(['sender', 'recipient'])
                 ->orderBy('created_at')
                 ->get();
 
@@ -48,26 +51,65 @@ class ChatController extends Controller
         try {
             $this->authorize('view', $inquiry);
 
-            $request->validate([
-                'message' => 'required|string|max:1000',
-                'visibility' => 'nullable|string|in:all,reservation,operation,admin'
-            ]);
+            $user = auth()->user();
+            $userRoles = $user->roles->pluck('name')->toArray();
 
-            // Determine visibility based on sender's role
-            $visibility = $this->determineMessageVisibility(auth()->user(), $request->input('visibility'));
+            // Validate request based on user role
+            $validationRules = ['message' => 'required|string|max:1000'];
+            
+            // Sales users can specify recipient
+            if (in_array('Sales', $userRoles)) {
+                $validationRules['recipient_id'] = 'nullable|exists:users,id';
+            }
+
+            $request->validate($validationRules);
+
+            $recipientId = null;
+
+            // Determine recipient based on user role
+            if (in_array('Sales', $userRoles)) {
+                // Sales must choose recipient (Reservation or Operation)
+                $recipientId = $request->recipient_id;
+                if (!$recipientId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select a recipient before sending the message.'
+                    ], 422);
+                }
+                
+                $recipient = User::find($recipientId);
+                if (!$recipient) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Selected recipient not found.'
+                    ], 422);
+                }
+                
+                $this->authorize('sendTo', [Chat::class, $recipient]);
+            } elseif (in_array('Reservation', $userRoles) || in_array('Operation', $userRoles)) {
+                // Reservation and Operation automatically send to Sales
+                $salesUser = User::role('Sales')->first();
+                if (!$salesUser) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No Sales user found to receive the message.'
+                    ], 422);
+                }
+                $recipientId = $salesUser->id;
+            }
 
             $chat = Chat::create([
                 'inquiry_id' => $inquiry->id,
-                'sender_id' => auth()->id(),
+                'sender_id' => $user->id,
+                'recipient_id' => $recipientId,
                 'message' => $request->message,
-                'visibility' => $visibility,
             ]);
 
-            $chat->load('sender');
+            $chat->load(['sender', 'recipient']);
 
             // Fire the chat message sent event (with error handling)
             try {
-                event(new ChatMessageSent($chat, $inquiry, auth()->user()));
+                event(new ChatMessageSent($chat, $inquiry, $user));
             } catch (\Exception $e) {
                 // Log the error but don't fail the request
                 \Log::error('Failed to fire ChatMessageSent event: ' . $e->getMessage());
@@ -94,6 +136,47 @@ class ChatController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send message. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available recipients for the current user.
+     */
+    public function getRecipients(): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+            
+            $userRoles = $user->roles->pluck('name')->toArray();
+            $recipients = [];
+
+            if (in_array('Sales', $userRoles)) {
+                // Sales can send to Reservation and Operation users
+                $recipients = User::whereHas('roles', function($query) {
+                    $query->whereIn('name', ['Reservation', 'Operation']);
+                })->select('id', 'name', 'email')->get();
+            } elseif (in_array('Reservation', $userRoles) || in_array('Operation', $userRoles)) {
+                // Reservation and Operation can send to Sales users
+                $recipients = User::role('Sales')->select('id', 'name', 'email')->get();
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $recipients
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in getRecipients: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading recipients: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -129,60 +212,5 @@ class ChatController extends Controller
             'success' => true,
             'message' => 'All messages marked as read'
         ]);
-    }
-
-    /**
-     * Determine the visibility of a message based on sender's role and request.
-     */
-    private function determineMessageVisibility(User $sender, ?string $requestedVisibility = null): string
-    {
-        $senderRoles = $sender->roles->pluck('name')->toArray();
-        
-        // If user explicitly requested a visibility, use it (if they have permission)
-        if ($requestedVisibility && $this->canSetVisibility($sender, $requestedVisibility)) {
-            return $requestedVisibility;
-        }
-        
-        // Default visibility based on sender's role
-        if (in_array('Admin', $senderRoles) || in_array('Administrator', $senderRoles)) {
-            return 'all'; // Admin messages are visible to all
-        }
-        
-        if (in_array('Reservation', $senderRoles)) {
-            return 'reservation'; // Reservation messages are only visible to Reservation and Admin
-        }
-        
-        if (in_array('Operation', $senderRoles)) {
-            return 'operation'; // Operation messages are only visible to Operation and Admin
-        }
-        
-        // Default to 'all' for other roles
-        return 'all';
-    }
-
-    /**
-     * Check if a user can set a specific visibility.
-     */
-    private function canSetVisibility(User $user, string $visibility): bool
-    {
-        $userRoles = $user->roles->pluck('name')->toArray();
-        
-        // Admin can set any visibility
-        if (in_array('Admin', $userRoles) || in_array('Administrator', $userRoles)) {
-            return true;
-        }
-        
-        // Regular users can only set visibility for their own role or 'all'
-        if ($visibility === 'all') {
-            return true;
-        }
-        
-        foreach ($userRoles as $role) {
-            if ($visibility === strtolower($role)) {
-                return true;
-            }
-        }
-        
-        return false;
     }
 }

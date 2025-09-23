@@ -13,8 +13,8 @@ class Chat extends Model
     protected $fillable = [
         'inquiry_id',
         'sender_id',
+        'recipient_id',
         'message',
-        'visibility',
         'read_at',
     ];
 
@@ -36,6 +36,14 @@ class Chat extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    /**
+     * Get the user that received the chat message.
+     */
+    public function recipient(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recipient_id');
     }
 
     /**
@@ -63,65 +71,65 @@ class Chat extends Model
     }
 
     /**
-     * Scope a query to only include messages visible to the current user.
+     * Scope a query to only include messages visible to a specific user based on role.
      */
     public function scopeVisibleTo($query, User $user)
     {
         $userRoles = $user->roles->pluck('name')->toArray();
         
-        return $query->where(function($q) use ($userRoles) {
-            // Admin can see all messages
-            if (in_array('Admin', $userRoles) || in_array('Administrator', $userRoles)) {
-                return $q; // No additional filtering for admin
-            }
-            
-            // Regular users can see messages based on visibility
-            $q->where('visibility', 'all'); // Everyone can see 'all' messages
-            
-            // Add role-specific visibility
-            foreach ($userRoles as $role) {
-                $q->orWhere('visibility', strtolower($role));
-            }
-        });
+        if (in_array('Sales', $userRoles)) {
+            // Sales can see:
+            // 1. Messages they sent (to anyone)
+            // 2. Messages sent to them (from Reservation/Operation)
+            return $query->where(function($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                  ->orWhere('recipient_id', $user->id);
+            });
+        } elseif (in_array('Reservation', $userRoles)) {
+            // Reservation can only see:
+            // 1. Messages they sent to Sales
+            // 2. Messages Sales sent to them specifically
+            return $query->where(function($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                  ->orWhere(function($subQ) use ($user) {
+                      $subQ->where('recipient_id', $user->id)
+                           ->whereHas('sender', function($senderQ) {
+                               $senderQ->role('Sales');
+                           });
+                  });
+            });
+        } elseif (in_array('Operation', $userRoles)) {
+            // Operation can only see:
+            // 1. Messages they sent to Sales
+            // 2. Messages Sales sent to them specifically
+            return $query->where(function($q) use ($user) {
+                $q->where('sender_id', $user->id)
+                  ->orWhere(function($subQ) use ($user) {
+                      $subQ->where('recipient_id', $user->id)
+                           ->whereHas('sender', function($senderQ) {
+                               $senderQ->role('Sales');
+                           });
+                  });
+            });
+        } else {
+            // Admin and other roles can see all messages
+            return $query;
+        }
     }
 
     /**
-     * Determine if a message is visible to a specific user.
+     * Scope a query to only include public messages (no recipient specified).
      */
-    public function isVisibleTo(User $user): bool
+    public function scopePublic($query)
     {
-        $userRoles = $user->roles->pluck('name')->toArray();
-        
-        // Admin can see all messages
-        if (in_array('Admin', $userRoles) || in_array('Administrator', $userRoles)) {
-            return true;
-        }
-        
-        // Check if message is visible to user's roles
-        if ($this->visibility === 'all') {
-            return true;
-        }
-        
-        foreach ($userRoles as $role) {
-            if ($this->visibility === strtolower($role)) {
-                return true;
-            }
-        }
-        
-        return false;
+        return $query->whereNull('recipient_id');
     }
 
     /**
-     * Get the visibility display name.
+     * Scope a query to only include private messages (recipient specified).
      */
-    public function getVisibilityDisplayAttribute(): string
+    public function scopePrivate($query)
     {
-        return match($this->visibility) {
-            'all' => 'Everyone',
-            'reservation' => 'Reservation Only',
-            'operation' => 'Operation Only',
-            'admin' => 'Admin Only',
-            default => ucfirst($this->visibility)
-        };
+        return $query->whereNotNull('recipient_id');
     }
 }

@@ -33,6 +33,7 @@ class PermittedMiddleware
         'dashboard.debug.user-roles',
         'dashboard.inquiries.confirm-form',
         'dashboard.inquiries.process-confirmation',
+        'dashboard.chats.recipients',
 
     ];
     public function handle(Request $request, Closure $next)

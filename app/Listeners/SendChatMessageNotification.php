@@ -31,12 +31,23 @@ class SendChatMessageNotification implements ShouldQueue
     public function handle(ChatMessageSent $event)
     {
         try {
-            // Get all users who have access to this inquiry (Sales and Reservation/Operation roles)
-            $users = User::whereHas('roles', function ($query) {
-                $query->whereIn('name', ['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
-            })->where('id', '!=', $event->sender->id)->get();
+            $users = collect();
 
-            // Send notification to all relevant users
+            // Handle private messages
+            if ($event->chat->recipient_id) {
+                // For private messages, only notify the recipient
+                $recipient = User::find($event->chat->recipient_id);
+                if ($recipient && $recipient->id !== $event->sender->id) {
+                    $users->push($recipient);
+                }
+            } else {
+                // For public messages, notify all relevant users
+                $users = User::whereHas('roles', function ($query) {
+                    $query->whereIn('name', ['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
+                })->where('id', '!=', $event->sender->id)->get();
+            }
+
+            // Send notification to relevant users
             foreach ($users as $user) {
                 try {
                     $user->notify(new NewChatMessageNotification(

@@ -49,9 +49,10 @@ class ChatMessageSent implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'chat' => $this->chat->load('sender'),
+            'chat' => $this->chat->load(['sender', 'recipient']),
             'inquiry_id' => $this->inquiry->id,
             'sender' => $this->sender,
+            'recipient' => $this->chat->recipient,
         ];
     }
 
