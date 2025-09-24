@@ -99,15 +99,27 @@
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Booking ID:</div>
-                <div class="info-value">#{{ $booking_id }}</div>
+                <div class="info-value"><strong>#{{ $booking_id }}</strong></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Inquiry ID:</div>
+                <div class="info-value">{{ $inquiry->inquiry_id ?? 'N/A' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Generated Date:</div>
                 <div class="info-value">{{ $generated_at->format('F d, Y \a\t H:i') }}</div>
             </div>
             <div class="info-row">
+                <div class="info-label">Confirmed Date:</div>
+                <div class="info-value">{{ $inquiry->confirmed_at ? $inquiry->confirmed_at->format('F d, Y \a\t H:i') : 'N/A' }}</div>
+            </div>
+            <div class="info-row">
                 <div class="info-label">Status:</div>
                 <div class="info-value"><span class="status-badge">CONFIRMED</span></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Created Date:</div>
+                <div class="info-value">{{ $inquiry->created_at->format('F d, Y \a\t H:i') }}</div>
             </div>
         </div>
     </div>
@@ -116,21 +128,31 @@
         <h3>Customer Information</h3>
         <div class="info-grid">
             <div class="info-row">
-                <div class="info-label">Name:</div>
-                <div class="info-value">{{ $inquiry->guest_name ?? 'N/A' }}</div>
+                <div class="info-label">Full Name:</div>
+                <div class="info-value"><strong>{{ $inquiry->guest_name ?? 'N/A' }}</strong></div>
             </div>
             <div class="info-row">
-                <div class="info-label">Email:</div>
+                <div class="info-label">Email Address:</div>
                 <div class="info-value">{{ $inquiry->email ?? 'N/A' }}</div>
             </div>
             <div class="info-row">
-                <div class="info-label">Phone:</div>
+                <div class="info-label">Phone Number:</div>
                 <div class="info-value">{{ $inquiry->phone ?? 'N/A' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Nationality:</div>
                 <div class="info-value">{{ $inquiry->nationality ?? 'N/A' }}</div>
             </div>
+            @if($inquiry->client)
+            <div class="info-row">
+                <div class="info-label">Client ID:</div>
+                <div class="info-value">{{ $inquiry->client->id ?? 'N/A' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Client Name:</div>
+                <div class="info-value">{{ $inquiry->client->name ?? 'N/A' }}</div>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -154,8 +176,30 @@
                 <div class="info-value">{{ $inquiry->departure_date ? $inquiry->departure_date->format('F d, Y') : 'N/A' }}</div>
             </div>
             <div class="info-row">
+                <div class="info-label">Duration:</div>
+                <div class="info-value">
+                    @if($inquiry->arrival_date && $inquiry->departure_date)
+                        {{ $inquiry->arrival_date->diffInDays($inquiry->departure_date) + 1 }} days
+                    @else
+                        N/A
+                    @endif
+                </div>
+            </div>
+            <div class="info-row">
                 <div class="info-label">Number of Pax:</div>
                 <div class="info-value">{{ $inquiry->number_pax ?? 'N/A' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Inquiry ID:</div>
+                <div class="info-value">{{ $inquiry->inquiry_id ?? 'N/A' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Created Date:</div>
+                <div class="info-value">{{ $inquiry->created_at->format('F d, Y \a\t H:i') }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Confirmed Date:</div>
+                <div class="info-value">{{ $inquiry->confirmed_at ? $inquiry->confirmed_at->format('F d, Y \a\t H:i') : 'N/A' }}</div>
             </div>
         </div>
     </div>
@@ -177,13 +221,58 @@
                     <div class="info-label">Remaining Amount:</div>
                     <div class="info-value">USD {{ number_format($inquiry->remaining_amount ?? $inquiry->total_amount, 2) }}</div>
                 </div>
+                <div class="info-row">
+                    <div class="info-label">Payment Status:</div>
+                    <div class="info-value">
+                        @if(($inquiry->paid_amount ?? 0) >= $inquiry->total_amount)
+                            <span style="color: green; font-weight: bold;">FULLY PAID</span>
+                        @elseif(($inquiry->paid_amount ?? 0) > 0)
+                            <span style="color: orange; font-weight: bold;">PARTIALLY PAID</span>
+                        @else
+                            <span style="color: red; font-weight: bold;">NOT PAID</span>
+                        @endif
+                    </div>
+                </div>
                 @if($inquiry->payment_method)
                 <div class="info-row">
                     <div class="info-label">Payment Method:</div>
                     <div class="info-value">{{ $inquiry->payment_method }}</div>
                 </div>
                 @endif
+                <div class="info-row">
+                    <div class="info-label">Currency:</div>
+                    <div class="info-value">USD (US Dollar)</div>
+                </div>
             </div>
+        </div>
+    </div>
+    @endif
+
+    @if($inquiry->bookingFile && $inquiry->bookingFile->payments->count() > 0)
+    <div class="section">
+        <h3>Payment History</h3>
+        <div class="info-grid">
+            @foreach($inquiry->bookingFile->payments as $payment)
+                <div class="info-row">
+                    <div class="info-label">Payment #{{ $payment->id }}:</div>
+                    <div class="info-value">
+                        <strong>USD {{ number_format($payment->amount, 2) }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            Date: {{ $payment->created_at->format('M d, Y H:i') }}
+                            @if($payment->payment_method)
+                                | Method: {{ $payment->payment_method }}
+                            @endif
+                            @if($payment->status)
+                                | Status: {{ ucfirst($payment->status) }}
+                            @endif
+                        </small>
+                        @if($payment->notes)
+                            <br><small class="text-muted">Notes: {{ $payment->notes }}</small>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
         </div>
     </div>
     @endif
@@ -197,13 +286,44 @@
     </div>
     @endif
 
-    @if($inquiry->assignedUser)
+    @php
+        $assignedUsers = $inquiry->getAllAssignedUsers();
+    @endphp
+    
+    @if(!empty($assignedUsers))
     <div class="section">
-        <h3>Assigned Staff</h3>
+        <h3>User Assignments</h3>
+        <div class="info-grid">
+            @foreach($assignedUsers as $assignment)
+                <div class="info-row">
+                    <div class="info-label">
+                        @if($assignment['type'] === 'user')
+                            {{ $assignment['role'] }}:
+                        @elseif($assignment['type'] === 'resource')
+                            {{ $assignment['role'] }}:
+                        @endif
+                    </div>
+                    <div class="info-value">
+                        @if($assignment['type'] === 'user')
+                            <strong>{{ $assignment['user']->name }}</strong>
+                        @elseif($assignment['type'] === 'resource')
+                            <strong>{{ $assignment['resource']->resource_name }}</strong>
+                            @if($assignment['added_by'])
+                                <br><small class="text-muted">Added by: {{ $assignment['added_by']->name }}</small>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @else
+    <div class="section">
+        <h3>User Assignments</h3>
         <div class="info-grid">
             <div class="info-row">
-                <div class="info-label">Assigned To:</div>
-                <div class="info-value">{{ $inquiry->assignedUser->name }}</div>
+                <div class="info-label">Status:</div>
+                <div class="info-value">No users or resources assigned to this inquiry.</div>
             </div>
         </div>
     </div>

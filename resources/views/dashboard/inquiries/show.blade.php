@@ -185,12 +185,24 @@
                                                                 <div class="mb-2 p-2 border rounded bg-light">
                                                                     <div class="d-flex justify-content-between align-items-center">
                                                                         <div>
-                                                                            <strong>{{ $assignment['user']->name }}</strong>
-                                                                            <br>
-                                                                            <small class="text-muted">
-                                                                                <i class="fa fa-user-tag"></i> 
-                                                                                {{ $assignment['role'] }}
-                                                                            </small>
+                                                                            @if($assignment['type'] === 'user')
+                                                                                <strong>{{ $assignment['user']->name }}</strong>
+                                                                                <br>
+                                                                                <small class="text-muted">
+                                                                                    <i class="fa fa-user-tag"></i> 
+                                                                                    {{ $assignment['role'] }}
+                                                                                </small>
+                                                                            @elseif($assignment['type'] === 'resource')
+                                                                                <strong>{{ $assignment['resource']->resource_name }}</strong>
+                                                                                <br>
+                                                                                <small class="text-muted">
+                                                                                    <i class="fa fa-tag"></i> 
+                                                                                    {{ $assignment['role'] }}
+                                                                                    @if($assignment['added_by'])
+                                                                                        - Added by {{ $assignment['added_by']->name }}
+                                                                                    @endif
+                                                                                </small>
+                                                                            @endif
                                                                         </div>
                                                                         <span class="badge badge-primary">{{ $assignment['role'] }}</span>
                                                                     </div>
@@ -198,7 +210,7 @@
                                                             @endforeach
                                                         @else
                                                             <span class="text-muted">
-                                                                <i class="fa fa-info-circle"></i> No users assigned
+                                                                <i class="fa fa-info-circle"></i> No users or resources assigned
                                                             </span>
                                                         @endif
                                                     </div>

@@ -30,7 +30,7 @@ class BookingController extends Controller
      */
     public function show(BookingFile $booking)
     {
-        $booking->load(['inquiry.client', 'payments', 'resourceBookings']);
+        $booking->load(['inquiry.client', 'inquiry.assignedUser.roles', 'inquiry.assignedReservation.roles', 'inquiry.assignedOperator.roles', 'inquiry.assignedAdmin.roles', 'inquiry.resources.resource', 'inquiry.resources.addedBy', 'payments', 'resourceBookings']);
         $statuses = BookingStatus::options();
         $inquiries = Inquiry::with('client')->get();
         
@@ -133,15 +133,37 @@ class BookingController extends Controller
      */
     public function download(BookingFile $booking)
     {
-        if (!$booking->fileExists()) {
-            session()->flash('message', 'File not found!');
+        try {
+            // Load inquiry with all necessary relationships
+            $booking->load(['inquiry.assignedUser.roles', 'inquiry.assignedReservation.roles', 'inquiry.assignedOperator.roles', 'inquiry.assignedAdmin.roles', 'inquiry.resources.resource', 'inquiry.resources.addedBy']);
+            
+            // Regenerate PDF with updated data
+            if ($booking->inquiry) {
+                $booking->inquiry->regenerateBookingFile();
+                
+                // Refresh the booking model to get updated file info
+                $booking->refresh();
+            }
+            
+            // Check if file exists after regeneration
+            if (!$booking->fileExists()) {
+                session()->flash('message', 'File could not be generated!');
+                session()->flash('type', 'error');
+                return back();
+            }
+
+            // Update download timestamp
+            $booking->update(['downloaded_at' => now()]);
+            
+            return response()->download($booking->full_file_path, $booking->file_name);
+            
+        } catch (\Exception $e) {
+            \Log::error("Failed to download booking file {$booking->id}: " . $e->getMessage());
+            
+            session()->flash('message', 'Failed to generate download file. Please try again.');
             session()->flash('type', 'error');
             return back();
         }
-
-        $booking->update(['downloaded_at' => now()]);
-        
-        return response()->download($booking->full_file_path, $booking->file_name);
     }
 
     /**
@@ -152,11 +174,31 @@ class BookingController extends Controller
      */
     public function send(BookingFile $booking)
     {
-        // TODO: Implement email sending logic
-        $booking->update(['sent_at' => now()]);
-        
-        session()->flash('message', 'Booking file sent successfully!');
-        session()->flash('type', 'success');
-        return back();
+        try {
+            // Load inquiry with all necessary relationships
+            $booking->load(['inquiry.assignedUser.roles', 'inquiry.assignedReservation.roles', 'inquiry.assignedOperator.roles', 'inquiry.assignedAdmin.roles', 'inquiry.resources.resource', 'inquiry.resources.addedBy']);
+            
+            // Regenerate PDF with updated data before sending
+            if ($booking->inquiry) {
+                $booking->inquiry->regenerateBookingFile();
+                
+                // Refresh the booking model to get updated file info
+                $booking->refresh();
+            }
+            
+            // TODO: Implement email sending logic
+            $booking->update(['sent_at' => now()]);
+            
+            session()->flash('message', 'Booking file sent successfully!');
+            session()->flash('type', 'success');
+            return back();
+            
+        } catch (\Exception $e) {
+            \Log::error("Failed to send booking file {$booking->id}: " . $e->getMessage());
+            
+            session()->flash('message', 'Failed to generate file for sending. Please try again.');
+            session()->flash('type', 'error');
+            return back();
+        }
     }
 }

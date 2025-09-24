@@ -64,14 +64,29 @@ class BookingService
      */
     public function generateFileName(Inquiry $inquiry): string
     {
-        $clientName = $inquiry->client ? 
-            str_replace(' ', '_', $inquiry->client->name) : 
-            'Client';
+        $name = $this->sanitizeForFilename($inquiry->guest_name ?? 'Guest_Name');
+        $nationality = $this->sanitizeForFilename($inquiry->nationality ?? 'Nationality');
         
-        $date = now()->format('Y-m-d');
-        $inquiryId = $inquiry->id;
+        return "booking-{$inquiry->id}-{$name}-{$nationality}.pdf";
+    }
+    
+    /**
+     * Sanitize string for use in filename
+     */
+    private function sanitizeForFilename(string $string): string
+    {
+        // Handle empty or whitespace-only strings
+        if (empty(trim($string))) {
+            return 'unknown';
+        }
         
-        return "Booking_{$clientName}_{$date}_{$inquiryId}.pdf";
+        // Remove special characters and replace spaces with hyphens
+        $sanitized = preg_replace('/[^a-zA-Z0-9\s\-_]/', '', $string);
+        $sanitized = preg_replace('/\s+/', '-', trim($sanitized));
+        $sanitized = strtolower($sanitized);
+        
+        // Limit length to avoid filesystem issues
+        return substr($sanitized, 0, 50);
     }
 
     /**

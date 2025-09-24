@@ -450,43 +450,48 @@
                                 <h5>Related Inquiry</h5>
                             </div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Client:</label>
-                                            <p class="form-control-plaintext">
-                                                @if($booking->inquiry->client)
-                                                    {{ $booking->inquiry->client->name }}
-                                                @elseif($booking->inquiry->guest_name)
-                                                    {{ $booking->inquiry->guest_name }}
-                                                @else
-                                                    N/A
-                                                @endif
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Subject:</label>
-                                            <p class="form-control-plaintext">{{ $booking->inquiry->subject ?? 'N/A' }}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                              
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Email:</label>
-                                            <p class="form-control-plaintext">{{ $booking->inquiry->email ?? 'N/A' }}</p>
+                              
+                                <!-- User Assignments Section -->
+                                @php
+                                    $assignedUsers = $booking->inquiry->getAllAssignedUsers();
+                                @endphp
+                                
+                                @if(!empty($assignedUsers))
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">User Assignments:</label>
+                                        <div class="row">
+                                            @foreach($assignedUsers as $assignment)
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="border p-2 rounded bg-secondary">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                @if($assignment['type'] === 'user')
+                                                                    <strong>{{ $assignment['user']->name }}</strong>
+                                                                    <br>
+                                                                    <small class="text-muted">{{ $assignment['role'] }}</small>
+                                                                @elseif($assignment['type'] === 'resource')
+                                                                    <strong>{{ $assignment['resource']->resource_name }}</strong>
+                                                                    <br>
+                                                                    <small class="text-muted">{{ $assignment['role'] }} - Added by {{ $assignment['added_by']->name ?? 'Unknown' }}</small>
+                                                                @endif
+                                                            </div>
+                                                            <div>
+                                                                <span class="badge badge-primary">{{ $assignment['role'] }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Phone:</label>
-                                            <p class="form-control-plaintext">{{ $booking->inquiry->phone ?? 'N/A' }}</p>
-                                        </div>
+                                @else
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">User Assignments:</label>
+                                        <p class="form-control-plaintext text-muted">No users or resources assigned to this inquiry.</p>
                                     </div>
-                                </div>
+                                @endif
 
                                 @if($booking->inquiry->message)
                                     <div class="mb-3">

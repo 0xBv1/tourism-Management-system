@@ -110,11 +110,16 @@ class Inquiry extends Model
     {
         $assignedUsers = [];
         
+        // Check if assigned_to user has Sales role
         if ($this->assignedUser) {
+            $userRoles = $this->assignedUser->roles->pluck('name')->toArray();
+            $role = in_array('Sales', $userRoles) ? 'Sales' : 'General';
+            
             $assignedUsers[] = [
                 'user' => $this->assignedUser,
-                'role' => 'General',
-                'field' => 'assigned_to'
+                'role' => $role,
+                'field' => 'assigned_to',
+                'type' => 'user'
             ];
         }
         
@@ -122,7 +127,8 @@ class Inquiry extends Model
             $assignedUsers[] = [
                 'user' => $this->assignedReservation,
                 'role' => 'Reservation',
-                'field' => 'assigned_reservation_id'
+                'field' => 'assigned_reservation_id',
+                'type' => 'user'
             ];
         }
         
@@ -130,7 +136,8 @@ class Inquiry extends Model
             $assignedUsers[] = [
                 'user' => $this->assignedOperator,
                 'role' => 'Operator',
-                'field' => 'assigned_operator_id'
+                'field' => 'assigned_operator_id',
+                'type' => 'user'
             ];
         }
         
@@ -138,7 +145,19 @@ class Inquiry extends Model
             $assignedUsers[] = [
                 'user' => $this->assignedAdmin,
                 'role' => 'Admin',
-                'field' => 'assigned_admin_id'
+                'field' => 'assigned_admin_id',
+                'type' => 'user'
+            ];
+        }
+        
+        // Add assigned resources
+        foreach ($this->resources as $resource) {
+            $assignedUsers[] = [
+                'resource' => $resource,
+                'role' => ucfirst($resource->resource_type),
+                'field' => 'resource',
+                'type' => 'resource',
+                'added_by' => $resource->addedBy
             ];
         }
         
@@ -154,6 +173,89 @@ class Inquiry extends Model
                $this->assigned_reservation_id === $user->id ||
                $this->assigned_operator_id === $user->id ||
                $this->assigned_admin_id === $user->id;
+    }
+
+    /**
+     * Regenerate the booking file PDF with updated inquiry data
+     */
+    public function regenerateBookingFile(): void
+    {
+        if (!$this->bookingFile) {
+            return;
+        }
+
+        try {
+            // Generate new PDF content
+            $pdfContent = $this->generateBookingFilePDF();
+            
+            // Generate new filename with updated data
+            $name = $this->sanitizeForFilename($this->guest_name ?? 'Guest_Name');
+            $nationality = $this->sanitizeForFilename($this->nationality ?? 'Nationality');
+            $filename = "booking-{$this->id}-{$name}-{$nationality}.pdf";
+            $filepath = "booking-files/{$filename}";
+            
+            // Delete old file if it exists
+            if (\Storage::disk('public')->exists($this->bookingFile->file_path)) {
+                \Storage::disk('public')->delete($this->bookingFile->file_path);
+            }
+            
+            // Update booking file record
+            $this->bookingFile->update([
+                'file_name' => $filename,
+                'file_path' => $filepath,
+                'generated_at' => now(),
+            ]);
+            
+            // Store the new PDF file
+            \Storage::disk('public')->put($filepath, $pdfContent);
+            
+        } catch (\Exception $e) {
+            \Log::error("Failed to regenerate booking file for inquiry {$this->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate booking file PDF content
+     */
+    private function generateBookingFilePDF(): string
+    {
+        // Load all necessary relationships for PDF generation
+        $this->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles', 'resources.resource', 'resources.addedBy', 'bookingFile.payments']);
+        
+        $data = [
+            'inquiry' => $this,
+            'generated_at' => now(),
+            'booking_id' => $this->id,
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('emails.booking-confirmation-pdf', $data);
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'Arial',
+        ]);
+
+        return $pdf->output();
+    }
+
+    /**
+     * Sanitize string for use in filename
+     */
+    private function sanitizeForFilename(string $string): string
+    {
+        // Handle empty or whitespace-only strings
+        if (empty(trim($string))) {
+            return 'unknown';
+        }
+        
+        // Remove special characters and replace spaces with hyphens
+        $sanitized = preg_replace('/[^a-zA-Z0-9\s\-_]/', '', $string);
+        $sanitized = preg_replace('/\s+/', '-', trim($sanitized));
+        $sanitized = strtolower($sanitized);
+        
+        // Limit length to avoid filesystem issues
+        return substr($sanitized, 0, 50);
     }
 
     /**
@@ -219,6 +321,26 @@ class Inquiry extends Model
         static::updating(function ($inquiry) {
             if ($inquiry->total_amount && $inquiry->paid_amount) {
                 $inquiry->remaining_amount = $inquiry->calculateRemainingAmount();
+            }
+        });
+
+        static::updated(function ($inquiry) {
+            // Regenerate PDF if inquiry data that affects the PDF has changed
+            $pdfAffectingFields = ['guest_name', 'email', 'phone', 'nationality', 'subject', 'total_amount', 'paid_amount', 'remaining_amount'];
+            $changes = $inquiry->getChanges();
+            
+            // Check if any PDF-affecting fields have changed
+            $hasRelevantChanges = false;
+            foreach ($pdfAffectingFields as $field) {
+                if (isset($changes[$field])) {
+                    $hasRelevantChanges = true;
+                    break;
+                }
+            }
+            
+            // Regenerate PDF if there are relevant changes and a booking file exists
+            if ($hasRelevantChanges && $inquiry->bookingFile) {
+                $inquiry->regenerateBookingFile();
             }
         });
     }

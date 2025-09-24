@@ -48,10 +48,11 @@ class InquiryConfirmedNotification extends Notification implements ShouldQueue
                     ->greeting('Hello ' . $notifiable->name . '!')
                     ->line('A new inquiry has been confirmed and requires your attention.')
                     ->line('**Inquiry Details:**')
-                    ->line('• Customer: ' . $this->inquiry->name)
+                    ->line('• Client: ' . $this->inquiry->guest_name)
+                    ->line('• Subject: ' . $this->inquiry->subject)
                     ->line('• Email: ' . $this->inquiry->email)
                     ->line('• Phone: ' . $this->inquiry->phone)
-                    ->line('• Subject: ' . $this->inquiry->subject)
+                    ->line('• Nationality: ' . $this->inquiry->nationality)
                     ->line('• Confirmed At: ' . $this->inquiry->confirmed_at->format('Y-m-d H:i:s'))
                     ->action('View Inquiry', route('dashboard.inquiries.show', $this->inquiry))
                     ->line('Please review the inquiry and take necessary actions.')
@@ -68,10 +69,13 @@ class InquiryConfirmedNotification extends Notification implements ShouldQueue
     {
         return [
             'inquiry_id' => $this->inquiry->id,
-            'customer_name' => $this->inquiry->name,
+            'customer_name' => $this->inquiry->guest_name,
             'subject' => $this->inquiry->subject,
+            'email' => $this->inquiry->email,
+            'phone' => $this->inquiry->phone,
+            'nationality' => $this->inquiry->nationality,
             'confirmed_at' => $this->inquiry->confirmed_at,
-            'message' => 'New inquiry #' . $this->inquiry->id . ' has been confirmed by ' . $this->inquiry->name,
+            'message' => 'New inquiry #' . $this->inquiry->id . ' has been confirmed by ' . $this->inquiry->guest_name,
         ];
     }
 }
