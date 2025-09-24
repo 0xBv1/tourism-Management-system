@@ -8,6 +8,8 @@ use App\Models\Hotel;
 use App\Models\Vehicle;
 use App\Models\Guide;
 use App\Models\Representative;
+use App\Models\ResourceBooking;
+use App\Models\InquiryResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -41,6 +43,12 @@ class ResourceReportController extends Controller
         $representativeUtilization = $this->getResourceUtilizationReport('representative', $startDate, $endDate);
 
         $overallStats = $this->getOverallStats($startDate, $endDate);
+        
+        // Enhanced analytics
+        $bookingPatterns = $this->getBookingPatterns($startDate, $endDate);
+        $resourcePerformance = $this->getResourcePerformanceMetrics($startDate, $endDate);
+        $monthlyTrends = $this->getMonthlyTrends($startDate, $endDate);
+        $topPerformers = $this->getTopPerformingResources($startDate, $endDate);
 
         return view('dashboard.reports.resource-utilization', compact(
             'hotelUtilization',
@@ -48,6 +56,10 @@ class ResourceReportController extends Controller
             'guideUtilization',
             'representativeUtilization',
             'overallStats',
+            'bookingPatterns',
+            'resourcePerformance',
+            'monthlyTrends',
+            'topPerformers',
             'startDate',
             'endDate'
         ));
@@ -337,6 +349,180 @@ class ResourceReportController extends Controller
             'representative' => Representative::query(),
             default => throw new \InvalidArgumentException("Invalid resource type: {$resourceType}")
         };
+    }
+
+    /**
+     * Get booking patterns analysis
+     */
+    private function getBookingPatterns(Carbon $startDate, Carbon $endDate): array
+    {
+        $bookings = ResourceBooking::whereBetween('start_date', [$startDate, $endDate])
+            ->orWhereBetween('end_date', [$startDate, $endDate])
+            ->orWhere(function ($query) use ($startDate, $endDate) {
+                $query->where('start_date', '<=', $startDate)
+                      ->where('end_date', '>=', $endDate);
+            })
+            ->get();
+
+        // Booking duration patterns
+        $durationPatterns = $bookings->groupBy(function($booking) {
+            $days = $booking->start_date->diffInDays($booking->end_date) + 1;
+            if ($days <= 1) return '1 day';
+            if ($days <= 3) return '2-3 days';
+            if ($days <= 7) return '4-7 days';
+            if ($days <= 14) return '8-14 days';
+            return '15+ days';
+        })->map->count();
+
+        // Peak booking days (day of week)
+        $dayOfWeekPatterns = $bookings->groupBy(function($booking) {
+            return $booking->start_date->dayOfWeek;
+        })->map->count();
+
+        // Average booking value by resource type
+        $avgBookingValue = $bookings->groupBy('resource_type')
+            ->map(function($group) {
+                return [
+                    'count' => $group->count(),
+                    'avg_value' => $group->avg('total_price'),
+                    'total_value' => $group->sum('total_price')
+                ];
+            });
+
+        return [
+            'duration_patterns' => $durationPatterns,
+            'day_of_week_patterns' => $dayOfWeekPatterns,
+            'avg_booking_value' => $avgBookingValue,
+            'total_bookings' => $bookings->count(),
+            'total_revenue' => $bookings->sum('total_price')
+        ];
+    }
+
+    /**
+     * Get resource performance metrics
+     */
+    private function getResourcePerformanceMetrics(Carbon $startDate, Carbon $endDate): array
+    {
+        $resourceTypes = ['hotel', 'vehicle', 'guide', 'representative'];
+        $metrics = [];
+
+        foreach ($resourceTypes as $type) {
+            $resources = $this->getResourceQuery($type)->get();
+            $bookings = ResourceBooking::where('resource_type', $type)
+                ->whereBetween('start_date', [$startDate, $endDate])
+                ->orWhereBetween('end_date', [$startDate, $endDate])
+                ->orWhere(function ($query) use ($startDate, $endDate) {
+                    $query->where('start_date', '<=', $startDate)
+                          ->where('end_date', '>=', $endDate);
+                })
+                ->get();
+
+            $totalUtilization = 0;
+            $totalRevenue = $bookings->sum('total_price');
+            $avgBookingValue = $bookings->count() > 0 ? $bookings->avg('total_price') : 0;
+
+            foreach ($resources as $resource) {
+                $utilization = $this->resourceAssignmentService->getResourceUtilization(
+                    $type,
+                    $resource->id,
+                    $startDate,
+                    $endDate
+                );
+                $totalUtilization += $utilization['utilization_percentage'];
+            }
+
+            $metrics[$type] = [
+                'total_resources' => $resources->count(),
+                'avg_utilization' => $resources->count() > 0 ? round($totalUtilization / $resources->count(), 2) : 0,
+                'total_bookings' => $bookings->count(),
+                'total_revenue' => $totalRevenue,
+                'avg_booking_value' => round($avgBookingValue, 2),
+                'booking_frequency' => $resources->count() > 0 ? round($bookings->count() / $resources->count(), 2) : 0
+            ];
+        }
+
+        return $metrics;
+    }
+
+    /**
+     * Get monthly trends for the past 6 months
+     */
+    private function getMonthlyTrends(Carbon $startDate, Carbon $endDate): array
+    {
+        $trends = [];
+        $currentDate = $startDate->copy()->startOfMonth();
+
+        while ($currentDate->lte($endDate)) {
+            $monthStart = $currentDate->copy()->startOfMonth();
+            $monthEnd = $currentDate->copy()->endOfMonth();
+
+            $bookings = ResourceBooking::whereBetween('start_date', [$monthStart, $monthEnd])
+                ->orWhereBetween('end_date', [$monthStart, $monthEnd])
+                ->orWhere(function ($query) use ($monthStart, $monthEnd) {
+                    $query->where('start_date', '<=', $monthStart)
+                          ->where('end_date', '>=', $monthEnd);
+                })
+                ->get();
+
+            $trends[] = [
+                'month' => $currentDate->format('M Y'),
+                'bookings' => $bookings->count(),
+                'revenue' => $bookings->sum('total_price'),
+                'avg_booking_value' => $bookings->count() > 0 ? round($bookings->avg('total_price'), 2) : 0
+            ];
+
+            $currentDate->addMonth();
+        }
+
+        return $trends;
+    }
+
+    /**
+     * Get top performing resources across all types
+     */
+    private function getTopPerformingResources(Carbon $startDate, Carbon $endDate): array
+    {
+        $topPerformers = [];
+        $resourceTypes = ['hotel', 'vehicle', 'guide', 'representative'];
+
+        foreach ($resourceTypes as $type) {
+            $resources = $this->getResourceQuery($type)->get();
+            
+            foreach ($resources as $resource) {
+                $utilization = $this->resourceAssignmentService->getResourceUtilization(
+                    $type,
+                    $resource->id,
+                    $startDate,
+                    $endDate
+                );
+
+                $bookings = ResourceBooking::where('resource_type', $type)
+                    ->where('resource_id', $resource->id)
+                    ->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($query) use ($startDate, $endDate) {
+                        $query->where('start_date', '<=', $startDate)
+                              ->where('end_date', '>=', $endDate);
+                    })
+                    ->get();
+
+                $topPerformers[] = [
+                    'resource' => $resource,
+                    'resource_type' => $type,
+                    'utilization_percentage' => $utilization['utilization_percentage'],
+                    'bookings_count' => $bookings->count(),
+                    'total_revenue' => $bookings->sum('total_price'),
+                    'avg_booking_value' => $bookings->count() > 0 ? round($bookings->avg('total_price'), 2) : 0
+                ];
+            }
+        }
+
+        // Sort by utilization percentage and take top 10
+        usort($topPerformers, function ($a, $b) {
+            return $b['utilization_percentage'] <=> $a['utilization_percentage'];
+        });
+
+        return array_slice($topPerformers, 0, 10);
     }
 }
 

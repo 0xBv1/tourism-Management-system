@@ -96,6 +96,14 @@ class Inquiry extends Model
     }
 
     /**
+     * Get all resources associated with this inquiry.
+     */
+    public function resources(): HasMany
+    {
+        return $this->hasMany(InquiryResource::class)->orderBy('created_at');
+    }
+
+    /**
      * Get all assigned users for this inquiry
      */
     public function getAllAssignedUsers(): array

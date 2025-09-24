@@ -171,6 +171,18 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card border-dark">
+                                                <div class="card-body text-center">
+                                                    <i class="fa fa-link fa-3x text-dark mb-3"></i>
+                                                    <h5>Inquiry Resources</h5>
+                                                    <p class="text-muted">Track resource assignments to inquiries and staff performance</p>
+                                                    <a href="{{ route('dashboard.reports.inquiry-resources') }}" class="btn btn-dark">
+                                                        <i class="fa fa-link"></i> View Report
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

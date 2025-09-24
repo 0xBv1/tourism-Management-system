@@ -33,6 +33,10 @@ class PermittedMiddleware
         'dashboard.debug.user-roles',
         'dashboard.inquiries.confirm-form',
         'dashboard.inquiries.process-confirmation',
+        'dashboard.inquiries.resources.store',
+        'dashboard.inquiries.resources.available',
+        'dashboard.inquiries.resources.destroy',
+        'dashboard.reports.inquiry-resources',
         'dashboard.chats.recipients',
 
     ];

@@ -9,6 +9,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\InquiryRequest;
 use App\Models\Inquiry;
 use App\Models\User;
+use App\Models\Hotel;
+use App\Models\Vehicle;
+use App\Models\Guide;
+use App\Models\Representative;
+use App\Models\Extra;
 use App\Enums\InquiryStatus;
 use Illuminate\Http\Request;
 
@@ -84,7 +89,16 @@ class InquiryController extends Controller
      */
     public function show(Inquiry $inquiry)
     {
-        $inquiry->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles']);
+        $inquiry->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles', 'resources.resource', 'resources.addedBy']);
+        
+        // Load all available resources for the navigation tabs
+        $availableResources = [
+            'hotels' => Hotel::active()->with('city')->get(['id', 'name', 'city_id']),
+            'vehicles' => Vehicle::active()->with('city')->get(['id', 'name', 'type', 'city_id']),
+            'guides' => Guide::active()->with('city')->get(['id', 'name', 'city_id']),
+            'representatives' => Representative::active()->with('city')->get(['id', 'name', 'city_id']),
+            'extras' => Extra::active()->get(['id', 'name', 'category', 'price', 'currency']),
+        ];
         $users = User::with('roles')
             ->whereHas('roles', function($query) {
                 $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
@@ -103,7 +117,7 @@ class InquiryController extends Controller
         }
         
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.show', compact('inquiry', 'users', 'usersByRole', 'statuses'));
+        return view('dashboard.inquiries.show', compact('inquiry', 'users', 'usersByRole', 'statuses', 'availableResources'));
     }
 
     /**

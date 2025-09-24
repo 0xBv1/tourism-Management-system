@@ -11,6 +11,11 @@ use App\Notifications\Channels\WhatsAppChannel as WhatsAppNotificationChannel;
 use App\Notifications\Channels\SmsChannel;
 use App\Services\Recaptcha\RecaptchaService;
 use App\Models\BookingFile;
+use App\Models\Hotel;
+use App\Models\Vehicle;
+use App\Models\Guide;
+use App\Models\Representative;
+use App\Models\Extra;
 use App\Observers\BookingFileObserver;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
@@ -18,6 +23,7 @@ use Illuminate\Notifications\ChannelManager;
 use App\Services\Translation\Google\FreeTranslator;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -64,6 +70,15 @@ class AppServiceProvider extends ServiceProvider
         
         // Register observers
         BookingFile::observe(BookingFileObserver::class);
+        
+        // Register morph map for InquiryResource
+        Relation::morphMap([
+            'hotel' => Hotel::class,
+            'vehicle' => Vehicle::class,
+            'guide' => Guide::class,
+            'representative' => Representative::class,
+            'extra' => Extra::class,
+        ]);
         
 //        Str::macro('htmlEntityDecode', fn($value) => Str::of(html_entity_decode($value)));
 //        Stringable::macro('htmlEntityDecode', fn() => new Stringable(html_entity_decode($this->value)));

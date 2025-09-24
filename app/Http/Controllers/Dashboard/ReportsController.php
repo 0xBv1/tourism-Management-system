@@ -13,6 +13,7 @@ use App\Models\Vehicle;
 use App\Models\Guide;
 use App\Models\Representative;
 use App\Models\ResourceBooking;
+use App\Models\InquiryResource;
 use App\Enums\InquiryStatus;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
@@ -289,6 +290,97 @@ class ReportsController extends Controller
             'topPerformers',
             'conversionFunnel',
             'startDate', 
+            'endDate'
+        ));
+    }
+
+    /**
+     * Inquiry Resources Report - Track resource assignments to inquiries
+     */
+    public function inquiryResources(Request $request)
+    {
+        $this->authorize('reports.inquiry-resources');
+        
+        $startDate = $request->get('start_date', now()->startOfMonth());
+        $endDate = $request->get('end_date', now()->endOfMonth());
+        
+        if (is_string($startDate)) {
+            $startDate = Carbon::parse($startDate);
+        }
+        if (is_string($endDate)) {
+            $endDate = Carbon::parse($endDate);
+        }
+
+        // Get inquiry resources with relationships
+        $inquiryResources = InquiryResource::with(['inquiry.client', 'resource', 'addedBy'])
+            ->whereHas('inquiry', function($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Resource type breakdown
+        $resourceTypeData = [];
+        $resourceTypes = ['hotel', 'vehicle', 'guide', 'representative', 'extra'];
+        
+        foreach ($resourceTypes as $type) {
+            $count = $inquiryResources->where('resource_type', $type)->count();
+            $resourceTypeData[$type] = [
+                'label' => ucfirst($type),
+                'count' => $count,
+                'percentage' => $inquiryResources->count() > 0 ? round(($count / $inquiryResources->count()) * 100, 2) : 0,
+            ];
+        }
+
+        // Top resources by usage
+        $topResources = $inquiryResources->groupBy('resource_id')
+            ->map(function($group) {
+                $resource = $group->first()->resource;
+                return [
+                    'resource' => $resource,
+                    'resource_type' => $group->first()->resource_type,
+                    'count' => $group->count(),
+                    'resource_name' => $resource ? $resource->name : 'Unknown Resource'
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(10);
+
+        // Staff performance (who adds most resources)
+        $staffPerformance = $inquiryResources->groupBy('added_by')
+            ->map(function($group) {
+                $user = $group->first()->addedBy;
+                return [
+                    'user' => $user,
+                    'count' => $group->count(),
+                    'user_name' => $user ? $user->name : 'Unknown User'
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(10);
+
+        // Monthly trend
+        $monthlyData = $this->getMonthlyData(InquiryResource::class, $startDate, $endDate);
+
+        // Conversion analysis (inquiries with vs without resources)
+        $inquiriesWithResources = Inquiry::whereBetween('created_at', [$startDate, $endDate])
+            ->whereHas('resources')
+            ->count();
+            
+        $totalInquiries = Inquiry::whereBetween('created_at', [$startDate, $endDate])->count();
+        
+        $resourceAssignmentRate = $totalInquiries > 0 ? round(($inquiriesWithResources / $totalInquiries) * 100, 2) : 0;
+
+        return view('dashboard.reports.inquiry-resources', compact(
+            'inquiryResources',
+            'resourceTypeData',
+            'topResources',
+            'staffPerformance',
+            'monthlyData',
+            'resourceAssignmentRate',
+            'inquiriesWithResources',
+            'totalInquiries',
+            'startDate',
             'endDate'
         ));
     }

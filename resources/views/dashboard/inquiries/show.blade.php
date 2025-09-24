@@ -235,6 +235,13 @@
                 </div>
             </div>
             
+            <!-- Resources Management Section -->
+            <div class="row mt-4">
+                <div class="col-sm-12">
+                    @include('dashboard.inquiries.partials.resources')
+                </div>
+            </div>
+            
             <!-- Chat Section -->
             @if(admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
                 <div class="row mt-4">

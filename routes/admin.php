@@ -19,6 +19,7 @@ use App\Http\Controllers\Dashboard\ResourceAssignmentController;
 use App\Http\Controllers\Dashboard\ResourceReportController;
 use App\Http\Controllers\Dashboard\PaymentController;
 use App\Http\Controllers\Dashboard\NotificationController;
+use App\Http\Controllers\Dashboard\InquiryResourceController;
 use Illuminate\Support\Facades\Route;
 
 //controllers
@@ -63,6 +64,16 @@ Route::group([
     Route::post('inquiries/{inquiry}/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
     Route::get('inquiries/{inquiry}/confirm-form', [InquiryController::class, 'showConfirmForm'])->name('inquiries.confirm-form');
     Route::post('inquiries/{inquiry}/process-confirmation', [InquiryController::class, 'processConfirmation'])->name('inquiries.process-confirmation');
+    
+    // Inquiry Resources Management
+    Route::group(['prefix' => 'inquiries/{inquiry}', 'as' => 'inquiries.'], function () {
+        Route::post('resources', [InquiryResourceController::class, 'store'])
+            ->name('resources.store');
+        Route::get('resources/available', [InquiryResourceController::class, 'getAvailableResources'])
+            ->name('resources.available');
+    });
+    Route::delete('inquiries/resources/{id}', [InquiryResourceController::class, 'destroy'])
+        ->name('inquiries.resources.destroy');
     
     // Chat Management
     Route::prefix('inquiries/{inquiry}')->name('inquiries.')->group(function () {
@@ -126,6 +137,7 @@ Route::group([
         Route::get('finance', [App\Http\Controllers\Dashboard\ReportsController::class, 'finance'])->name('finance');
         Route::get('operational', [App\Http\Controllers\Dashboard\ReportsController::class, 'operational'])->name('operational');
         Route::get('performance', [App\Http\Controllers\Dashboard\ReportsController::class, 'performance'])->name('performance');
+        Route::get('inquiry-resources', [App\Http\Controllers\Dashboard\ReportsController::class, 'inquiryResources'])->name('inquiry-resources');
         Route::get('export/{type}', [App\Http\Controllers\Dashboard\ReportsController::class, 'export'])->name('export');
     });
 
