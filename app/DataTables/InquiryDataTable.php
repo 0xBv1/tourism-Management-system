@@ -14,7 +14,7 @@ class InquiryDataTable extends DataTable
 {
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
-        $isRestrictedRole = auth()->user()->hasRole(['Reservation', 'Operation']);
+        $isRestrictedRole = auth()->user()->hasRole(['Reservation', 'Operator']);
         
         return (new EloquentDataTable($query))
             ->editColumn('status', fn(Inquiry $inquiry) => '<span class="badge badge-' . $this->getStatusColor($inquiry->status->value) . '">' . ucfirst($inquiry->status->value) . '</span>')
@@ -35,7 +35,7 @@ class InquiryDataTable extends DataTable
         $query = $model->newQuery()->with(['client', 'assignedUser', 'assignedReservation', 'assignedOperator', 'assignedAdmin']);
         
         // Filter inquiries based on user role
-        if (auth()->user()->hasRole(['Reservation', 'Operation'])) {
+        if (auth()->user()->hasRole(['Reservation', 'Operator'])) {
             // For Reservation and Operation roles, show only inquiries assigned to the current user
             $query->where(function($q) {
                 $q->where('assigned_to', auth()->id())
@@ -43,8 +43,11 @@ class InquiryDataTable extends DataTable
                   ->orWhere('assigned_operator_id', auth()->id())
                   ->orWhere('assigned_admin_id', auth()->id());
             });
+        } elseif (auth()->user()->hasRole('Finance')) {
+            // For Finance role, show only confirmed inquiries
+            $query->where('status', 'confirmed');
         }
-        // For other roles (Admin, Administrator, Sales, Finance), show all inquiries
+        // For other roles (Admin, Administrator, Sales), show all inquiries
         
         return $query;
     }
@@ -114,11 +117,17 @@ class InquiryDataTable extends DataTable
         
         $html = '<div class="assigned-users">';
         foreach ($assignedUsers as $assignment) {
+            // Only show user assignments, skip resource assignments
+            if ($assignment['type'] !== 'user' || !isset($assignment['user'])) {
+                continue;
+            }
+            
             $roleColor = match($assignment['role']) {
+                'Sales' => 'primary',
                 'Reservation' => 'info',
                 'Operator' => 'warning',
                 'Admin' => 'danger',
-                'General' => 'primary',
+                'General' => 'secondary',
                 default => 'secondary'
             };
             

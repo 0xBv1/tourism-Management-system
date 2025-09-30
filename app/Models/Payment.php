@@ -24,6 +24,17 @@ class Payment extends Model
         'reference_number',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($payment) {
+            if (empty($payment->reference_number)) {
+                $payment->reference_number = $payment->generateReferenceNumber();
+            }
+        });
+    }
+
     protected $casts = [
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
@@ -82,7 +93,8 @@ class Payment extends Model
 
     public function getFormattedAmountAttribute(): string
     {
-        return $this->booking->currency . ' ' . number_format($this->amount, 2);
+        $currency = $this->booking?->currency ?? 'USD';
+        return $currency . ' ' . number_format($this->amount, 2);
     }
 
     public function isPaid(): bool
@@ -101,5 +113,45 @@ class Payment extends Model
         if ($this->booking) {
             $this->booking->syncPaymentData();
         }
+    }
+
+    /**
+     * Generate a unique reference number for the payment
+     */
+    public function generateReferenceNumber(): string
+    {
+        $prefix = 'PAY';
+        $date = now()->format('Ymd');
+        
+        // Get the last payment reference number for today
+        $lastPayment = static::whereDate('created_at', now()->toDateString())
+            ->whereNotNull('reference_number')
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastPayment && $lastPayment->reference_number) {
+            // Extract the sequence number from the last reference
+            $lastRef = $lastPayment->reference_number;
+            if (preg_match('/PAY-' . $date . '-(\d+)/', $lastRef, $matches)) {
+                $sequence = (int) $matches[1] + 1;
+            } else {
+                $sequence = 1;
+            }
+        } else {
+            $sequence = 1;
+        }
+        
+        // Format sequence with leading zeros (4 digits)
+        $sequenceFormatted = str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        
+        return $prefix . '-' . $date . '-' . $sequenceFormatted;
+    }
+
+    /**
+     * Get formatted reference number with prefix
+     */
+    public function getFormattedReferenceNumberAttribute(): string
+    {
+        return $this->reference_number ? 'REF: ' . $this->reference_number : 'N/A';
     }
 }

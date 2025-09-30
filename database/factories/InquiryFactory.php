@@ -21,13 +21,16 @@ class InquiryFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name(),
+            'guest_name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),
             'subject' => $this->faker->sentence(),
-            'message' => $this->faker->paragraph(),
-            'status' => $this->faker->randomElement(['pending', 'confirmed', 'completed', 'cancelled']),
-            'admin_notes' => $this->faker->optional()->paragraph(),
+            'tour_name' => $this->faker->words(3, true),
+            'nationality' => $this->faker->country(),
+            'number_pax' => $this->faker->numberBetween(1, 10),
+            'arrival_date' => $this->faker->date(),
+            'departure_date' => $this->faker->date(),
+            'status' => $this->faker->randomElement(['pending', 'confirmed', 'cancelled']),
             'client_id' => null,
             'assigned_to' => User::factory(),
             'booking_file_id' => null,

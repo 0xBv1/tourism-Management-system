@@ -27,7 +27,7 @@ class AuthServiceProvider extends ServiceProvider
 
         // Gate for managing inquiry resources
         Gate::define('manage-inquiry-resources', function ($user) {
-            return $user->hasAnyRole(['Operation', 'Admin', 'Administrator']);
+            return $user->hasAnyRole(['Operator', 'Admin', 'Administrator']);
         });
     }
 }

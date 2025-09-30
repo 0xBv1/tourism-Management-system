@@ -204,6 +204,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Debug Deprecations
+    |--------------------------------------------------------------------------
+    |
+    | When this option is enabled, PHP 8.3 deprecation warnings will be shown.
+    | When disabled (default), deprecation warnings are suppressed for better
+    | development experience until vendor packages are updated.
+    |
+    */
+
+    'debug_deprecations' => env('APP_DEBUG_DEPRECATIONS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Class Aliases
     |--------------------------------------------------------------------------
     |

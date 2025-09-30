@@ -33,11 +33,9 @@ class PaymentDataTable extends DataTable
                 return $payment->created_at->format('M d, Y H:i');
             })
             ->addColumn('booking_file', function (Payment $payment) {
-                return $payment->booking->file_name ?? '-';
+                return $payment->booking?->file_name ?? '-';
             })
-            ->addColumn('client_name', function (Payment $payment) {
-                return $payment->booking->inquiry->client->name ?? '-';
-            })
+        
             ->addColumn('action', 'dashboard.payments.action')
             ->setRowId('id')
             ->rawColumns(['status', 'action']);
@@ -71,7 +69,6 @@ class PaymentDataTable extends DataTable
             Column::make('id'),
             Column::make('reference_number')->title('Reference'),
             Column::make('booking_file')->title('Booking File'),
-            Column::make('client_name')->title('Client'),
             Column::make('gateway'),
             Column::make('amount'),
             Column::make('status'),

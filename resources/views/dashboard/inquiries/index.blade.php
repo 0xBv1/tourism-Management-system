@@ -14,10 +14,16 @@
                 <div class="col-sm-12">
                     <x-dashboard.partials.message-alert />
                     
-                    @if(auth()->user()->hasRole(['Reservation', 'Operation']))
+                    @if(auth()->user()->hasRole(['Reservation', 'Operator']))
                         <div class="alert alert-info">
                             <i class="fa fa-info-circle"></i> 
                             <strong>Filtered View:</strong> You are viewing only inquiries assigned to you. 
+                            <small class="text-muted">(Role: {{ auth()->user()->roles->pluck('name')->join(', ') }})</small>
+                        </div>
+                    @elseif(auth()->user()->hasRole('Finance'))
+                        <div class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle"></i> 
+                            <strong>Finance View:</strong> You are viewing only confirmed inquiries. Chat and resource management features are disabled for Finance role. 
                             <small class="text-muted">(Role: {{ auth()->user()->roles->pluck('name')->join(', ') }})</small>
                         </div>
                     @endif
@@ -27,7 +33,7 @@
                             <h5>Inquiries Management</h5>
                             @if(admin()->roles->count() > 0)
                                 <small class="text-muted">
-                                    <i class="fa fa-user-tag"></i> 
+                                    <i class="fa fa-user"></i> 
                                     Role: {{ admin()->roles->pluck('name')->join(', ') }}
                                 </small>
                             @endif

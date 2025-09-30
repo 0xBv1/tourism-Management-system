@@ -98,7 +98,7 @@ class Chat extends Model
                            });
                   });
             });
-        } elseif (in_array('Operation', $userRoles)) {
+        } elseif (in_array('Operator', $userRoles)) {
             // Operation can only see:
             // 1. Messages they sent to Sales
             // 2. Messages Sales sent to them specifically

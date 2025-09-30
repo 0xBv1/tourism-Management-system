@@ -16,7 +16,7 @@
         "dompdf/dompdf": "^2.0",
         "google/cloud-translate": "^1.16",
         "guzzlehttp/guzzle": "^7.2",
-        "laravel/framework": "^9.19",
+        "laravel/framework": "^10.0",
         "laravel/passport": "^11.5",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
@@ -43,9 +43,9 @@
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
-        "nunomaduro/collision": "^6.1",
-        "phpunit/phpunit": "^9.5.10",
-        "spatie/laravel-ignition": "^1.0"
+        "nunomaduro/collision": "^7.0",
+        "phpunit/phpunit": "^10.0",
+        "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -69,7 +69,13 @@
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+            "@php fix-carbon-deprecation.php",
+            "@php fix-php84-deprecations.php"
+        ],
+        "post-install-cmd": [
+            "@php fix-carbon-deprecation.php",
+            "@php fix-php84-deprecations.php"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

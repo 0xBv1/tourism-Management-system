@@ -28,7 +28,7 @@ class SendNewInquiryNotification implements ShouldQueue
         try {
             // Get all users who should be notified about new inquiries
             $users = User::whereHas('roles', function ($query) {
-                $query->whereIn('name', ['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
+                $query->whereIn('name', ['Sales', 'Reservation', 'Operator', 'Admin', 'Administrator']);
             })->get();
 
             // Send notification to all relevant users

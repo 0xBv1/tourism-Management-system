@@ -18,7 +18,7 @@
                     <!-- Role Indicator -->
                     @if(admin()->roles->count() > 0)
                         <div class="alert alert-info">
-                            <i class="fa fa-user-tag"></i> 
+                            <i class="fa fa-user"></i> 
                             <strong>Current Role:</strong> {{ admin()->roles->pluck('name')->join(', ') }}
                         </div>
                     @endif
@@ -67,60 +67,68 @@
                     <!-- Summary Cards -->
                     <div class="row mt-3">
                         <div class="col-md-3">
-                            <div class="card bg-primary text-white">
+                            <div class="card bg-gradient-primary text-white shadow-lg">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>{{ $payments->count() }}</h4>
-                                            <p class="mb-0">Total Payments</p>
+                                            <h3 class="fw-bold">{{ $payments->count() }}</h3>
+                                            <p class="mb-1 fs-6">Total Payments</p>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fa fa-credit-card fa-2x"></i>
+                                            <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                                                <i class="fa fa-credit-card fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-success text-white">
+                            <div class="card bg-gradient-success text-white shadow-lg">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>${{ number_format($payments->where('status', \App\Enums\PaymentStatus::PAID)->sum('amount'), 2) }}</h4>
-                                            <p class="mb-0">Paid Amount</p>
+                                            <h3 class="fw-bold">${{ number_format($payments->where('status', \App\Enums\PaymentStatus::PAID)->sum('amount'), 2) }}</h3>
+                                            <p class="mb-1 fs-6">Paid Amount</p>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fa fa-check-circle fa-2x"></i>
+                                            <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                                                <i class="fa fa-check-circle fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-warning text-white">
+                            <div class="card bg-gradient-warning text-white shadow-lg">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>${{ number_format($payments->where('status', \App\Enums\PaymentStatus::PENDING)->sum('amount'), 2) }}</h4>
-                                            <p class="mb-0">Pending Amount</p>
+                                            <h3 class="fw-bold">${{ number_format($payments->where('status', \App\Enums\PaymentStatus::PENDING)->sum('amount'), 2) }}</h3>
+                                            <p class="mb-1 fs-6">Pending Amount</p>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fa fa-clock fa-2x"></i>
+                                            <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                                                <i class="fa fa-clock fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-danger text-white">
+                            <div class="card bg-gradient-danger text-white shadow-lg">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>${{ number_format($payments->where('status', \App\Enums\PaymentStatus::NOT_PAID)->sum('amount'), 2) }}</h4>
-                                            <p class="mb-0">Not Paid Amount</p>
+                                            <h3 class="fw-bold">${{ number_format($payments->where('status', \App\Enums\PaymentStatus::NOT_PAID)->sum('amount'), 2) }}</h3>
+                                            <p class="mb-1 fs-6">Not Paid Amount</p>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fa fa-times-circle fa-2x"></i>
+                                            <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                                                <i class="fa fa-times-circle fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -130,35 +138,53 @@
 
                     <!-- Charts Row -->
                     <div class="row mt-3">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Payment Status</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="statusChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="payment-status-chart"
+                                type="doughnut"
+                                :labels="array_column($statusData, 'label')"
+                                :data="array_column($statusData, 'count')"
+                                title="Payment Status Distribution"
+                                subtitle="Breakdown of payments by status"
+                                height="350px"
+                                :colors="['#10b981', '#f59e0b', '#ef4444']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Total Payments',
+                                        'value' => $payments->count(),
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Paid Amount',
+                                        'value' => '$' . number_format($payments->where('status', \App\Enums\PaymentStatus::PAID)->sum('amount'), 2),
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
                         </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Gateway Distribution</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="gatewayChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Revenue Trend</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="revenueChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="gateway-distribution-chart"
+                                type="pie"
+                                :labels="array_column($gatewayData, 'gateway')"
+                                :data="array_column($gatewayData, 'count')"
+                                title="Gateway Distribution"
+                                subtitle="Payment methods used by customers"
+                                height="350px"
+                                :colors="['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Total Gateways',
+                                        'value' => count($gatewayData),
+                                        'color' => 'info'
+                                    ],
+                                    [
+                                        'label' => 'Most Used',
+                                        'value' => count($gatewayData) > 0 ? $gatewayData[0]['gateway'] : 'N/A',
+                                        'color' => 'primary'
+                                    ]
+                                ]"
+                                :exportable="true" />
                         </div>
                     </div>
 
@@ -189,7 +215,7 @@
                                             <td>{{ $payment->id }}</td>
                                             <td>{{ $payment->invoice_id ?? 'N/A' }}</td>
                                             <td>{{ $payment->reference_number ?? 'N/A' }}</td>
-                                            <td>{{ $payment->booking->inquiry->client->name ?? 'N/A' }}</td>
+                                            <td>{{ $payment->booking?->inquiry?->client?->name ?? 'N/A' }}</td>
                                             <td>{{ $payment->formatted_amount }}</td>
                                             <td>
                                                 <span class="badge bg-{{ $payment->status->getColor() }}">
@@ -218,85 +244,61 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Status Chart
-    const statusCtx = document.getElementById('statusChart').getContext('2d');
-    const statusData = @json($statusData);
-    
-    new Chart(statusCtx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.values(statusData).map(item => item.label),
-            datasets: [{
-                data: Object.values(statusData).map(item => item.count),
-                backgroundColor: [
-                    '#28a745',
-                    '#ffc107',
-                    '#dc3545'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
+{{-- Chart.js is now included by the chart components --}}
+@endpush
 
-    // Gateway Chart
-    const gatewayCtx = document.getElementById('gatewayChart').getContext('2d');
-    const gatewayData = @json($gatewayData);
+@push('styles')
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .bg-gradient-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
     
-    new Chart(gatewayCtx, {
-        type: 'pie',
-        data: {
-            labels: gatewayData.map(item => item.gateway),
-            datasets: [{
-                data: gatewayData.map(item => item.count),
-                backgroundColor: [
-                    '#007bff',
-                    '#28a745',
-                    '#ffc107',
-                    '#dc3545',
-                    '#6c757d',
-                    '#17a2b8'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-
-    // Revenue Trend Chart
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    const revenueData = @json($revenueTrend);
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
     
-    new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: revenueData.map(item => item.date),
-            datasets: [{
-                label: 'Daily Revenue',
-                data: revenueData.map(item => item.revenue),
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-});
-</script>
+    .shadow-lg {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+    }
+    
+    .btn {
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .table {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: none;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .badge {
+        border-radius: 20px;
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+</style>
 @endpush

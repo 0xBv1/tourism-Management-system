@@ -24,9 +24,9 @@ enum InquiryStatus: string
     public function getColor(): string
     {
         return match($this) {
-            self::PENDING => 'yellow',
-            self::CONFIRMED => 'blue',
-            self::CANCELLED => 'red',
+            self::PENDING => 'warning',
+            self::CONFIRMED => 'success',
+            self::CANCELLED => 'danger',
         };
     }
 

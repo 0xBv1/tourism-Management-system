@@ -6,6 +6,7 @@ use App\Models\BookingFile;
 use App\Models\Inquiry;
 use App\Models\Payment;
 use App\Enums\BookingStatus;
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -93,7 +94,7 @@ class BookingFileSeeder extends Seeder
                     'invoice_id' => 'INV-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
                     'gateway' => 'stripe',
                     'amount' => 750.00,
-                    'status' => 'completed',
+                    'status' => PaymentStatus::PAID,
                     'paid_at' => now()->subDays(1),
                     'transaction_request' => ['payment_method' => 'card'],
                     'transaction_verification' => ['transaction_id' => 'txn_' . uniqid()],
@@ -104,7 +105,7 @@ class BookingFileSeeder extends Seeder
                     'invoice_id' => 'INV-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
                     'gateway' => 'paypal',
                     'amount' => $booking->total_amount,
-                    'status' => 'completed',
+                    'status' => PaymentStatus::PAID,
                     'paid_at' => now()->subDays(3),
                     'transaction_request' => ['payment_method' => 'paypal'],
                     'transaction_verification' => ['transaction_id' => 'paypal_' . uniqid()],

@@ -27,12 +27,12 @@ enum BookingStatus: string
     public function getColor(): string
     {
         return match($this) {
-            self::PENDING => 'yellow',
-            self::CONFIRMED => 'blue',
+            self::PENDING => 'warning',
+            self::CONFIRMED => 'info',
             self::IN_PROGRESS => 'purple',
-            self::COMPLETED => 'green',
-            self::CANCELLED => 'red',
-            self::REFUNDED => 'gray',
+            self::COMPLETED => 'success',
+            self::CANCELLED => 'danger',
+            self::REFUNDED => 'secondary',
         };
     }
 

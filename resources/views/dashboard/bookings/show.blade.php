@@ -144,7 +144,7 @@
                                     @if($booking->notes)
                                         <div class="mb-3">
                                             <label class="form-label fw-bold">Notes:</label>
-                                            <div class="border p-3 rounded bg-light">
+                                            <div class="border p-3 rounded" style="background-color: #f8f9fa; border-color: #dee2e6 !important;">
                                                 {{ $booking->notes }}
                                             </div>
                                         </div>
@@ -238,7 +238,7 @@
                                             @if($booking->inquiry->message)
                                                 <div class="mb-3">
                                                     <label class="form-label fw-bold">Message:</label>
-                                                    <div class="border p-3 rounded bg-light">
+                                                    <div class="border p-3 rounded" style="background-color: #f8f9fa; border-color: #dee2e6 !important;">
                                                         {{ $booking->inquiry->message }}
                                                     </div>
                                                 </div>
@@ -246,51 +246,6 @@
                                         </div>
                                     @endif
 
-                                    <!-- Checklist Section -->
-                                    <div class="mb-4">
-                                        <h6 class="fw-bold">Checklist Progress</h6>
-                                        <div class="progress mb-3" style="height: 25px;">
-                                            <div class="progress-bar" role="progressbar" style="width: {{ $booking->checklist_progress }}%" 
-                                                 aria-valuenow="{{ $booking->checklist_progress }}" aria-valuemin="0" aria-valuemax="100">
-                                                {{ $booking->checklist_progress }}%
-                                            </div>
-                                        </div>
-                                        
-                                        @php
-                                            $defaultChecklist = [
-                                                'accommodation_booked' => 'Accommodation Booked',
-                                                'tours_scheduled' => 'Tours Scheduled',
-                                                'transportation_arranged' => 'Transportation Arranged',
-                                                'insurance_processed' => 'Insurance Processed',
-                                                'final_documents_sent' => 'Final Documents Sent',
-                                                'payment_confirmed' => 'Payment Confirmed',
-                                                'client_notified' => 'Client Notified'
-                                            ];
-                                            
-                                            $checklist = $booking->checklist ?? [];
-                                            $allChecklistItems = array_merge($defaultChecklist, $checklist);
-                                        @endphp
-                                        
-                                        <div class="row">
-                                            @foreach($allChecklistItems as $item => $label)
-                                                @php
-                                                    $isCompleted = isset($checklist[$item]) ? $checklist[$item] : false;
-                                                @endphp
-                                                <div class="col-md-6 mb-2">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input checklist-item" 
-                                                               type="checkbox" 
-                                                               data-item="{{ $item }}"
-                                                               data-booking="{{ $booking->id }}"
-                                                               {{ $isCompleted ? 'checked' : '' }}>
-                                                        <label class="form-check-label {{ $isCompleted ? 'text-decoration-line-through' : '' }}">
-                                                            {{ is_string($label) ? $label : ucfirst(str_replace('_', ' ', $item)) }}
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
                                 </div>
                                 
                                 <div class="col-md-4">
@@ -433,6 +388,52 @@
                                             <strong>Payment Method:</strong> {{ $booking->inquiry->payment_method }}
                                         </div>
                                     @endif
+                                    
+                                    @php
+                                        $latestPayment = $booking->inquiry->latestPayment();
+                                    @endphp
+                                    
+                                    @if($latestPayment)
+                                        <div class="mt-3 pt-3 border-top">
+                                            <h6 class="fw-bold text-primary mb-2">
+                                                <i class="fa fa-credit-card"></i> Latest Payment
+                                            </h6>
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <strong>Amount:</strong><br>
+                                                    <span class="text-success">{{ $booking->currency }} {{ number_format($latestPayment->amount, 2) }}</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Gateway:</strong><br>
+                                                    <span class="badge bg-info">{{ ucfirst($latestPayment->gateway) }}</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Status:</strong><br>
+                                                    <span class="badge bg-{{ $latestPayment->status_color }}">
+                                                        {{ $latestPayment->status_label }}
+                                                    </span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Date:</strong><br>
+                                                    @if($latestPayment->paid_at)
+                                                        {{ $latestPayment->paid_at->format('M d, Y H:i') }}
+                                                    @else
+                                                        {{ $latestPayment->created_at->format('M d, Y H:i') }}
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @if($latestPayment->reference_number)
+                                                <div class="mt-2">
+                                                    <strong>Reference:</strong> {{ $latestPayment->reference_number }}
+                                                </div>
+                                            @endif
+                                            @if($latestPayment->notes)
+                                                <div class="mt-2">
+                                                    <strong>Notes:</strong> {{ $latestPayment->notes }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
                             @else
                                 <div class="alert alert-warning">
@@ -526,49 +527,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle checklist item updates
-    document.querySelectorAll('.checklist-item').forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
-            const item = this.dataset.item;
-            const bookingId = this.dataset.booking;
-            const completed = this.checked;
-            
-            fetch(`/dashboard/bookings/${bookingId}/checklist`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    item: item,
-                    completed: completed
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    // Update progress bar
-                    const progressBar = document.querySelector('.progress-bar');
-                    progressBar.style.width = data.progress + '%';
-                    progressBar.setAttribute('aria-valuenow', data.progress);
-                    progressBar.textContent = data.progress + '%';
-                    
-                    // Update label style
-                    const label = this.nextElementSibling;
-                    if (completed) {
-                        label.classList.add('text-decoration-line-through');
-                    } else {
-                        label.classList.remove('text-decoration-line-through');
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Revert checkbox state
-                this.checked = !completed;
-            });
-        });
-    });
+    // Initialize any other functionality if needed
 });
 </script>
 @endpush

@@ -181,7 +181,7 @@ class UriParser
             $this->queryParameters[] = [
                 'type' => 'Basic',
                 'key' => $key,
-                'operator' => $operator,
+                'Operator' => $operator,
                 'value' => $value,
             ];
         } catch (\Throwable|\Exception $e) {

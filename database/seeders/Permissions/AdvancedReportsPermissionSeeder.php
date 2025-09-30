@@ -123,7 +123,7 @@ class AdvancedReportsPermissionSeeder extends Seeder
         }
 
         // Grant limited permissions to Operation role
-        if ($operationRole = Role::whereName('Operation')->first()) {
+        if ($operationRole = Role::whereName('Operator')->first()) {
             $operationPermissions = [
                 'reports.operational.hotels-usage',
                 'reports.operational.vehicles-usage',

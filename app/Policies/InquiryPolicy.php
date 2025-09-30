@@ -18,7 +18,7 @@ class InquiryPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasAnyRole(['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
+        return $user->hasAnyRole(['Sales', 'Reservation', 'Operator', 'Admin', 'Administrator']);
     }
 
     /**
@@ -30,7 +30,7 @@ class InquiryPolicy
      */
     public function view(User $user, Inquiry $inquiry)
     {
-        return $user->hasAnyRole(['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
+        return $user->hasAnyRole(['Sales', 'Reservation', 'Operator', 'Admin', 'Administrator']);
     }
 
     /**

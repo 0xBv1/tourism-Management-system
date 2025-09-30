@@ -49,6 +49,11 @@ class PaymentRequest extends FormRequest
             $data['invoice_id'] = $this->generateInvoiceId();
         }
         
+        // Generate reference number if not provided
+        if (empty($data['reference_number'])) {
+            $data['reference_number'] = $this->generateReferenceNumber();
+        }
+        
         // Set paid_at if status is paid and paid_at is not provided
         if ($data['status'] === PaymentStatus::PAID->value && empty($data['paid_at'])) {
             $data['paid_at'] = now();
@@ -72,6 +77,38 @@ class PaymentRequest extends FormRequest
         $random = str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
         
         return $prefix . '-' . $date . '-' . $random;
+    }
+
+    /**
+     * Generate a unique reference number
+     */
+    private function generateReferenceNumber(): string
+    {
+        $prefix = 'PAY';
+        $date = now()->format('Ymd');
+        
+        // Get the last payment reference number for today
+        $lastPayment = \App\Models\Payment::whereDate('created_at', now()->toDateString())
+            ->whereNotNull('reference_number')
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastPayment && $lastPayment->reference_number) {
+            // Extract the sequence number from the last reference
+            $lastRef = $lastPayment->reference_number;
+            if (preg_match('/PAY-' . $date . '-(\d+)/', $lastRef, $matches)) {
+                $sequence = (int) $matches[1] + 1;
+            } else {
+                $sequence = 1;
+            }
+        } else {
+            $sequence = 1;
+        }
+        
+        // Format sequence with leading zeros (4 digits)
+        $sequenceFormatted = str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        
+        return $prefix . '-' . $date . '-' . $sequenceFormatted;
     }
 }
 

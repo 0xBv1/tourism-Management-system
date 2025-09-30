@@ -68,7 +68,7 @@ class RequestPermissionSeeder extends Seeder
         }
 
         // Grant response permissions to Operation role
-        if ($operationRole = Role::whereName('Operation')->first()) {
+        if ($operationRole = Role::whereName('Operator')->first()) {
             $operationPermissions = [
                 'requests.list',
                 'requests.show',

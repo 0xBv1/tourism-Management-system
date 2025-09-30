@@ -21,7 +21,7 @@
                             <small class="text-muted">Enter payment information to confirm this inquiry</small>
                             @if(admin()->roles->count() > 0)
                                 <small class="text-muted">
-                                    <i class="fa fa-user-tag"></i> 
+                                    <i class="fa fa-user"></i> 
                                     Role: {{ admin()->roles->pluck('name')->join(', ') }}
                                 </small>
                             @endif

@@ -18,7 +18,7 @@ class ChatPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasAnyRole(['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
+        return $user->hasAnyRole(['Sales', 'Reservation', 'Operator', 'Admin', 'Administrator']);
     }
 
     /**
@@ -47,7 +47,7 @@ class ChatPolicy
      */
     public function create(User $user)
     {
-        return $user->hasAnyRole(['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
+        return $user->hasAnyRole(['Sales', 'Reservation', 'Operator', 'Admin', 'Administrator']);
     }
 
     /**
@@ -70,11 +70,11 @@ class ChatPolicy
 
         // Sales can send to Reservation and Operation users ONLY
         if ($user->hasRole('Sales')) {
-            return $recipient->hasAnyRole(['Reservation', 'Operation']);
+            return $recipient->hasAnyRole(['Reservation', 'Operator']);
         }
 
         // Reservation and Operation can only send to Sales users
-        if ($user->hasAnyRole(['Reservation', 'Operation'])) {
+        if ($user->hasAnyRole(['Reservation', 'Operator'])) {
             return $recipient->hasRole('Sales');
         }
 

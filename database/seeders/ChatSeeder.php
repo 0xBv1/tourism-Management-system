@@ -54,7 +54,7 @@ class ChatSeeder extends Seeder
         $inquiry = Inquiry::first();
         if (!$inquiry) {
             $inquiry = Inquiry::create([
-                'name' => 'Sample Client',
+                'guest_name' => 'Sample Client',
                 'email' => 'client@example.com',
                 'phone' => '+1234567890',
                 'subject' => 'Sample Inquiry for Chat Demo',

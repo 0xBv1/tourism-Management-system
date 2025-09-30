@@ -21,7 +21,7 @@
                             <h5>Vehicle Information</h5>
                             @if(admin()->roles->count() > 0)
                                 <small class="text-muted">
-                                    <i class="fa fa-user-tag"></i> 
+                                    <i class="fa fa-user"></i> 
                                     Role: {{ admin()->roles->pluck('name')->join(', ') }}
                                 </small>
                             @endif
@@ -140,7 +140,7 @@
                                     <h6><strong>Maintenance Information:</strong></h6>
                                     <div class="row">
                                         <div class="col-md-3">
-                                            <div class="card bg-light">
+                                            <div class="card" style="background-color: #f8f9fa;">
                                                 <div class="card-body text-center">
                                                     <h6 class="card-title">Insurance Expiry</h6>
                                                     <p class="card-text">
@@ -150,7 +150,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <div class="card bg-light">
+                                            <div class="card" style="background-color: #f8f9fa;">
                                                 <div class="card-body text-center">
                                                     <h6 class="card-title">Registration Expiry</h6>
                                                     <p class="card-text">
@@ -160,7 +160,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <div class="card bg-light">
+                                            <div class="card" style="background-color: #f8f9fa;">
                                                 <div class="card-body text-center">
                                                     <h6 class="card-title">Last Maintenance</h6>
                                                     <p class="card-text">
@@ -170,7 +170,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <div class="card bg-light">
+                                            <div class="card" style="background-color: #f8f9fa;">
                                                 <div class="card-body text-center">
                                                     <h6 class="card-title">Next Maintenance</h6>
                                                     <p class="card-text">

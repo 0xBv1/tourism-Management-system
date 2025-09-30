@@ -1,4 +1,4 @@
-@if(admin()->hasRole(['Sales']) || Gate::allows('manage-inquiry-resources'))
+@if(admin()->hasRole(['Sales' ,'Finance']) || Gate::allows('manage-inquiry-resources'))
 <div class="card mb-4">
     <div class="card-header">
         <h5 class="card-title mb-0">
@@ -207,7 +207,7 @@
                             <td>{{ $resource->resource_name }}</td>
                             <td>
                                 <span class="badge bg-info">{{ $resource->addedBy->name }}</span>
-                                @if($resource->addedBy->hasRole(['Operation', 'Admin', 'Administrator']))
+                                @if($resource->addedBy->hasRole(['Operator', 'Admin', 'Administrator']))
                                     <small class="text-muted d-block">Operator</small>
                                 @endif
                             </td>

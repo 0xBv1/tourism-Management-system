@@ -18,7 +18,7 @@
                     <!-- Role Indicator -->
                     @if(admin()->roles->count() > 0)
                         <div class="alert alert-info">
-                            <i class="fa fa-user-tag"></i> 
+                            <i class="fa fa-user"></i> 
                             <strong>Current Role:</strong> {{ admin()->roles->pluck('name')->join(', ') }}
                         </div>
                     @endif
@@ -67,50 +67,50 @@
                     <!-- KPI Cards -->
                     <div class="row mt-3">
                         <div class="col-md-2">
-                            <div class="card bg-primary text-white">
+                            <div class="card bg-gradient-primary text-black shadow-lg">
                                 <div class="card-body text-center">
-                                    <h4>{{ $kpis['inquiry_to_booking_conversion'] }}%</h4>
-                                    <p class="mb-0">Inquiry to Booking</p>
+                                    <h4 class="fw-bold">{{ $kpis['inquiry_to_booking_conversion'] }}%</h4>
+                                    <p class="mb-0 fs-6">Inquiry to Booking</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="card bg-success text-white">
+                            <div class="card bg-gradient-success text-black shadow-lg">
                                 <div class="card-body text-center">
-                                    <h4>{{ $kpis['booking_to_payment_conversion'] }}%</h4>
-                                    <p class="mb-0">Booking to Payment</p>
+                                    <h4 class="fw-bold">{{ $kpis['booking_to_payment_conversion'] }}%</h4>
+                                    <p class="mb-0 fs-6">Booking to Payment</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="card bg-warning text-white">
+                            <div class="card bg-gradient-warning text-black shadow-lg">
                                 <div class="card-body text-center">
-                                    <h4>${{ number_format($kpis['average_inquiry_value'], 2) }}</h4>
-                                    <p class="mb-0">Avg Inquiry Value</p>
+                                    <h4 class="fw-bold">${{ number_format($kpis['average_inquiry_value'], 2) }}</h4>
+                                    <p class="mb-0 fs-6">Avg Inquiry Value</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="card bg-info text-white">
+                            <div class="card bg-gradient-info text-black shadow-lg">
                                 <div class="card-body text-center">
-                                    <h4>${{ number_format($kpis['average_booking_value'], 2) }}</h4>
-                                    <p class="mb-0">Avg Booking Value</p>
+                                    <h4 class="fw-bold">${{ number_format($kpis['average_booking_value'], 2) }}</h4>
+                                    <p class="mb-0 fs-6">Avg Booking Value</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="card bg-danger text-white">
+                            <div class="card bg-gradient-danger text-black shadow-lg">
                                 <div class="card-body text-center">
-                                    <h4>${{ number_format($kpis['revenue_per_inquiry'], 2) }}</h4>
-                                    <p class="mb-0">Revenue per Inquiry</p>
+                                    <h4 class="fw-bold">${{ number_format($kpis['revenue_per_inquiry'], 2) }}</h4>
+                                    <p class="mb-0 fs-6">Income per Inquiry</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="card bg-secondary text-white">
+                            <div class="card bg-gradient-secondary text-black shadow-lg">
                                 <div class="card-body text-center">
-                                    <h4>{{ $startDate->diffInDays($endDate) + 1 }}</h4>
-                                    <p class="mb-0">Days Analyzed</p>
+                                    <h4 class="fw-bold">{{ $startDate->diffInDays($endDate) + 1 }}</h4>
+                                    <p class="mb-0 fs-6">Days Analyzed</p>
                                 </div>
                             </div>
                         </div>
@@ -118,7 +118,7 @@
 
                     <!-- Conversion Funnel -->
                     <div class="row mt-3">
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <div class="card">
                                 <div class="card-header">
                                     <h5>Conversion Funnel</h5>
@@ -141,16 +141,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Trend Analysis</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="trendChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Top Performers -->
@@ -167,7 +157,7 @@
                                                 <tr>
                                                     <th>Rank</th>
                                                     <th>Client Name</th>
-                                                    <th>Total Revenue</th>
+                                                    <th>Total Income</th>
                                                     <th>Bookings</th>
                                                     <th>Avg Booking Value</th>
                                                 </tr>
@@ -182,8 +172,8 @@
                                                     </td>
                                                     <td>{{ $client['client']->name }}</td>
                                                     <td>${{ number_format($client['revenue'], 2) }}</td>
-                                                    <td>{{ $client['client']->inquiries->count() }}</td>
-                                                    <td>${{ number_format($client['revenue'] / max($client['client']->inquiries->count(), 1), 2) }}</td>
+                                                    <td>{{ $client['inquiry_count'] }}</td>
+                                                    <td>${{ number_format($client['revenue'] / max($client['inquiry_count'], 1), 2) }}</td>
                                                 </tr>
                                                 @empty
                                                 <tr>
@@ -198,39 +188,6 @@
                         </div>
                     </div>
 
-                    <!-- Performance Metrics Grid -->
-                    <div class="row mt-3">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Inquiry Trends</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="inquiryTrendChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Booking Trends</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="bookingTrendChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Revenue Trends</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="revenueTrendChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -240,206 +197,164 @@
 
 @push('styles')
 <style>
-.funnel-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-}
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    }
+    .bg-gradient-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    .bg-gradient-secondary {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    }
+    .bg-gradient-purple {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+    .bg-gradient-pink {
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    }
+    .bg-gradient-indigo {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    .shadow-lg {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+    }
+    
+    .btn {
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .table {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: none;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .badge {
+        border-radius: 20px;
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+    
+    .funnel-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
 
-.funnel-stage {
-    position: relative;
-    height: 60px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+    .funnel-stage {
+        position: relative;
+        height: 60px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 
-.funnel-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #007bff, #0056b3);
-    transition: width 0.3s ease;
-    position: relative;
-    min-width: 20px;
-}
+    .funnel-bar {
+        height: 100%;
 
-.funnel-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    text-align: center;
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    z-index: 10;
-}
 
-.funnel-text {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-}
+        background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+        transition: width 0.3s ease;
+        position: relative;
+        min-width: 20px;
+    }
 
-.funnel-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    text-align: center;
-}
+    .funnel-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        z-index: 10;
+    }
 
-.funnel-stats {
-    font-size: 12px;
-    opacity: 0.9;
-    text-align: center;
-}
+    .funnel-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
 
-/* Ensure text doesn't break into individual characters */
-.funnel-stage {
-    word-wrap: normal;
-    word-break: normal;
-    white-space: normal;
-}
+    .funnel-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        text-align: center;
+    }
 
-.funnel-content {
-    word-wrap: normal;
-    word-break: normal;
-    white-space: normal;
-    line-height: 1.2;
-}
+    .funnel-stats {
+        font-size: 12px;
+        opacity: 0.9;
+        text-align: center;
+    }
 
-/* Fallback for very small percentages */
-.funnel-bar[style*="width: 0%"] {
-    min-width: 80px;
-}
+    /* Ensure text doesn't break into individual characters */
+    .funnel-stage {
+        word-wrap: normal;
+        word-break: normal;
+        white-space: normal;
+    }
 
-.funnel-bar[style*="width: 1%"],
-.funnel-bar[style*="width: 2%"],
-.funnel-bar[style*="width: 3%"],
-.funnel-bar[style*="width: 4%"],
-.funnel-bar[style*="width: 5%"] {
-    min-width: 100px;
-}
+    .funnel-content {
+        word-wrap: normal;
+        word-break: normal;
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    /* Fallback for very small percentages */
+    .funnel-bar[style*="width: 0%"] {
+        min-width: 80px;
+    }
+
+    .funnel-bar[style*="width: 1%"],
+    .funnel-bar[style*="width: 2%"],
+    .funnel-bar[style*="width: 3%"],
+    .funnel-bar[style*="width: 4%"],
+    .funnel-bar[style*="width: 5%"] {
+        min-width: 100px;
+    }
 </style>
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Trend Chart
-    const trendCtx = document.getElementById('trendChart').getContext('2d');
-    const trends = @json($trends);
-    
-    new Chart(trendCtx, {
-        type: 'line',
-        data: {
-            labels: trends.inquiries_trend.map(item => item.month),
-            datasets: [
-                {
-                    label: 'Inquiries',
-                    data: trends.inquiries_trend.map(item => item.count),
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    tension: 0.4
-                },
-                {
-                    label: 'Bookings',
-                    data: trends.bookings_trend.map(item => item.count),
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    tension: 0.4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    // Inquiry Trend Chart
-    const inquiryTrendCtx = document.getElementById('inquiryTrendChart').getContext('2d');
-    new Chart(inquiryTrendCtx, {
-        type: 'bar',
-        data: {
-            labels: trends.inquiries_trend.map(item => item.month),
-            datasets: [{
-                label: 'Inquiries',
-                data: trends.inquiries_trend.map(item => item.count),
-                backgroundColor: 'rgba(0, 123, 255, 0.8)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    // Booking Trend Chart
-    const bookingTrendCtx = document.getElementById('bookingTrendChart').getContext('2d');
-    new Chart(bookingTrendCtx, {
-        type: 'bar',
-        data: {
-            labels: trends.bookings_trend.map(item => item.month),
-            datasets: [{
-                label: 'Bookings',
-                data: trends.bookings_trend.map(item => item.count),
-                backgroundColor: 'rgba(40, 167, 69, 0.8)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    // Revenue Trend Chart
-    const revenueTrendCtx = document.getElementById('revenueTrendChart').getContext('2d');
-    new Chart(revenueTrendCtx, {
-        type: 'line',
-        data: {
-            labels: trends.revenue_trend.map(item => item.date),
-            datasets: [{
-                label: 'Daily Revenue',
-                data: trends.revenue_trend.map(item => item.revenue),
-                borderColor: '#ffc107',
-                backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-});
-</script>
+<!-- Chart.js is no longer needed since trend charts are removed -->
 @endpush

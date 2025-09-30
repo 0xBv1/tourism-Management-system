@@ -19,7 +19,7 @@
                             <h5>Edit Vehicle: {{ $vehicle->name }}</h5>
                             @if(admin()->roles->count() > 0)
                                 <small class="text-muted">
-                                    <i class="fa fa-user-tag"></i> 
+                                    <i class="fa fa-user"></i> 
                                     Role: {{ admin()->roles->pluck('name')->join(', ') }}
                                 </small>
                             @endif

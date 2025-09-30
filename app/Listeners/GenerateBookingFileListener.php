@@ -65,7 +65,7 @@ class GenerateBookingFileListener implements ShouldQueue
         
         // Get all sales users
         $salesUsers = User::whereHas('roles', function ($query) {
-            $query->whereIn('name', ['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
+            $query->whereIn('name', ['Sales', 'Reservation', 'Operator', 'Admin', 'Administrator']);
         })->get();
         $usersToNotify = $usersToNotify->merge($salesUsers);
         

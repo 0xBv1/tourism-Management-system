@@ -63,6 +63,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Suppress PHP 8.3 deprecation warnings for implicitly nullable parameters
+        // until vendor packages are updated to handle PHP 8.3's stricter requirements
+        if (PHP_VERSION_ID >= 80300 && !config('app.debug_deprecations', false)) {
+            error_reporting(E_ALL & ~E_DEPRECATED);
+        }
+        
         Schema::defaultStringLength(191);
         File::macro('isEmptyDir', function ($path) {
             return count(glob("$path/*")) === 0;

@@ -27,7 +27,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'permissions' => ['inquiries', 'booking-files', 'requests', 'master-data', 'workflow'],
                 'description' => 'Reservation management and booking processing'
             ],
-            'Operation' => [
+            'Operator' => [
                 'permissions' => ['inquiries', 'booking-files', 'requests', 'master-data', 'workflow'],
                 'description' => 'Operational management and resource coordination'
             ],
@@ -81,7 +81,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 } elseif ($role === 'Reservation') {
                     // Reservation gets full access to their modules
                     $dbRole->givePermissionTo($crudPermissions);
-                } elseif ($role === 'Operation') {
+                } elseif ($role === 'Operator') {
                     // Operation gets full access to their modules
                     $dbRole->givePermissionTo($crudPermissions);
                 } elseif ($role === 'Finance') {
@@ -138,7 +138,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 ];
                 break;
 
-            case 'Operation':
+            case 'Operator':
                 $specificPermissions = [
                     'inquiries.chats.list', 'inquiries.chats.create', 'inquiries.chats.mark-read',
                     'inquiries.notes',

@@ -20,7 +20,7 @@
                             <h5>Edit Inquiry #{{ $inquiry->id }}</h5>
                             @if(admin()->roles->count() > 0)
                                 <small class="text-muted">
-                                    <i class="fa fa-user-tag"></i> 
+                                    <i class="fa fa-user"></i> 
                                     Role: {{ admin()->roles->pluck('name')->join(', ') }}
                                 </small>
                             @endif
@@ -29,7 +29,7 @@
                             <form action="{{ route('dashboard.inquiries.update', $inquiry) }}" method="POST">
                                 @csrf
                                 @method('PUT')
-                                @if(!admin()->hasRole(['Reservation', 'Operation']))
+                                @if(!admin()->hasRole(['Reservation', 'Operator']))
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
@@ -162,7 +162,7 @@
                                     @enderror
                                 </div>
 
-                                @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
+                                @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operator']))
                                     <div class="row">
                                         <div class="col-12">
                                             <h6 class="mb-3">
@@ -199,8 +199,8 @@
                                                 <select class="form-control @error('assigned_operator_id') is-invalid @enderror" 
                                                         id="assigned_operator_id" name="assigned_operator_id">
                                                     <option value="">Select Operator User</option>
-                                                    @if(isset($usersByRole['Operation']))
-                                                        @foreach($usersByRole['Operation'] as $user)
+                                                    @if(isset($usersByRole['Operator']))
+                                                        @foreach($usersByRole['Operator'] as $user)
                                                             <option value="{{ $user->id }}" {{ old('assigned_operator_id', $inquiry->assigned_operator_id) == $user->id ? 'selected' : '' }}>
                                                                 {{ $user->name }}
                                                             </option>

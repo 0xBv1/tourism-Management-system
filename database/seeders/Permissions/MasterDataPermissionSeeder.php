@@ -131,7 +131,7 @@ class MasterDataPermissionSeeder extends Seeder
         }
 
         // Grant full permissions to Operation role
-        if ($operationRole = Role::whereName('Operation')->first()) {
+        if ($operationRole = Role::whereName('Operator')->first()) {
             $operationPermissions = [
                 'master-data.guides.list',
                 'master-data.guides.create',

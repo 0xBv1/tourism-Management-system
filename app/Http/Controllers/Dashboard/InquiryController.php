@@ -39,7 +39,7 @@ class InquiryController extends Controller
         // Get users with specific roles only
         $users = User::with('roles')
             ->whereHas('roles', function($query) {
-                $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
+                $query->whereIn('name', ['Reservation', 'Sales', 'Operator', 'Admin']);
             })
             ->get();
         
@@ -101,7 +101,7 @@ class InquiryController extends Controller
         ];
         $users = User::with('roles')
             ->whereHas('roles', function($query) {
-                $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
+                $query->whereIn('name', ['Reservation', 'Sales', 'Operator', 'Admin']);
             })
             ->get();
         
@@ -131,7 +131,7 @@ class InquiryController extends Controller
         // Get users with specific roles only
         $users = User::with('roles')
             ->whereHas('roles', function($query) {
-                $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
+                $query->whereIn('name', ['Reservation', 'Sales', 'Operator', 'Admin']);
             })
             ->get();
         
@@ -223,7 +223,7 @@ class InquiryController extends Controller
         $inquiry->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles']);
         $users = User::with('roles')
             ->whereHas('roles', function($query) {
-                $query->whereIn('name', ['Reservation', 'Sales', 'Operation', 'Admin']);
+                $query->whereIn('name', ['Reservation', 'Sales', 'Operator', 'Admin']);
             })
             ->get();
         

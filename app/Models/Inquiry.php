@@ -80,6 +80,22 @@ class Inquiry extends Model
         return $this->belongsTo(BookingFile::class);
     }
 
+    /**
+     * Get the latest payment for this inquiry through booking file
+     */
+    public function latestPayment()
+    {
+        return $this->bookingFile?->payments()->latest()->first();
+    }
+
+    /**
+     * Get all payments for this inquiry through booking file
+     */
+    public function payments()
+    {
+        return $this->bookingFile?->payments() ?? collect();
+    }
+
     public function syncBookingFileData(): void
     {
         if ($this->bookingFile) {

@@ -101,12 +101,12 @@
                 ]"
             />
 
-            <x-dashboard.sidebar.single-link 
+<!-- <x-dashboard.sidebar.single-link 
                 :permissions="['bookings.list','bookings.show']" 
                 title="Resource Assignment" 
                 link="{{ route('dashboard.bookings.index') }}#assign-resources" 
                 icon="link-2" 
-            />
+            />             -->
 
             <x-dashboard.sidebar.link-with-child
                 title="Reports"

@@ -120,7 +120,7 @@ class WorkflowPermissionSeeder extends Seeder
         }
 
         // Grant limited permissions to Operation role
-        if ($operationRole = Role::whereName('Operation')->first()) {
+        if ($operationRole = Role::whereName('Operator')->first()) {
             $operationPermissions = [
                 'workflow.sla-timers',
                 'workflow.checklists',

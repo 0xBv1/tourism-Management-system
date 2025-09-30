@@ -15,7 +15,7 @@
                     <!-- Role Indicator -->
                     @if(admin()->roles->count() > 0)
                         <div class="alert alert-info">
-                            <i class="fa fa-user-tag"></i> 
+                            <i class="fa fa-user"></i> 
                             <strong>Current Role:</strong> {{ admin()->roles->pluck('name')->join(', ') }}
                         </div>
                     @endif
@@ -41,34 +41,34 @@
                             <!-- Overall Statistics -->
                             <div class="row mb-4">
                                 <div class="col-md-3">
-                                    <div class="card bg-primary text-white">
-                                        <div class="card-body">
-                                            <h4>{{ $overallStats['total_resources'] }}</h4>
-                                            <p class="mb-0">Total Resources</p>
+                                    <div class="card bg-gradient-primary text-white shadow-lg">
+                                        <div class="card-body text-center">
+                                            <h3 class="fw-bold">{{ $overallStats['total_resources'] }}</h3>
+                                            <p class="mb-0 fs-6">Total Resources</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="card bg-success text-white">
-                                        <div class="card-body">
-                                            <h4>{{ $overallStats['total_bookings'] }}</h4>
-                                            <p class="mb-0">Total Bookings</p>
+                                    <div class="card bg-gradient-success text-white shadow-lg">
+                                        <div class="card-body text-center">
+                                            <h3 class="fw-bold">{{ $overallStats['total_bookings'] }}</h3>
+                                            <p class="mb-0 fs-6">Total Bookings</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="card bg-info text-white">
-                                        <div class="card-body">
-                                            <h4>${{ number_format($overallStats['total_revenue'], 2) }}</h4>
-                                            <p class="mb-0">Total Revenue</p>
+                                    <div class="card bg-gradient-info text-white shadow-lg">
+                                        <div class="card-body text-center">
+                                            <h3 class="fw-bold">${{ number_format($overallStats['total_revenue'], 2) }}</h3>
+                                            <p class="mb-0 fs-6">Total Income</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="card bg-warning text-white">
-                                        <div class="card-body">
-                                            <h4>{{ $overallStats['period_days'] }}</h4>
-                                            <p class="mb-0">Period Days</p>
+                                    <div class="card bg-gradient-warning text-white shadow-lg">
+                                        <div class="card-body text-center">
+                                            <h3 class="fw-bold">{{ $overallStats['period_days'] }}</h3>
+                                            <p class="mb-0 fs-6">Period Days</p>
                                         </div>
                                     </div>
                                 </div>
@@ -297,6 +297,71 @@
         <!-- Container-fluid Ends-->
     </div>
 @endsection
+
+@push('styles')
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    .shadow-lg {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+    }
+    
+    .btn {
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .table {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: none;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .progress {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        border-radius: 10px;
+    }
+    
+    .badge {
+        border-radius: 20px;
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+</style>
+@endpush
 
 
 

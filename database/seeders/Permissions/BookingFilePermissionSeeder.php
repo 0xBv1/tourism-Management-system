@@ -74,7 +74,7 @@ class BookingFilePermissionSeeder extends Seeder
         }
 
         // Grant limited permissions to Operation role
-        if ($operationRole = Role::whereName('Operation')->first()) {
+        if ($operationRole = Role::whereName('Operator')->first()) {
             $operationPermissions = [
                 'booking-files.list',
                 'booking-files.show',

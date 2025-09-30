@@ -104,6 +104,55 @@ class BookingController extends Controller
     }
 
     /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\BookingFile  $booking
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(BookingFile $booking)
+    {
+        // Check if user has permission to delete bookings
+        if (!auth()->user()->can('bookings.delete')) {
+            abort(403, 'You do not have permission to delete bookings.');
+        }
+
+        try {
+            // Check if booking has associated payments
+            if ($booking->payments()->exists()) {
+                session()->flash('message', 'Cannot delete booking with associated payments. Please remove payments first.');
+                session()->flash('type', 'error');
+                return redirect()->route('dashboard.bookings.show', $booking);
+            }
+
+            // Check if booking has associated resource bookings
+            if ($booking->resourceBookings()->exists()) {
+                session()->flash('message', 'Cannot delete booking with associated resource assignments. Please remove resource assignments first.');
+                session()->flash('type', 'error');
+                return redirect()->route('dashboard.bookings.show', $booking);
+            }
+
+            // Delete the booking file from storage if it exists
+            if ($booking->fileExists()) {
+                \Storage::delete($booking->file_path);
+            }
+
+            // Delete the booking record
+            $booking->delete();
+
+            return response()->json([
+                'message' => 'Booking Deleted Successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error("Failed to delete booking {$booking->id}: " . $e->getMessage());
+            
+            session()->flash('message', 'Failed to delete booking. Please try again.');
+            session()->flash('type', 'error');
+            return redirect()->route('dashboard.bookings.show', $booking);
+        }
+    }
+
+    /**
      * Update checklist item
      *
      * @param  \Illuminate\Http\Request  $request

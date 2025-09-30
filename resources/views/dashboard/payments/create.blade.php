@@ -19,7 +19,7 @@
                             <h5>Create New Payment</h5>
                             @if(admin()->roles->count() > 0)
                                 <small class="text-muted">
-                                    <i class="fa fa-user-tag"></i> 
+                                    <i class="fa fa-user"></i> 
                                     Role: {{ admin()->roles->pluck('name')->join(', ') }}
                                 </small>
                             @endif
@@ -105,9 +105,11 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="reference_number" class="form-label">Reference Number</label>
-                                            <input type="text" name="reference_number" id="reference_number" 
-                                                   class="form-control @error('reference_number') is-invalid @enderror" 
-                                                   value="{{ old('reference_number') }}">
+                                            
+                                            <small class="form-text text-muted">
+                                                <i class="fa fa-info-circle"></i> 
+                                                 automatically generate a reference number (PAY-YYYYMMDD-0001)
+                                            </small>
                                             @error('reference_number')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror

@@ -16,7 +16,7 @@
                     <!-- Role Indicator -->
                     @if(admin()->roles->count() > 0)
                         <div class="alert alert-info">
-                            <i class="fa fa-user-tag"></i> 
+                            <i class="fa fa-user"></i> 
                             <strong>Current Role:</strong> {{ admin()->roles->pluck('name')->join(', ') }}
                         </div>
                     @endif

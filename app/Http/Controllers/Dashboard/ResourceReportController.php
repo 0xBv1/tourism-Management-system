@@ -188,7 +188,7 @@ class ResourceReportController extends Controller
 
         // Overall Summary
         $csv .= "OVERALL SUMMARY\n";
-        $csv .= "Resource Type,Total Resources,Avg Utilization %,Total Bookings,Total Revenue\n";
+        $csv .= "Resource Type,Total Resources,Avg Utilization %,Total Bookings,Total Income\n";
         
         $csv .= "Hotels," . count($hotelUtilization) . "," . 
             (count($hotelUtilization) > 0 ? round(collect($hotelUtilization)->avg('utilization_percentage'), 2) : 0) . "," .
@@ -212,7 +212,7 @@ class ResourceReportController extends Controller
 
         // Hotel Details
         $csv .= "HOTEL UTILIZATION DETAILS\n";
-        $csv .= "Hotel Name,City,Star Rating,Total Rooms,Available Rooms,Utilization %,Total Days,Booked Days,Bookings Count,Total Revenue,Price Per Night\n";
+        $csv .= "Hotel Name,City,Star Rating,Total Rooms,Available Rooms,Utilization %,Total Days,Booked Days,Bookings Count,Total Income,Price Per Night\n";
         foreach ($hotelUtilization as $util) {
             $hotel = $util['resource'];
             $csv .= "\"{$hotel->name}\",\"{$hotel->city->name}\",{$hotel->star_rating},{$hotel->total_rooms},{$hotel->available_rooms}," .
@@ -222,7 +222,7 @@ class ResourceReportController extends Controller
 
         // Vehicle Details
         $csv .= "VEHICLE UTILIZATION DETAILS\n";
-        $csv .= "Vehicle Name,Type,Brand,Model,Capacity,City,Utilization %,Total Days,Booked Days,Bookings Count,Total Revenue,Price Per Hour\n";
+        $csv .= "Vehicle Name,Type,Brand,Model,Capacity,City,Utilization %,Total Days,Booked Days,Bookings Count,Total Income,Price Per Hour\n";
         foreach ($vehicleUtilization as $util) {
             $vehicle = $util['resource'];
             $csv .= "\"{$vehicle->name}\",{$vehicle->type},{$vehicle->brand},{$vehicle->model},{$vehicle->capacity},\"{$vehicle->city->name}\"," .
@@ -232,7 +232,7 @@ class ResourceReportController extends Controller
 
         // Guide Details
         $csv .= "GUIDE UTILIZATION DETAILS\n";
-        $csv .= "Guide Name,City,Languages,Specialties,Rating,Utilization %,Total Days,Booked Days,Bookings Count,Total Revenue,Price Per Hour\n";
+        $csv .= "Guide Name,City,Languages,Specialties,Rating,Utilization %,Total Days,Booked Days,Bookings Count,Total Income,Price Per Hour\n";
         foreach ($guideUtilization as $util) {
             $guide = $util['resource'];
             $languages = is_string($guide->languages) ? $guide->languages : json_encode($guide->languages);
@@ -244,7 +244,7 @@ class ResourceReportController extends Controller
 
         // Representative Details
         $csv .= "REPRESENTATIVE UTILIZATION DETAILS\n";
-        $csv .= "Representative Name,City,Languages,Specialties,Rating,Utilization %,Total Days,Booked Days,Bookings Count,Total Revenue,Price Per Hour\n";
+        $csv .= "Representative Name,City,Languages,Specialties,Rating,Utilization %,Total Days,Booked Days,Bookings Count,Total Income,Price Per Hour\n";
         foreach ($representativeUtilization as $util) {
             $representative = $util['resource'];
             $languages = is_string($representative->languages) ? $representative->languages : json_encode($representative->languages);

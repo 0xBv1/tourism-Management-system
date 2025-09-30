@@ -23,12 +23,7 @@ class BookingDataTable extends DataTable
             ->editColumn('total_amount', function (BookingFile $booking) {
                 return $booking->total_amount ? $booking->currency . ' ' . number_format($booking->total_amount, 2) : '-';
             })
-            ->editColumn('checklist_progress', function (BookingFile $booking) {
-                $progress = $booking->checklist_progress;
-                return '<div class="progress" style="height: 20px;">
-                    <div class="progress-bar" role="progressbar" style="width: ' . $progress . '%" aria-valuenow="' . $progress . '" aria-valuemin="0" aria-valuemax="100">' . $progress . '%</div>
-                </div>';
-            })
+           
             ->editColumn('generated_at', function (BookingFile $booking) {
                 return $booking->generated_at ? $booking->generated_at->format('M d, Y H:i') : '-';
             })
@@ -38,9 +33,7 @@ class BookingDataTable extends DataTable
             ->editColumn('downloaded_at', function (BookingFile $booking) {
                 return $booking->downloaded_at ? $booking->downloaded_at->format('M d, Y H:i') : '-';
             })
-            ->addColumn('client_name', function (BookingFile $booking) {
-                return $booking->inquiry->client->name ?? '-';
-            })
+            
             ->addColumn('inquiry_subject', function (BookingFile $booking) {
                 return $booking->inquiry->subject ?? '-';
             })
@@ -76,11 +69,9 @@ class BookingDataTable extends DataTable
         return [
             Column::make('id'),
             Column::make('file_name'),
-            Column::make('client_name')->title('Client'),
             Column::make('inquiry_subject')->title('Inquiry Subject'),
             Column::make('status'),
             Column::make('total_amount')->title('Amount'),
-            Column::make('checklist_progress')->title('Progress'),
             Column::make('generated_at')->title('Generated'),
             Column::make('sent_at')->title('Sent'),
             Column::make('downloaded_at')->title('Downloaded'),

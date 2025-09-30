@@ -72,7 +72,7 @@ class InquiryPermissionSeeder extends Seeder
         }
 
         // Grant limited permissions to Operation role
-        if ($operationRole = Role::whereName('Operation')->first()) {
+        if ($operationRole = Role::whereName('Operator')->first()) {
             $operationPermissions = [
                 'inquiries.list',
                 'inquiries.show',

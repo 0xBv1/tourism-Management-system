@@ -10,8 +10,8 @@
         <div id="chat-messages" class="chat-messages" style="height: 400px; overflow-y: auto; border: 1px solid #e9ecef; padding: 15px; margin-bottom: 15px; background-color: #f8f9fa;">
             <!-- Messages will be loaded here via AJAX -->
         </div>
-
-        @if(admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
+        
+        @if(!admin()->hasRole('Finance') && (admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operator'])))
             <!-- Chat Input Form -->
             <form id="chat-form" class="d-flex flex-column">
                 @csrf
@@ -25,7 +25,7 @@
                         </select>
                         <small class="form-text text-muted">Choose Reservation or Operation user</small>
                     </div>
-                @elseif(auth()->user()->hasAnyRole(['Reservation', 'Operation']))
+                @elseif(auth()->user()->hasAnyRole(['Reservation', 'Operator']))
                     <div class="mb-2">
                         <div class="alert alert-info py-2">
                             <small><i class="fa fa-info-circle"></i> Messages will be sent directly to Sales team</small>
@@ -59,7 +59,7 @@
             </div>
         @else
             <div class="alert alert-info">
-                <i class="fa fa-info-circle"></i> You don't have permission to participate in this chat.
+                <i class="fa fa-info-circle"></i> You don't have permission to participate in this chat or show content.
             </div>
         @endif
     </div>
@@ -90,9 +90,12 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const currentUserRole = '{{ auth()->user()->roles->first()->name ?? "" }}';
+    
+   
+    
     const inquiryId = {{ $inquiry->id }};
     const currentUserId = {{ auth()->id() }};
-    const currentUserRole = '{{ auth()->user()->roles->first()->name ?? "" }}';
     const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('chat-message');
@@ -283,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (senderRole === 'Reservation') {
                     messageContent.style.backgroundColor = '#ffc107';
                     messageContent.style.color = 'black';
-                } else if (senderRole === 'Operation') {
+                } else if (senderRole === 'Operator') {
                     messageContent.style.backgroundColor = '#dc3545';
                     messageContent.style.color = 'white';
                 }

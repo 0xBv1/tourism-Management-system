@@ -43,7 +43,7 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-8">
-                                    @if(!admin()->hasRole(['Reservation', 'Operation']))
+                                    @if(!admin()->hasRole(['Reservation', 'Operator']))
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="mb-3">
@@ -172,7 +172,7 @@
                                             <h6>Additional Information</h6>
                                         </div>
                                         <div class="card-body">
-                                            @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
+                                            @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operator']))
                                                 <div class="mb-3">
                                                     <label class="form-label fw-bold">User Assignments:</label>
                                                     <div class="form-control-plaintext">
@@ -182,14 +182,14 @@
                                                         
                                                         @if(count($assignedUsers) > 0)
                                                             @foreach($assignedUsers as $assignment)
-                                                                <div class="mb-2 p-2 border rounded bg-light">
+                                                                <div class="mb-2 p-2 border rounded" style="background-color: #f8f9fa; border-color: #dee2e6 !important;">
                                                                     <div class="d-flex justify-content-between align-items-center">
                                                                         <div>
                                                                             @if($assignment['type'] === 'user')
                                                                                 <strong>{{ $assignment['user']->name }}</strong>
                                                                                 <br>
                                                                                 <small class="text-muted">
-                                                                                    <i class="fa fa-user-tag"></i> 
+                                                                                    <i class="fa fa-user"></i> 
                                                                                     {{ $assignment['role'] }}
                                                                                 </small>
                                                                             @elseif($assignment['type'] === 'resource')
@@ -222,7 +222,7 @@
                                                 <p class="form-control-plaintext">{{ $inquiry->created_at->format('M d, Y H:i') }}</p>
                                             </div>
                                             
-                                            @if($inquiry->confirmed_at && (admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation'])))
+                                            @if($inquiry->confirmed_at && (admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operator'])))
                                                 <div class="mb-3">
                                                     <label class="form-label fw-bold">Confirmed At:</label>
                                                     <p class="form-control-plaintext">{{ $inquiry->confirmed_at->format('M d, Y H:i') }}</p>
@@ -230,7 +230,7 @@
                                             @endif
                                             
                                             
-                                            @if($inquiry->client && (admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation', 'Finance'])))
+                                            @if($inquiry->client && (admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operator', 'Finance'])))
                                                 <div class="mb-3">
                                                     <label class="form-label fw-bold">Client:</label>
                                                     <p class="form-control-plaintext">
@@ -255,7 +255,7 @@
             </div>
             
             <!-- Chat Section -->
-            @if(admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operation']))
+            @if(admin()->can('inquiries.show') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operator']))
                 <div class="row mt-4">
                     <div class="col-sm-12">
                         @include('dashboard.inquiries.partials.chat')

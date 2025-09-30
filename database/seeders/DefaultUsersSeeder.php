@@ -29,7 +29,7 @@ class DefaultUsersSeeder extends Seeder
                 'name' => 'Operation Manager',
                 'email' => 'operation@perfect.com',
                 'password' => Hash::make('password123'),
-                'roles' => ['Operation']
+                'roles' => ['Operator']
             ],
             [
                 'name' => 'Finance Manager',

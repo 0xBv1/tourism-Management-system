@@ -18,9 +18,19 @@ class ChatController extends Controller
     public function index(Inquiry $inquiry): JsonResponse
     {
         try {
-            $this->authorize('view', $inquiry);
-            
             $user = auth()->user();
+            
+            // Block Finance role from accessing chat
+            if ($user->hasRole('Finance')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Finance role users are not authorized to access chat functionality.',
+                    'user_roles' => $user->roles->pluck('name'),
+                    'inquiry_id' => $inquiry->id
+                ], 403);
+            }
+            
+            $this->authorize('view', $inquiry);
             
             // Apply role-based filtering using the Chat model scope
             $chats = $inquiry->chats()
@@ -49,9 +59,18 @@ class ChatController extends Controller
     public function store(Request $request, Inquiry $inquiry): JsonResponse
     {
         try {
+            $user = auth()->user();
+            
+            // Block Finance role from accessing chat
+            if ($user->hasRole('Finance')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Finance role users are not authorized to access chat functionality.'
+                ], 403);
+            }
+            
             $this->authorize('view', $inquiry);
 
-            $user = auth()->user();
             $userRoles = $user->roles->pluck('name')->toArray();
 
             // Validate request based on user role
@@ -86,7 +105,7 @@ class ChatController extends Controller
                 }
                 
                 $this->authorize('sendTo', [Chat::class, $recipient]);
-            } elseif (in_array('Reservation', $userRoles) || in_array('Operation', $userRoles)) {
+            } elseif (in_array('Reservation', $userRoles) || in_array('Operator', $userRoles)) {
                 // Reservation and Operation automatically send to Sales
                 $salesUser = User::role('Sales')->first();
                 if (!$salesUser) {
@@ -155,15 +174,23 @@ class ChatController extends Controller
                 ], 401);
             }
             
+            // Block Finance role from accessing chat
+            if ($user->hasRole('Finance')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Finance role users are not authorized to access chat functionality.'
+                ], 403);
+            }
+            
             $userRoles = $user->roles->pluck('name')->toArray();
             $recipients = [];
 
             if (in_array('Sales', $userRoles)) {
                 // Sales can send to Reservation and Operation users
                 $recipients = User::whereHas('roles', function($query) {
-                    $query->whereIn('name', ['Reservation', 'Operation']);
+                    $query->whereIn('name', ['Reservation', 'Operator']);
                 })->select('id', 'name', 'email')->get();
-            } elseif (in_array('Reservation', $userRoles) || in_array('Operation', $userRoles)) {
+            } elseif (in_array('Reservation', $userRoles) || in_array('Operator', $userRoles)) {
                 // Reservation and Operation can send to Sales users
                 $recipients = User::role('Sales')->select('id', 'name', 'email')->get();
             }
@@ -186,6 +213,16 @@ class ChatController extends Controller
      */
     public function markAsRead(Chat $chat): JsonResponse
     {
+        $user = auth()->user();
+        
+        // Block Finance role from accessing chat
+        if ($user->hasRole('Finance')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Finance role users are not authorized to access chat functionality.'
+            ], 403);
+        }
+        
         $this->authorize('view', $chat->inquiry);
         
         $chat->markAsRead();
@@ -201,6 +238,16 @@ class ChatController extends Controller
      */
     public function markAllAsRead(Inquiry $inquiry): JsonResponse
     {
+        $user = auth()->user();
+        
+        // Block Finance role from accessing chat
+        if ($user->hasRole('Finance')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Finance role users are not authorized to access chat functionality.'
+            ], 403);
+        }
+        
         $this->authorize('view', $inquiry);
         
         $inquiry->chats()

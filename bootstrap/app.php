@@ -2,6 +2,19 @@
 
 /*
 |--------------------------------------------------------------------------
+| Suppress PHP 8.4 Deprecation Warnings
+|--------------------------------------------------------------------------
+|
+| PHP 8.4 introduced stricter nullable parameter handling. This suppresses
+| deprecation warnings from vendor packages that haven't been updated yet.
+|
+*/
+
+// Suppress deprecation warnings for PHP 8.4 compatibility
+error_reporting(E_ALL & ~E_DEPRECATED);
+
+/*
+|--------------------------------------------------------------------------
 | Create The Application
 |--------------------------------------------------------------------------
 |

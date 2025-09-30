@@ -21,7 +21,7 @@
                             <h5>Payment #{{ $payment->id }}</h5>
                             @if(admin()->roles->count() > 0)
                                 <small class="text-muted">
-                                    <i class="fa fa-user-tag"></i> 
+                                    <i class="fa fa-user"></i> 
                                     Role: {{ admin()->roles->pluck('name')->join(', ') }}
                                 </small>
                             @endif
@@ -40,7 +40,13 @@
                                     <table class="table table-borderless">
                                         <tr>
                                             <td><strong>Reference Number:</strong></td>
-                                            <td>{{ $payment->reference_number ?? 'N/A' }}</td>
+                                            <td>
+                                                @if($payment->reference_number)
+                                                    <span class="badge bg-info text-dark fs-6">{{ $payment->reference_number }}</span>
+                                                @else
+                                                    <span class="text-muted">N/A</span>
+                                                @endif
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Amount:</strong></td>
@@ -150,14 +156,14 @@
                             @if($payment->transaction_request)
                             <div class="mb-3">
                                 <h6>Transaction Request:</h6>
-                                <pre class="bg-light p-3 rounded"><code>{{ json_encode($payment->transaction_request, JSON_PRETTY_PRINT) }}</code></pre>
+                                <pre class="p-3 rounded" style="background-color: #f8f9fa; border: 1px solid #dee2e6;"><code>{{ json_encode($payment->transaction_request, JSON_PRETTY_PRINT) }}</code></pre>
                             </div>
                             @endif
                             
                             @if($payment->transaction_verification)
                             <div class="mb-3">
                                 <h6>Transaction Verification:</h6>
-                                <pre class="bg-light p-3 rounded"><code>{{ json_encode($payment->transaction_verification, JSON_PRETTY_PRINT) }}</code></pre>
+                                <pre class="p-3 rounded" style="background-color: #f8f9fa; border: 1px solid #dee2e6;"><code>{{ json_encode($payment->transaction_verification, JSON_PRETTY_PRINT) }}</code></pre>
                             </div>
                             @endif
                         </div>

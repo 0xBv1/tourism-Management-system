@@ -43,7 +43,7 @@ class SendChatMessageNotification implements ShouldQueue
             } else {
                 // For public messages, notify all relevant users
                 $users = User::whereHas('roles', function ($query) {
-                    $query->whereIn('name', ['Sales', 'Reservation', 'Operation', 'Admin', 'Administrator']);
+                    $query->whereIn('name', ['Sales', 'Reservation', 'Operator', 'Admin', 'Administrator']);
                 })->where('id', '!=', $event->sender->id)->get();
             }
 

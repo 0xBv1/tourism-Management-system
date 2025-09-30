@@ -85,7 +85,7 @@ Route::group([
     Route::get('chats/recipients', [ChatController::class, 'getRecipients'])->name('chats.recipients');
     
     // Booking Management
-    Route::resource('bookings', BookingController::class)->only(['index', 'show', 'update']);
+    Route::resource('bookings', BookingController::class)->only(['index', 'show', 'update', 'destroy']);
     Route::post('bookings/{booking}/checklist', [BookingController::class, 'updateChecklist'])->name('bookings.checklist');
     Route::get('bookings/{booking}/download', [BookingController::class, 'download'])->name('bookings.download');
     Route::get('bookings/{booking}/send', [BookingController::class, 'send'])->name('bookings.send');

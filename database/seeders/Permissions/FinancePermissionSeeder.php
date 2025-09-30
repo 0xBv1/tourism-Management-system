@@ -103,7 +103,7 @@ class FinancePermissionSeeder extends Seeder
         }
 
         // Grant limited permissions to Operation role
-        if ($operationRole = Role::whereName('Operation')->first()) {
+        if ($operationRole = Role::whereName('Operator')->first()) {
             $operationPermissions = [
                 'finance.payments.list',
                 'finance.payments.show',

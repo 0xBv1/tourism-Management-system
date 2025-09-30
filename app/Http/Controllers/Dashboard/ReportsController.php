@@ -84,29 +84,16 @@ class ReportsController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate]);
             
         // Filter inquiries based on user role for reports
-        if (auth()->user()->hasRole(['Reservation', 'Operation'])) {
+        if (auth()->user()->hasRole(['Reservation', 'Operator'])) {
             $inquiriesQuery->where('assigned_to', auth()->id());
         }
         
         $inquiries = $inquiriesQuery->orderBy('created_at', 'desc')->get();
 
-        $statusBreakdown = InquiryStatus::cases();
-        $statusData = [];
-        foreach ($statusBreakdown as $status) {
-            $statusData[$status->value] = [
-                'label' => $status->getLabel(),
-                'count' => $inquiries->where('status', $status)->count(),
-                'percentage' => $inquiries->count() > 0 ? round(($inquiries->where('status', $status)->count() / $inquiries->count()) * 100, 2) : 0,
-            ];
-        }
-
-        $monthlyData = $this->getMonthlyData(Inquiry::class, $startDate, $endDate);
         $conversionRate = $this->calculateConversionRate($inquiries);
 
         return view('dashboard.reports.inquiries', compact(
             'inquiries', 
-            'statusData', 
-            'monthlyData', 
             'conversionRate',
             'startDate', 
             'endDate'
@@ -135,23 +122,10 @@ class ReportsController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $statusBreakdown = BookingStatus::cases();
-        $statusData = [];
-        foreach ($statusBreakdown as $status) {
-            $statusData[$status->value] = [
-                'label' => $status->getLabel(),
-                'count' => $bookings->where('status', $status)->count(),
-                'percentage' => $bookings->count() > 0 ? round(($bookings->where('status', $status)->count() / $bookings->count()) * 100, 2) : 0,
-            ];
-        }
-
-        $monthlyData = $this->getMonthlyData(BookingFile::class, $startDate, $endDate);
         $revenueData = $this->getRevenueData($bookings);
 
         return view('dashboard.reports.bookings', compact(
             'bookings', 
-            'statusData', 
-            'monthlyData', 
             'revenueData',
             'startDate', 
             'endDate'
@@ -193,14 +167,12 @@ class ReportsController extends Controller
 
         $monthlyData = $this->getMonthlyData(Payment::class, $startDate, $endDate);
         $gatewayData = $this->getGatewayData($payments);
-        $revenueTrend = $this->getRevenueTrend($startDate, $endDate);
 
         return view('dashboard.reports.finance', compact(
             'payments', 
             'statusData', 
             'monthlyData', 
             'gatewayData',
-            'revenueTrend',
             'startDate', 
             'endDate'
         ));
@@ -275,9 +247,6 @@ class ReportsController extends Controller
         // KPI calculations
         $kpis = $this->calculateKPIs($startDate, $endDate);
         
-        // Trend analysis
-        $trends = $this->getTrendAnalysis($startDate, $endDate);
-        
         // Top performers
         $topPerformers = $this->getTopPerformers($startDate, $endDate);
         
@@ -286,7 +255,6 @@ class ReportsController extends Controller
 
         return view('dashboard.reports.performance', compact(
             'kpis',
-            'trends',
             'topPerformers',
             'conversionFunnel',
             'startDate', 
@@ -481,18 +449,42 @@ class ReportsController extends Controller
         $data = [];
         $current = $startDate->copy();
         
+        // If the date range is more than 30 days, use weekly data
+        $isLongRange = $startDate->diffInDays($endDate) > 30;
+        
         while ($current->lte($endDate)) {
-            $dayEnd = $current->copy()->endOfDay();
-            $revenue = Payment::where('status', PaymentStatus::PAID)
-                ->whereBetween('paid_at', [$current, $dayEnd])
-                ->sum('amount');
+            if ($isLongRange) {
+                // Weekly data for long ranges
+                $weekEnd = $current->copy()->addDays(6);
+                if ($weekEnd->gt($endDate)) {
+                    $weekEnd = $endDate->copy();
+                }
                 
-            $data[] = [
-                'date' => $current->format('M d'),
-                'revenue' => $revenue,
-            ];
-            
-            $current->addDay();
+                $revenue = Payment::where('status', PaymentStatus::PAID)
+                    ->whereBetween('paid_at', [$current, $weekEnd])
+                    ->sum('amount');
+                    
+                $data[] = [
+                    'date' => $current->format('M d') . ' - ' . $weekEnd->format('M d'),
+                    'revenue' => (float) $revenue,
+                ];
+                
+                $current->addDays(7);
+            } else {
+                // Daily data for short ranges
+                $dayEnd = $current->copy()->endOfDay();
+                
+                $revenue = Payment::where('status', PaymentStatus::PAID)
+                    ->whereBetween('paid_at', [$current, $dayEnd])
+                    ->sum('amount');
+                    
+                $data[] = [
+                    'date' => $current->format('M d'),
+                    'revenue' => (float) $revenue,
+                ];
+                
+                $current->addDay();
+            }
         }
         
         return $data;
@@ -586,38 +578,92 @@ class ReportsController extends Controller
 
     private function getTrendAnalysis($startDate, $endDate)
     {
-        // This would typically include more complex trend analysis
-        // For now, we'll return basic month-over-month data
+        // Generate more granular trend data
         return [
-            'inquiries_trend' => $this->getMonthlyData(Inquiry::class, $startDate, $endDate),
-            'bookings_trend' => $this->getMonthlyData(BookingFile::class, $startDate, $endDate),
+            'inquiries_trend' => $this->getDailyTrendData(Inquiry::class, $startDate, $endDate),
+            'bookings_trend' => $this->getDailyTrendData(BookingFile::class, $startDate, $endDate),
             'revenue_trend' => $this->getRevenueTrend($startDate, $endDate),
         ];
     }
 
+    private function getDailyTrendData($model, $startDate, $endDate)
+    {
+        $data = [];
+        $current = $startDate->copy();
+        
+        // If the date range is more than 30 days, use weekly data
+        $isLongRange = $startDate->diffInDays($endDate) > 30;
+        
+        while ($current->lte($endDate)) {
+            if ($isLongRange) {
+                // Weekly data for long ranges
+                $weekEnd = $current->copy()->addDays(6);
+                if ($weekEnd->gt($endDate)) {
+                    $weekEnd = $endDate->copy();
+                }
+                
+                $count = $model::whereBetween('created_at', [$current, $weekEnd])->count();
+                $data[] = [
+                    'month' => $current->format('M d') . ' - ' . $weekEnd->format('M d'),
+                    'count' => $count,
+                ];
+                
+                $current->addDays(7);
+            } else {
+                // Daily data for short ranges
+                $dayEnd = $current->copy()->endOfDay();
+                
+                $count = $model::whereBetween('created_at', [$current, $dayEnd])->count();
+                $data[] = [
+                    'month' => $current->format('M d'),
+                    'count' => $count,
+                ];
+                
+                $current->addDay();
+            }
+        }
+        
+        return $data;
+    }
+
     private function getTopPerformers($startDate, $endDate)
     {
-        // Top clients by revenue
-        $topClients = Client::with(['inquiries.bookingFile.payments'])
+        // Get clients with inquiries in the date range and their revenue
+        $topClients = Client::with(['inquiries' => function($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            }])
+            ->whereHas('inquiries', function($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            })
             ->get()
             ->map(function ($client) use ($startDate, $endDate) {
-                $revenue = $client->inquiries
-                    ->flatMap->bookingFile
-                    ->flatMap->payments
+                // Calculate revenue from paid payments within the date range
+                $revenue = Payment::whereHas('booking.inquiry', function($query) use ($client) {
+                        $query->where('client_id', $client->id);
+                    })
                     ->where('status', PaymentStatus::PAID)
                     ->whereBetween('paid_at', [$startDate, $endDate])
                     ->sum('amount');
                 
+                // Get inquiry count for the date range
+                $inquiryCount = $client->inquiries()
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->count();
+                
                 return [
-                    'client' => $client->load('inquiries'), // Ensure inquiries are loaded
+                    'client' => $client,
                     'revenue' => $revenue,
+                    'inquiry_count' => $inquiryCount,
                 ];
+            })
+            ->filter(function($item) {
+                return $item['revenue'] > 0; // Only include clients with revenue
             })
             ->sortByDesc('revenue')
             ->take(10);
 
         return [
-            'top_clients' => $topClients,
+            'top_clients' => $topClients->values(), // Reset array keys to ensure proper indexing
         ];
     }
 
@@ -713,7 +759,7 @@ class ReportsController extends Controller
         
         // Resource Utilization Summary
         $csv .= "RESOURCE UTILIZATION SUMMARY\n";
-        $csv .= "Resource Type,Total Resources,Avg Utilization %,Total Bookings,Total Revenue\n";
+        $csv .= "Resource Type,Total Resources,Avg Utilization %,Total Bookings,Total Income\n";
         
         $csv .= "Hotels," . $hotelUtilization->count() . "," . $hotelUtilization->avg('utilization_percentage') . "," . $hotelUtilization->sum('bookings_count') . "," . $hotelUtilization->sum('total_revenue') . "\n";
         $csv .= "Vehicles," . $vehicleUtilization->count() . "," . $vehicleUtilization->avg('utilization_percentage') . "," . $vehicleUtilization->sum('bookings_count') . "," . $vehicleUtilization->sum('total_revenue') . "\n";
@@ -722,7 +768,7 @@ class ReportsController extends Controller
 
         // Hotel Utilization Details
         $csv .= "HOTEL UTILIZATION DETAILS\n";
-        $csv .= "Hotel Name,Utilization %,Total Days,Booked Days,Bookings Count,Total Revenue\n";
+        $csv .= "Hotel Name,Utilization %,Total Days,Booked Days,Bookings Count,Total Income\n";
         foreach ($hotelUtilization as $util) {
             $csv .= "{$util['resource']->name},{$util['utilization_percentage']},{$util['total_days']},{$util['booked_days']},{$util['bookings_count']},{$util['total_revenue']}\n";
         }
@@ -730,7 +776,7 @@ class ReportsController extends Controller
 
         // Vehicle Utilization Details
         $csv .= "VEHICLE UTILIZATION DETAILS\n";
-        $csv .= "Vehicle Name,Utilization %,Total Days,Booked Days,Bookings Count,Total Revenue\n";
+        $csv .= "Vehicle Name,Utilization %,Total Days,Booked Days,Bookings Count,Total Income\n";
         foreach ($vehicleUtilization as $util) {
             $csv .= "{$util['resource']->name},{$util['utilization_percentage']},{$util['total_days']},{$util['booked_days']},{$util['bookings_count']},{$util['total_revenue']}\n";
         }
@@ -738,7 +784,7 @@ class ReportsController extends Controller
 
         // Guide Utilization Details
         $csv .= "GUIDE UTILIZATION DETAILS\n";
-        $csv .= "Guide Name,Utilization %,Total Days,Booked Days,Bookings Count,Total Revenue\n";
+        $csv .= "Guide Name,Utilization %,Total Days,Booked Days,Bookings Count,Total Income\n";
         foreach ($guideUtilization as $util) {
             $csv .= "{$util['resource']->name},{$util['utilization_percentage']},{$util['total_days']},{$util['booked_days']},{$util['bookings_count']},{$util['total_revenue']}\n";
         }
@@ -746,7 +792,7 @@ class ReportsController extends Controller
 
         // Representative Utilization Details
         $csv .= "REPRESENTATIVE UTILIZATION DETAILS\n";
-        $csv .= "Representative Name,Utilization %,Total Days,Booked Days,Bookings Count,Total Revenue\n";
+        $csv .= "Representative Name,Utilization %,Total Days,Booked Days,Bookings Count,Total Income\n";
         foreach ($representativeUtilization as $util) {
             $csv .= "{$util['resource']->name},{$util['utilization_percentage']},{$util['total_days']},{$util['booked_days']},{$util['bookings_count']},{$util['total_revenue']}\n";
         }
@@ -827,7 +873,7 @@ class ReportsController extends Controller
 
         // Top Performers (Clients)
         $csv .= "TOP PERFORMERS (CLIENTS)\n";
-        $csv .= "Client Name,Total Revenue\n";
+        $csv .= "Client Name,Total Income\n";
         $topClients = $topPerformers['top_clients'] ?? collect();
         foreach ($topClients as $performer) {
             $csv .= "{$performer['client']->name},{$performer['revenue']}\n";

@@ -25,10 +25,10 @@ enum ResourceStatus: string
     public function getColor(): string
     {
         return match($this) {
-            self::AVAILABLE => 'green',
-            self::OCCUPIED => 'red',
-            self::MAINTENANCE => 'yellow',
-            self::OUT_OF_SERVICE => 'gray',
+            self::AVAILABLE => 'success',
+            self::OCCUPIED => 'danger',
+            self::MAINTENANCE => 'warning',
+            self::OUT_OF_SERVICE => 'secondary',
         };
     }
 

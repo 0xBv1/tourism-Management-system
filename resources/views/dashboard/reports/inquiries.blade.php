@@ -18,12 +18,12 @@
                     <!-- Role Indicator -->
                     @if(admin()->roles->count() > 0)
                         <div class="alert alert-info">
-                            <i class="fa fa-user-tag"></i> 
+                            <i class="fa fa-user"></i> 
                             <strong>Current Role:</strong> {{ admin()->roles->pluck('name')->join(', ') }}
                         </div>
                     @endif
                     
-                    @if(auth()->user()->hasRole(['Reservation', 'Operation']))
+                    @if(auth()->user()->hasRole(['Reservation', 'Operator']))
                         <div class="alert alert-warning">
                             <i class="fa fa-filter"></i> 
                             <strong>Filtered Report:</strong> This report shows only inquiries assigned to you.
@@ -74,60 +74,68 @@
                     <!-- Summary Cards -->
                     <div class="row mt-3">
                         <div class="col-md-3">
-                            <div class="card bg-primary text-white">
+                            <div class="card bg-gradient-primary text-white shadow-lg">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>{{ $inquiries->count() }}</h4>
-                                            <p class="mb-0">Total Inquiries</p>
+                                            <h3 class="fw-bold">{{ $inquiries->count() }}</h3>
+                                            <p class="mb-1 fs-6">Total Inquiries</p>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fa fa-envelope fa-2x"></i>
+                                            <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                                                <i class="fa fa-envelope fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-success text-white">
+                            <div class="card bg-gradient-success text-white shadow-lg">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>{{ $conversionRate }}%</h4>
-                                            <p class="mb-0">Conversion Rate</p>
+                                            <h3 class="fw-bold">{{ $conversionRate }}%</h3>
+                                            <p class="mb-1 fs-6">Conversion Rate</p>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fa fa-percentage fa-2x"></i>
+                                            <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                                                <i class="fa fa-percentage fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-warning text-white">
+                            <div class="card bg-gradient-warning text-white shadow-lg">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>{{ $statusData['pending']['count'] ?? 0 }}</h4>
-                                            <p class="mb-0">Pending</p>
+                                            <h3 class="fw-bold">{{ $inquiries->where('status', \App\Enums\InquiryStatus::PENDING)->count() }}</h3>
+                                            <p class="mb-1 fs-6">Pending</p>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fa fa-clock fa-2x"></i>
+                                            <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                                                <i class="fa fa-clock fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-info text-white">
+                            <div class="card bg-gradient-info text-white shadow-lg">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
-                                            <h4>{{ $statusData['confirmed']['count'] ?? 0 }}</h4>
-                                            <p class="mb-0">Confirmed</p>
+                                            <h3 class="fw-bold">{{ $inquiries->where('status', \App\Enums\InquiryStatus::CONFIRMED)->count() }}</h3>
+                                            <p class="mb-1 fs-6">Confirmed</p>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fa fa-check fa-2x"></i>
+                                            <div class="bg-white bg-opacity-20 rounded-circle p-3">
+                                                <i class="fa fa-check fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -135,29 +143,6 @@
                         </div>
                     </div>
 
-                    <!-- Status Breakdown Chart -->
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Status Breakdown</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="statusChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Monthly Trend</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="trendChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Inquiries Table -->
                     <div class="card mt-3">
@@ -216,57 +201,63 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Status Breakdown Chart
-    const statusCtx = document.getElementById('statusChart').getContext('2d');
-    const statusData = @json($statusData);
-    
-    new Chart(statusCtx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.values(statusData).map(item => item.label),
-            datasets: [{
-                data: Object.values(statusData).map(item => item.count),
-                backgroundColor: [
-                    '#007bff',
-                    '#28a745',
-                    '#ffc107',
-                    '#dc3545',
-                    '#6c757d'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-
-    // Monthly Trend Chart
-    const trendCtx = document.getElementById('trendChart').getContext('2d');
-    const trendData = @json($monthlyData);
-    
-    new Chart(trendCtx, {
-        type: 'line',
-        data: {
-            labels: trendData.map(item => item.month),
-            datasets: [{
-                label: 'Inquiries',
-                data: trendData.map(item => item.count),
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    // Chart initialization code removed
 });
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    }
+    
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    .shadow-lg {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+    }
+    
+    .btn {
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .table {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: none;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .badge {
+        border-radius: 20px;
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+</style>
 @endpush

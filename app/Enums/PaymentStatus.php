@@ -24,9 +24,9 @@ enum PaymentStatus: string
     public function getColor(): string
     {
         return match($this) {
-            self::PAID => 'green',
-            self::NOT_PAID => 'red',
-            self::PENDING => 'yellow',
+            self::PAID => 'success',
+            self::NOT_PAID => 'danger',
+            self::PENDING => 'warning',
         };
     }
 
