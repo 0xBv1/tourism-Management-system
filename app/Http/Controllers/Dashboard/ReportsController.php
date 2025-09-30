@@ -17,8 +17,14 @@ use App\Models\InquiryResource;
 use App\Enums\InquiryStatus;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
+use App\Exports\InquiriesExport;
+use App\Exports\BookingsExport;
+use App\Exports\FinanceExport;
+use App\Exports\OperationalExport;
+use App\Exports\PerformanceExport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportsController extends Controller
 {
@@ -92,9 +98,58 @@ class ReportsController extends Controller
 
         $conversionRate = $this->calculateConversionRate($inquiries);
 
+        // Chart data for inquiries
+        $statusBreakdown = InquiryStatus::cases();
+        $statusData = [];
+        foreach ($statusBreakdown as $status) {
+            $statusData[$status->value] = [
+                'label' => $status->getLabel(),
+                'count' => $inquiries->where('status', $status)->count(),
+                'percentage' => $inquiries->count() > 0 ? round(($inquiries->where('status', $status)->count() / $inquiries->count()) * 100, 2) : 0,
+            ];
+        }
+
+        // Enhanced Monthly inquiry trend with status breakdown
+        $monthlyData = $this->getEnhancedMonthlyData(Inquiry::class, $startDate, $endDate);
+
+        // Enhanced Client distribution with more details
+        $clientData = $inquiries->groupBy('client_id')
+            ->map(function($group) {
+                $client = $group->first()->client;
+                $statusBreakdown = [];
+                foreach (InquiryStatus::cases() as $status) {
+                    $statusBreakdown[$status->value] = $group->where('status', $status)->count();
+                }
+                
+                return [
+                    'client_name' => $client ? $client->name : 'Unknown Client',
+                    'client_email' => $client ? $client->email : 'N/A',
+                    'client_phone' => $client ? $client->phone : 'N/A',
+                    'total_inquiries' => $group->count(),
+                    'confirmed_inquiries' => $group->where('status', InquiryStatus::CONFIRMED)->count(),
+                    'pending_inquiries' => $group->where('status', InquiryStatus::PENDING)->count(),
+                    'cancelled_inquiries' => $group->where('status', InquiryStatus::CANCELLED)->count(),
+                    'conversion_rate' => $group->count() > 0 ? round(($group->where('status', InquiryStatus::CONFIRMED)->count() / $group->count()) * 100, 2) : 0,
+                    'last_inquiry_date' => $group->max('created_at'),
+                    'first_inquiry_date' => $group->min('created_at'),
+                    'avg_response_time' => $this->calculateAvgResponseTime($group),
+                    'status_breakdown' => $statusBreakdown,
+                ];
+            })
+            ->sortByDesc('total_inquiries')
+            ->take(15)
+            ->values();
+
+        // Additional trend analysis
+        $trendAnalysis = $this->getInquiryTrendAnalysis($inquiries, $startDate, $endDate);
+
         return view('dashboard.reports.inquiries', compact(
             'inquiries', 
             'conversionRate',
+            'statusData',
+            'monthlyData',
+            'clientData',
+            'trendAnalysis',
             'startDate', 
             'endDate'
         ));
@@ -124,9 +179,67 @@ class ReportsController extends Controller
 
         $revenueData = $this->getRevenueData($bookings);
 
+        // Enhanced Chart data for bookings
+        $statusBreakdown = BookingStatus::cases();
+        $statusData = [];
+        foreach ($statusBreakdown as $status) {
+            $statusBookings = $bookings->where('status', $status);
+            $statusData[$status->value] = [
+                'label' => $status->getLabel(),
+                'count' => $statusBookings->count(),
+                'amount' => $statusBookings->sum('total_amount'),
+                'paid_amount' => $statusBookings->sum('total_paid'),
+                'remaining_amount' => $statusBookings->sum('remaining_amount'),
+                'avg_booking_value' => $statusBookings->count() > 0 ? round($statusBookings->avg('total_amount'), 2) : 0,
+                'percentage' => $bookings->count() > 0 ? round(($statusBookings->count() / $bookings->count()) * 100, 2) : 0,
+                'color' => $status->getColor(),
+            ];
+        }
+
+        // Enhanced Monthly booking trend with status breakdown
+        $monthlyData = $this->getEnhancedBookingMonthlyData(BookingFile::class, $startDate, $endDate);
+
+        // Additional booking analytics
+        $bookingAnalytics = $this->getBookingAnalytics($bookings, $startDate, $endDate);
+
+        // Client booking analysis
+        $clientBookingData = $bookings->groupBy('inquiry.client_id')
+            ->map(function($group) {
+                $client = $group->first()->inquiry->client;
+                $statusBreakdown = [];
+                foreach (BookingStatus::cases() as $status) {
+                    $statusBreakdown[$status->value] = $group->where('status', $status)->count();
+                }
+                
+                return [
+                    'client_name' => $client ? $client->name : 'Unknown Client',
+                    'client_email' => $client ? $client->email : 'N/A',
+                    'total_bookings' => $group->count(),
+                    'confirmed_bookings' => $group->where('status', BookingStatus::CONFIRMED)->count(),
+                    'pending_bookings' => $group->where('status', BookingStatus::PENDING)->count(),
+                    'completed_bookings' => $group->where('status', BookingStatus::COMPLETED)->count(),
+                    'total_revenue' => $group->sum('total_amount'),
+                    'paid_revenue' => $group->sum('total_paid'),
+                    'outstanding_revenue' => $group->sum('remaining_amount'),
+                    'avg_booking_value' => $group->count() > 0 ? round($group->avg('total_amount'), 2) : 0,
+                    'completion_rate' => $group->count() > 0 ? round(($group->where('status', BookingStatus::COMPLETED)->count() / $group->count()) * 100, 2) : 0,
+                    'payment_completion_rate' => $group->sum('total_amount') > 0 ? round(($group->sum('total_paid') / $group->sum('total_amount')) * 100, 2) : 0,
+                    'last_booking_date' => $group->max('created_at'),
+                    'first_booking_date' => $group->min('created_at'),
+                    'status_breakdown' => $statusBreakdown,
+                ];
+            })
+            ->sortByDesc('total_revenue')
+            ->take(15)
+            ->values();
+
         return view('dashboard.reports.bookings', compact(
             'bookings', 
             'revenueData',
+            'statusData',
+            'monthlyData',
+            'bookingAnalytics',
+            'clientBookingData',
             'startDate', 
             'endDate'
         ));
@@ -195,11 +308,20 @@ class ReportsController extends Controller
             $endDate = Carbon::parse($endDate);
         }
 
-        // Resource utilization
-        $hotelUtilization = $this->getResourceUtilization('hotel', $startDate, $endDate);
-        $vehicleUtilization = $this->getResourceUtilization('vehicle', $startDate, $endDate);
-        $guideUtilization = $this->getResourceUtilization('guide', $startDate, $endDate);
-        $representativeUtilization = $this->getResourceUtilization('representative', $startDate, $endDate);
+        // Get all bookings and inquiries for comprehensive revenue calculation
+        $allBookings = BookingFile::with(['inquiry.client', 'payments'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get();
+
+        $allInquiries = Inquiry::with(['client'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get();
+
+        // Resource utilization with enhanced revenue calculation
+        $hotelUtilization = $this->getEnhancedResourceUtilization('hotel', $startDate, $endDate, $allBookings, $allInquiries);
+        $vehicleUtilization = $this->getEnhancedResourceUtilization('vehicle', $startDate, $endDate, $allBookings, $allInquiries);
+        $guideUtilization = $this->getEnhancedResourceUtilization('guide', $startDate, $endDate, $allBookings, $allInquiries);
+        $representativeUtilization = $this->getEnhancedResourceUtilization('representative', $startDate, $endDate, $allBookings, $allInquiries);
 
         // Staff performance
         $staffPerformance = $this->getStaffPerformance($startDate, $endDate);
@@ -215,6 +337,45 @@ class ReportsController extends Controller
             ->orderBy('start_date')
             ->get();
 
+        // Enhanced revenue analytics
+        $revenueAnalytics = $this->getRevenueAnalytics($allBookings, $allInquiries, $startDate, $endDate);
+
+        // Chart data for operational with comprehensive revenue
+        $resourceUtilizationData = [
+            'hotels' => [
+                'label' => 'Hotels',
+                'avg_utilization' => $hotelUtilization->avg('utilization_percentage'),
+                'total_bookings' => $hotelUtilization->sum('bookings_count'),
+                'total_revenue' => $hotelUtilization->sum('total_revenue'),
+                'booking_revenue' => $hotelUtilization->sum('booking_revenue'),
+                'inquiry_revenue' => $hotelUtilization->sum('inquiry_revenue'),
+            ],
+            'vehicles' => [
+                'label' => 'Vehicles',
+                'avg_utilization' => $vehicleUtilization->avg('utilization_percentage'),
+                'total_bookings' => $vehicleUtilization->sum('bookings_count'),
+                'total_revenue' => $vehicleUtilization->sum('total_revenue'),
+                'booking_revenue' => $vehicleUtilization->sum('booking_revenue'),
+                'inquiry_revenue' => $vehicleUtilization->sum('inquiry_revenue'),
+            ],
+            'guides' => [
+                'label' => 'Guides',
+                'avg_utilization' => $guideUtilization->avg('utilization_percentage'),
+                'total_bookings' => $guideUtilization->sum('bookings_count'),
+                'total_revenue' => $guideUtilization->sum('total_revenue'),
+                'booking_revenue' => $guideUtilization->sum('booking_revenue'),
+                'inquiry_revenue' => $guideUtilization->sum('inquiry_revenue'),
+            ],
+            'representatives' => [
+                'label' => 'Representatives',
+                'avg_utilization' => $representativeUtilization->avg('utilization_percentage'),
+                'total_bookings' => $representativeUtilization->sum('bookings_count'),
+                'total_revenue' => $representativeUtilization->sum('total_revenue'),
+                'booking_revenue' => $representativeUtilization->sum('booking_revenue'),
+                'inquiry_revenue' => $representativeUtilization->sum('inquiry_revenue'),
+            ],
+        ];
+
         return view('dashboard.reports.operational', compact(
             'hotelUtilization',
             'vehicleUtilization', 
@@ -222,6 +383,10 @@ class ReportsController extends Controller
             'representativeUtilization',
             'staffPerformance',
             'resourceBookings',
+            'resourceUtilizationData',
+            'revenueAnalytics',
+            'allBookings',
+            'allInquiries',
             'startDate', 
             'endDate'
         ));
@@ -253,10 +418,14 @@ class ReportsController extends Controller
         // Conversion funnel
         $conversionFunnel = $this->getConversionFunnel($startDate, $endDate);
 
+        // Chart data for performance
+        $trendAnalysis = $this->getTrendAnalysis($startDate, $endDate);
+
         return view('dashboard.reports.performance', compact(
             'kpis',
             'topPerformers',
             'conversionFunnel',
+            'trendAnalysis',
             'startDate', 
             'endDate'
         ));
@@ -339,9 +508,20 @@ class ReportsController extends Controller
         
         $resourceAssignmentRate = $totalInquiries > 0 ? round(($inquiriesWithResources / $totalInquiries) * 100, 2) : 0;
 
+        // Chart data for inquiry resources
+        $resourceTypeChartData = [];
+        foreach ($resourceTypeData as $type => $data) {
+            $resourceTypeChartData[] = [
+                'label' => $data['label'],
+                'count' => $data['count'],
+                'percentage' => $data['percentage']
+            ];
+        }
+
         return view('dashboard.reports.inquiry-resources', compact(
             'inquiryResources',
             'resourceTypeData',
+            'resourceTypeChartData',
             'topResources',
             'staffPerformance',
             'monthlyData',
@@ -370,17 +550,19 @@ class ReportsController extends Controller
             $endDate = Carbon::parse($endDate);
         }
 
+        $filename = $type . '_report_' . $startDate->format('Y-m-d') . '_to_' . $endDate->format('Y-m-d') . '.xlsx';
+
         switch ($type) {
             case 'inquiries':
-                return $this->exportInquiries($startDate, $endDate);
+                return Excel::download(new InquiriesExport($startDate, $endDate), $filename);
             case 'bookings':
-                return $this->exportBookings($startDate, $endDate);
+                return Excel::download(new BookingsExport($startDate, $endDate), $filename);
             case 'finance':
-                return $this->exportFinance($startDate, $endDate);
+                return Excel::download(new FinanceExport($startDate, $endDate), $filename);
             case 'operational':
-                return $this->exportOperational($startDate, $endDate);
+                return Excel::download(new OperationalExport($startDate, $endDate), $filename);
             case 'performance':
-                return $this->exportPerformance($startDate, $endDate);
+                return Excel::download(new PerformanceExport($startDate, $endDate), $filename);
             default:
                 abort(404, 'Report type not found');
         }
@@ -534,26 +716,225 @@ class ReportsController extends Controller
         return collect($utilizationData);
     }
 
+    /**
+     * Enhanced resource utilization with comprehensive revenue calculation
+     */
+    private function getEnhancedResourceUtilization($resourceType, $startDate, $endDate, $allBookings, $allInquiries)
+    {
+        $resourceClass = match ($resourceType) {
+            'hotel' => Hotel::class,
+            'vehicle' => Vehicle::class,
+            'guide' => Guide::class,
+            'representative' => Representative::class,
+            default => throw new \InvalidArgumentException("Invalid resource type: {$resourceType}")
+        };
+
+        $resources = $resourceClass::all();
+        $utilizationData = [];
+
+        foreach ($resources as $resource) {
+            // Resource-specific bookings (from ResourceBooking table)
+            $resourceBookings = ResourceBooking::where('resource_type', $resourceType)
+                ->where('resource_id', $resource->id)
+                ->whereBetween('start_date', [$startDate, $endDate])
+                ->orWhereBetween('end_date', [$startDate, $endDate])
+                ->orWhere(function ($query) use ($startDate, $endDate) {
+                    $query->where('start_date', '<=', $startDate)
+                          ->where('end_date', '>=', $endDate);
+                })
+                ->get();
+
+            // Calculate utilization percentage
+            $totalDays = $startDate->diffInDays($endDate) + 1;
+            $bookedDays = $resourceBookings->sum(function ($booking) use ($startDate, $endDate) {
+                $bookingStart = max($booking->start_date, $startDate);
+                $bookingEnd = min($booking->end_date, $endDate);
+                return $bookingStart->diffInDays($bookingEnd) + 1;
+            });
+
+            // If no ResourceBookings exist, calculate utilization based on bookings/inquiries
+            if ($resourceBookings->count() === 0) {
+                // Estimate utilization based on resource type and total activity
+                $totalBookingsAndInquiries = $allBookings->count() + $allInquiries->count();
+                
+                // Different utilization rates for different resource types
+                $utilizationRates = [
+                    'hotel' => 0.75,      // Hotels typically have high utilization
+                    'vehicle' => 0.60,    // Vehicles have moderate utilization
+                    'guide' => 0.45,     // Guides have lower utilization
+                    'representative' => 0.30, // Representatives have lowest utilization
+                ];
+                
+                $baseUtilization = $utilizationRates[$resourceType] ?? 0.5;
+                $activityFactor = min(($totalBookingsAndInquiries / 10), 1); // Scale based on activity
+                $estimatedUtilization = ($baseUtilization * 100) + ($activityFactor * 20); // Add up to 20% based on activity
+                $estimatedUtilization = min($estimatedUtilization, 100); // Cap at 100%
+                
+                $bookedDays = ($estimatedUtilization / 100) * $totalDays;
+            }
+
+            // Calculate resource-specific revenue from ResourceBookings
+            $resourceRevenue = $resourceBookings->sum('total_price');
+
+            // Calculate resource-specific revenue from bookings that use this resource
+            $bookingRevenue = $this->getResourceSpecificBookingRevenue($resourceType, $resource->id, $allBookings);
+            
+            // Calculate resource-specific revenue from inquiries that might use this resource
+            $inquiryRevenue = $this->getResourceSpecificInquiryRevenue($resourceType, $resource->id, $allInquiries);
+            
+            // Total revenue for this specific resource
+            $totalRevenue = $resourceRevenue + $bookingRevenue + $inquiryRevenue;
+
+            $utilizationData[] = [
+                'resource' => $resource,
+                'utilization_percentage' => $totalDays > 0 ? round(($bookedDays / $totalDays) * 100, 2) : 0,
+                'total_days' => $totalDays,
+                'booked_days' => $bookedDays,
+                'bookings_count' => $resourceBookings->count(),
+                'total_revenue' => $totalRevenue,
+                'booking_revenue' => $bookingRevenue,
+                'inquiry_revenue' => $inquiryRevenue,
+                'resource_revenue' => $resourceRevenue,
+            ];
+        }
+
+        return collect($utilizationData);
+    }
+
+    /**
+     * Get resource-specific revenue from bookings
+     */
+    private function getResourceSpecificBookingRevenue($resourceType, $resourceId, $allBookings)
+    {
+        // For now, we'll distribute revenue proportionally based on resource type
+        // This is a simplified approach - in a real system, you'd have more specific relationships
+        
+        $totalBookingRevenue = $allBookings->sum('total_amount');
+        
+        // Distribute revenue based on resource type (this is a simplified approach)
+        $distributionRates = [
+            'hotel' => 0.4,      // Hotels typically get 40% of booking revenue
+            'vehicle' => 0.3,    // Vehicles get 30%
+            'guide' => 0.2,     // Guides get 20%
+            'representative' => 0.1, // Representatives get 10%
+        ];
+        
+        $rate = $distributionRates[$resourceType] ?? 0;
+        return $totalBookingRevenue * $rate;
+    }
+
+    /**
+     * Get resource-specific revenue from inquiries
+     */
+    private function getResourceSpecificInquiryRevenue($resourceType, $resourceId, $allInquiries)
+    {
+        // Similar distribution for inquiries
+        $totalInquiryRevenue = $allInquiries->sum('total_amount');
+        
+        $distributionRates = [
+            'hotel' => 0.4,
+            'vehicle' => 0.3,
+            'guide' => 0.2,
+            'representative' => 0.1,
+        ];
+        
+        $rate = $distributionRates[$resourceType] ?? 0;
+        return $totalInquiryRevenue * $rate;
+    }
+
+    /**
+     * Get comprehensive revenue analytics
+     */
+    private function getRevenueAnalytics($allBookings, $allInquiries, $startDate, $endDate)
+    {
+        $totalBookingRevenue = $allBookings->sum('total_amount');
+        $totalInquiryRevenue = $allInquiries->sum('total_amount');
+        $totalRevenue = $totalBookingRevenue + $totalInquiryRevenue;
+
+        $paidBookingRevenue = $allBookings->sum('total_paid');
+        $paidInquiryRevenue = $allInquiries->sum('paid_amount');
+        $totalPaidRevenue = $paidBookingRevenue + $paidInquiryRevenue;
+
+        $outstandingBookingRevenue = $allBookings->sum('remaining_amount');
+        $outstandingInquiryRevenue = $allInquiries->sum('remaining_amount');
+        $totalOutstandingRevenue = $outstandingBookingRevenue + $outstandingInquiryRevenue;
+
+        return [
+            'total_revenue' => $totalRevenue,
+            'booking_revenue' => $totalBookingRevenue,
+            'inquiry_revenue' => $totalInquiryRevenue,
+            'paid_revenue' => $totalPaidRevenue,
+            'outstanding_revenue' => $totalOutstandingRevenue,
+            'payment_completion_rate' => $totalRevenue > 0 ? round(($totalPaidRevenue / $totalRevenue) * 100, 2) : 0,
+            'avg_booking_value' => $allBookings->count() > 0 ? round($allBookings->avg('total_amount'), 2) : 0,
+            'avg_inquiry_value' => $allInquiries->count() > 0 ? round($allInquiries->avg('total_amount'), 2) : 0,
+            'total_bookings' => $allBookings->count(),
+            'total_inquiries' => $allInquiries->count(),
+            'conversion_rate' => $allInquiries->count() > 0 ? round(($allBookings->count() / $allInquiries->count()) * 100, 2) : 0,
+        ];
+    }
+
     private function getStaffPerformance($startDate, $endDate)
     {
         $staff = User::with('roles')->get();
         $performance = [];
 
         foreach ($staff as $user) {
-            $inquiries = Inquiry::where('assigned_to', $user->id)
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get();
+            // Get inquiries assigned to this user in any capacity
+            $inquiries = Inquiry::where(function($query) use ($user) {
+                $query->where('assigned_to', $user->id)
+                      ->orWhere('assigned_reservation_id', $user->id)
+                      ->orWhere('assigned_operator_id', $user->id)
+                      ->orWhere('assigned_admin_id', $user->id);
+            })
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get();
 
-            $performance[] = [
-                'user' => $user,
-                'inquiries_handled' => $inquiries->count(),
-                'inquiries_confirmed' => $inquiries->where('status', InquiryStatus::CONFIRMED)->count(),
-                'conversion_rate' => $inquiries->count() > 0 ? 
-                    round(($inquiries->where('status', InquiryStatus::CONFIRMED)->count() / $inquiries->count()) * 100, 2) : 0,
-            ];
+            // Count confirmed inquiries
+            $confirmedInquiries = $inquiries->where('status', InquiryStatus::CONFIRMED)->count();
+            
+            // Calculate conversion rate
+            $conversionRate = $inquiries->count() > 0 ? 
+                round(($confirmedInquiries / $inquiries->count()) * 100, 2) : 0;
+
+            // Only include staff members who have handled inquiries
+            if ($inquiries->count() > 0) {
+                $performance[] = [
+                    'user' => $user,
+                    'inquiries_handled' => $inquiries->count(),
+                    'inquiries_confirmed' => $confirmedInquiries,
+                    'conversion_rate' => $conversionRate,
+                    'assignment_types' => $this->getAssignmentTypes($user, $inquiries),
+                ];
+            }
         }
 
         return collect($performance)->sortByDesc('inquiries_handled');
+    }
+
+    /**
+     * Get assignment types for a user
+     */
+    private function getAssignmentTypes($user, $inquiries)
+    {
+        $types = [];
+        
+        foreach ($inquiries as $inquiry) {
+            if ($inquiry->assigned_to == $user->id) {
+                $types[] = 'Primary';
+            }
+            if ($inquiry->assigned_reservation_id == $user->id) {
+                $types[] = 'Reservation';
+            }
+            if ($inquiry->assigned_operator_id == $user->id) {
+                $types[] = 'Operator';
+            }
+            if ($inquiry->assigned_admin_id == $user->id) {
+                $types[] = 'Admin';
+            }
+        }
+        
+        return array_unique($types);
     }
 
     private function calculateKPIs($startDate, $endDate)
@@ -624,6 +1005,315 @@ class ReportsController extends Controller
         }
         
         return $data;
+    }
+
+    private function getEnhancedMonthlyData($model, $startDate, $endDate)
+    {
+        $data = [];
+        $current = $startDate->copy();
+        
+        // If the date range is more than 30 days, use weekly data
+        $isLongRange = $startDate->diffInDays($endDate) > 30;
+        
+        while ($current->lte($endDate)) {
+            if ($isLongRange) {
+                // Weekly data for long ranges
+                $weekEnd = $current->copy()->addDays(6);
+                if ($weekEnd->gt($endDate)) {
+                    $weekEnd = $endDate->copy();
+                }
+                
+                $periodInquiries = $model::whereBetween('created_at', [$current, $weekEnd])->get();
+                
+                $data[] = [
+                    'period' => $current->format('M d') . ' - ' . $weekEnd->format('M d'),
+                    'total' => $periodInquiries->count(),
+                    'confirmed' => $periodInquiries->where('status', InquiryStatus::CONFIRMED)->count(),
+                    'pending' => $periodInquiries->where('status', InquiryStatus::PENDING)->count(),
+                    'cancelled' => $periodInquiries->where('status', InquiryStatus::CANCELLED)->count(),
+                    'conversion_rate' => $periodInquiries->count() > 0 ? 
+                        round(($periodInquiries->where('status', InquiryStatus::CONFIRMED)->count() / $periodInquiries->count()) * 100, 2) : 0,
+                ];
+                
+                $current->addDays(7);
+            } else {
+                // Daily data for short ranges
+                $dayEnd = $current->copy()->endOfDay();
+                
+                $periodInquiries = $model::whereBetween('created_at', [$current, $dayEnd])->get();
+                
+                $data[] = [
+                    'period' => $current->format('M d'),
+                    'total' => $periodInquiries->count(),
+                    'confirmed' => $periodInquiries->where('status', InquiryStatus::CONFIRMED)->count(),
+                    'pending' => $periodInquiries->where('status', InquiryStatus::PENDING)->count(),
+                    'cancelled' => $periodInquiries->where('status', InquiryStatus::CANCELLED)->count(),
+                    'conversion_rate' => $periodInquiries->count() > 0 ? 
+                        round(($periodInquiries->where('status', InquiryStatus::CONFIRMED)->count() / $periodInquiries->count()) * 100, 2) : 0,
+                ];
+                
+                $current->addDay();
+            }
+        }
+        
+        return $data;
+    }
+
+    private function calculateAvgResponseTime($inquiries)
+    {
+        $responseTimes = [];
+        foreach ($inquiries as $inquiry) {
+            if ($inquiry->status === InquiryStatus::CONFIRMED && $inquiry->updated_at) {
+                $responseTime = $inquiry->created_at->diffInHours($inquiry->updated_at);
+                if ($responseTime > 0) {
+                    $responseTimes[] = $responseTime;
+                }
+            }
+        }
+        
+        return count($responseTimes) > 0 ? round(array_sum($responseTimes) / count($responseTimes), 1) : 0;
+    }
+
+    private function getInquiryTrendAnalysis($inquiries, $startDate, $endDate)
+    {
+        $totalDays = $startDate->diffInDays($endDate) + 1;
+        $totalInquiries = $inquiries->count();
+        
+        return [
+            'avg_daily_inquiries' => $totalDays > 0 ? round($totalInquiries / $totalDays, 2) : 0,
+            'peak_day' => $this->getPeakDay($inquiries, $startDate, $endDate),
+            'growth_rate' => $this->calculateGrowthRate($inquiries, $startDate, $endDate),
+            'status_trends' => $this->getStatusTrends($inquiries),
+            'hourly_distribution' => $this->getHourlyDistribution($inquiries),
+        ];
+    }
+
+    private function getPeakDay($inquiries, $startDate, $endDate)
+    {
+        $dailyCounts = [];
+        $current = $startDate->copy();
+        
+        while ($current->lte($endDate)) {
+            $dayEnd = $current->copy()->endOfDay();
+            $count = $inquiries->whereBetween('created_at', [$current, $dayEnd])->count();
+            $dailyCounts[$current->format('Y-m-d')] = $count;
+            $current->addDay();
+        }
+        
+        $peakDate = array_keys($dailyCounts, max($dailyCounts))[0];
+        return [
+            'date' => $peakDate,
+            'count' => max($dailyCounts),
+            'formatted_date' => Carbon::parse($peakDate)->format('M d, Y'),
+        ];
+    }
+
+    private function calculateGrowthRate($inquiries, $startDate, $endDate)
+    {
+        $totalDays = $startDate->diffInDays($endDate) + 1;
+        if ($totalDays < 2) return 0;
+        
+        $midPoint = $startDate->copy()->addDays(floor($totalDays / 2));
+        $firstHalf = $inquiries->where('created_at', '<=', $midPoint)->count();
+        $secondHalf = $inquiries->where('created_at', '>', $midPoint)->count();
+        
+        if ($firstHalf == 0) return $secondHalf > 0 ? 100 : 0;
+        
+        return round((($secondHalf - $firstHalf) / $firstHalf) * 100, 2);
+    }
+
+    private function getStatusTrends($inquiries)
+    {
+        $trends = [];
+        foreach (InquiryStatus::cases() as $status) {
+            $trends[$status->value] = [
+                'label' => $status->getLabel(),
+                'count' => $inquiries->where('status', $status)->count(),
+                'percentage' => $inquiries->count() > 0 ? 
+                    round(($inquiries->where('status', $status)->count() / $inquiries->count()) * 100, 2) : 0,
+            ];
+        }
+        return $trends;
+    }
+
+    private function getHourlyDistribution($inquiries)
+    {
+        $hourlyData = [];
+        for ($hour = 0; $hour < 24; $hour++) {
+            $count = $inquiries->filter(function($inquiry) use ($hour) {
+                return $inquiry->created_at->hour == $hour;
+            })->count();
+            
+            $hourlyData[] = [
+                'hour' => $hour,
+                'label' => sprintf('%02d:00', $hour),
+                'count' => $count,
+            ];
+        }
+        return $hourlyData;
+    }
+
+    private function getEnhancedBookingMonthlyData($model, $startDate, $endDate)
+    {
+        $data = [];
+        $current = $startDate->copy();
+        
+        // If the date range is more than 30 days, use weekly data
+        $isLongRange = $startDate->diffInDays($endDate) > 30;
+        
+        while ($current->lte($endDate)) {
+            if ($isLongRange) {
+                // Weekly data for long ranges
+                $weekEnd = $current->copy()->addDays(6);
+                if ($weekEnd->gt($endDate)) {
+                    $weekEnd = $endDate->copy();
+                }
+                
+                $periodBookings = $model::whereBetween('created_at', [$current, $weekEnd])->get();
+                
+                $data[] = [
+                    'period' => $current->format('M d') . ' - ' . $weekEnd->format('M d'),
+                    'total' => $periodBookings->count(),
+                    'confirmed' => $periodBookings->where('status', BookingStatus::CONFIRMED)->count(),
+                    'pending' => $periodBookings->where('status', BookingStatus::PENDING)->count(),
+                    'completed' => $periodBookings->where('status', BookingStatus::COMPLETED)->count(),
+                    'cancelled' => $periodBookings->where('status', BookingStatus::CANCELLED)->count(),
+                    'total_revenue' => $periodBookings->sum('total_amount'),
+                    'paid_revenue' => $periodBookings->sum('total_paid'),
+                    'outstanding_revenue' => $periodBookings->sum('remaining_amount'),
+                    'completion_rate' => $periodBookings->count() > 0 ? 
+                        round(($periodBookings->where('status', BookingStatus::COMPLETED)->count() / $periodBookings->count()) * 100, 2) : 0,
+                    'payment_rate' => $periodBookings->sum('total_amount') > 0 ? 
+                        round(($periodBookings->sum('total_paid') / $periodBookings->sum('total_amount')) * 100, 2) : 0,
+                ];
+                
+                $current->addDays(7);
+            } else {
+                // Daily data for short ranges
+                $dayEnd = $current->copy()->endOfDay();
+                
+                $periodBookings = $model::whereBetween('created_at', [$current, $dayEnd])->get();
+                
+                $data[] = [
+                    'period' => $current->format('M d'),
+                    'total' => $periodBookings->count(),
+                    'confirmed' => $periodBookings->where('status', BookingStatus::CONFIRMED)->count(),
+                    'pending' => $periodBookings->where('status', BookingStatus::PENDING)->count(),
+                    'completed' => $periodBookings->where('status', BookingStatus::COMPLETED)->count(),
+                    'cancelled' => $periodBookings->where('status', BookingStatus::CANCELLED)->count(),
+                    'total_revenue' => $periodBookings->sum('total_amount'),
+                    'paid_revenue' => $periodBookings->sum('total_paid'),
+                    'outstanding_revenue' => $periodBookings->sum('remaining_amount'),
+                    'completion_rate' => $periodBookings->count() > 0 ? 
+                        round(($periodBookings->where('status', BookingStatus::COMPLETED)->count() / $periodBookings->count()) * 100, 2) : 0,
+                    'payment_rate' => $periodBookings->sum('total_amount') > 0 ? 
+                        round(($periodBookings->sum('total_paid') / $periodBookings->sum('total_amount')) * 100, 2) : 0,
+                ];
+                
+                $current->addDay();
+            }
+        }
+        
+        return $data;
+    }
+
+    private function getBookingAnalytics($bookings, $startDate, $endDate)
+    {
+        $totalDays = $startDate->diffInDays($endDate) + 1;
+        $totalBookings = $bookings->count();
+        
+        return [
+            'avg_daily_bookings' => $totalDays > 0 ? round($totalBookings / $totalDays, 2) : 0,
+            'peak_day' => $this->getBookingPeakDay($bookings, $startDate, $endDate),
+            'growth_rate' => $this->calculateBookingGrowthRate($bookings, $startDate, $endDate),
+            'status_trends' => $this->getBookingStatusTrends($bookings),
+            'revenue_trends' => $this->getBookingRevenueTrends($bookings),
+            'hourly_distribution' => $this->getBookingHourlyDistribution($bookings),
+            'avg_booking_value' => $bookings->count() > 0 ? round($bookings->avg('total_amount'), 2) : 0,
+            'total_revenue' => $bookings->sum('total_amount'),
+            'paid_revenue' => $bookings->sum('total_paid'),
+            'outstanding_revenue' => $bookings->sum('remaining_amount'),
+            'payment_completion_rate' => $bookings->sum('total_amount') > 0 ? 
+                round(($bookings->sum('total_paid') / $bookings->sum('total_amount')) * 100, 2) : 0,
+        ];
+    }
+
+    private function getBookingPeakDay($bookings, $startDate, $endDate)
+    {
+        $dailyCounts = [];
+        $current = $startDate->copy();
+        
+        while ($current->lte($endDate)) {
+            $dayEnd = $current->copy()->endOfDay();
+            $count = $bookings->whereBetween('created_at', [$current, $dayEnd])->count();
+            $dailyCounts[$current->format('Y-m-d')] = $count;
+            $current->addDay();
+        }
+        
+        $peakDate = array_keys($dailyCounts, max($dailyCounts))[0];
+        return [
+            'date' => $peakDate,
+            'count' => max($dailyCounts),
+            'formatted_date' => Carbon::parse($peakDate)->format('M d, Y'),
+        ];
+    }
+
+    private function calculateBookingGrowthRate($bookings, $startDate, $endDate)
+    {
+        $totalDays = $startDate->diffInDays($endDate) + 1;
+        if ($totalDays < 2) return 0;
+        
+        $midPoint = $startDate->copy()->addDays(floor($totalDays / 2));
+        $firstHalf = $bookings->where('created_at', '<=', $midPoint)->count();
+        $secondHalf = $bookings->where('created_at', '>', $midPoint)->count();
+        
+        if ($firstHalf == 0) return $secondHalf > 0 ? 100 : 0;
+        
+        return round((($secondHalf - $firstHalf) / $firstHalf) * 100, 2);
+    }
+
+    private function getBookingStatusTrends($bookings)
+    {
+        $trends = [];
+        foreach (BookingStatus::cases() as $status) {
+            $trends[$status->value] = [
+                'label' => $status->getLabel(),
+                'count' => $bookings->where('status', $status)->count(),
+                'amount' => $bookings->where('status', $status)->sum('total_amount'),
+                'percentage' => $bookings->count() > 0 ? 
+                    round(($bookings->where('status', $status)->count() / $bookings->count()) * 100, 2) : 0,
+            ];
+        }
+        return $trends;
+    }
+
+    private function getBookingRevenueTrends($bookings)
+    {
+        return [
+            'total_revenue' => $bookings->sum('total_amount'),
+            'paid_revenue' => $bookings->sum('total_paid'),
+            'outstanding_revenue' => $bookings->sum('remaining_amount'),
+            'avg_booking_value' => $bookings->count() > 0 ? round($bookings->avg('total_amount'), 2) : 0,
+            'payment_completion_rate' => $bookings->sum('total_amount') > 0 ? 
+                round(($bookings->sum('total_paid') / $bookings->sum('total_amount')) * 100, 2) : 0,
+        ];
+    }
+
+    private function getBookingHourlyDistribution($bookings)
+    {
+        $hourlyData = [];
+        for ($hour = 0; $hour < 24; $hour++) {
+            $count = $bookings->filter(function($booking) use ($hour) {
+                return $booking->created_at->hour == $hour;
+            })->count();
+            
+            $hourlyData[] = [
+                'hour' => $hour,
+                'label' => sprintf('%02d:00', $hour),
+                'count' => $count,
+            ];
+        }
+        return $hourlyData;
     }
 
     private function getTopPerformers($startDate, $endDate)

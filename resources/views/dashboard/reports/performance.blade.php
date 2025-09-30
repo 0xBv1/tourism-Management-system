@@ -143,6 +143,88 @@
                         </div>
                     </div>
 
+                    <!-- Charts Row -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="conversion-funnel-chart"
+                                type="bar"
+                                :labels="array_column($conversionFunnel, 'stage')"
+                                :data="array_column($conversionFunnel, 'count')"
+                                title="Conversion Funnel"
+                                subtitle="Sales funnel analysis"
+                                height="350px"
+                                :colors="['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Overall Conversion',
+                                        'value' => $kpis['inquiry_to_booking_conversion'] . '%',
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Payment Conversion',
+                                        'value' => $kpis['booking_to_payment_conversion'] . '%',
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="revenue-trend-chart"
+                                type="line"
+                                :labels="array_column($trendAnalysis['revenue_trend'], 'date')"
+                                :data="array_column($trendAnalysis['revenue_trend'], 'revenue')"
+                                title="Revenue Trend"
+                                subtitle="Revenue over time"
+                                height="350px"
+                                :colors="['#10b981']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Total Revenue',
+                                        'value' => '$' . number_format(array_sum(array_column($trendAnalysis['revenue_trend'], 'revenue')), 2),
+                                        'color' => 'success'
+                                    ],
+                                    [
+                                        'label' => 'Avg Daily',
+                                        'value' => '$' . number_format(array_sum(array_column($trendAnalysis['revenue_trend'], 'revenue')) / max(count($trendAnalysis['revenue_trend']), 1), 2),
+                                        'color' => 'info'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                    </div>
+
+                    <!-- Top Performers Chart -->
+                    @if(isset($topPerformers['top_clients']) && count($topPerformers['top_clients']) > 0)
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <x-dashboard-chart 
+                                id="top-clients-performance-chart"
+                                type="bar"
+                                :labels="array_column($topPerformers['top_clients'], 'client.name')"
+                                :data="array_column($topPerformers['top_clients'], 'revenue')"
+                                title="Top Clients by Revenue"
+                                subtitle="Highest performing clients"
+                                height="300px"
+                                :colors="['#8b5cf6']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Top Client',
+                                        'value' => count($topPerformers['top_clients']) > 0 ? $topPerformers['top_clients'][0]['client']->name : 'N/A',
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Max Revenue',
+                                        'value' => '$' . number_format(count($topPerformers['top_clients']) > 0 ? $topPerformers['top_clients'][0]['revenue'] : 0, 2),
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Top Performers -->
                     <div class="row mt-3">
                         <div class="col-12">

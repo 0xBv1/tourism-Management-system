@@ -225,18 +225,18 @@
         </div>
     @else
         @if($title || $subtitle)
-            <div class="chart-header mb-3">
+            <div class="chart-header">
                 @if($title)
-                    <h5 class="chart-title mb-1">{{ $title }}</h5>
+                    <h5 class="chart-title">{{ $title }}</h5>
                 @endif
                 @if($subtitle)
-                    <p class="chart-subtitle text-muted mb-0">{{ $subtitle }}</p>
+                    <p class="chart-subtitle">{{ $subtitle }}</p>
                 @endif
             </div>
         @endif
         
         @if($refreshable || $exportable)
-            <div class="chart-controls mb-3 d-flex justify-content-end gap-2">
+            <div class="chart-controls d-flex justify-content-end gap-2">
                 @if($refreshable)
                     <button type="button" class="btn btn-sm btn-outline-primary chart-refresh-btn">
                         <i class="fa fa-refresh"></i> Refresh

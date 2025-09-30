@@ -136,6 +136,265 @@
                         </div>
                     </div>
 
+                    <!-- Charts Row -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="booking-status-chart"
+                                type="doughnut"
+                                :labels="array_column($statusData, 'label')"
+                                :data="array_column($statusData, 'count')"
+                                title="Booking Status Distribution"
+                                subtitle="Breakdown of bookings by status"
+                                height="350px"
+                                :colors="['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16', '#f97316']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Total Bookings',
+                                        'value' => $bookings->count(),
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Total Revenue',
+                                        'value' => '$' . number_format($revenueData['total_revenue'], 2),
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-advanced-chart 
+                                id="booking-trend-chart"
+                                type="line"
+                                :labels="array_column($monthlyData, 'period')"
+                                :datasets="[
+                                    [
+                                        'label' => 'Total Bookings',
+                                        'data' => array_column($monthlyData, 'total'),
+                                        'backgroundColor' => 'rgba(6, 182, 212, 0.1)',
+                                        'borderColor' => '#06b6d4',
+                                        'borderWidth' => 3,
+                                        'fill' => true,
+                                        'tension' => 0.4
+                                    ],
+                                    [
+                                        'label' => 'Confirmed',
+                                        'data' => array_column($monthlyData, 'confirmed'),
+                                        'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                                        'borderColor' => '#10b981',
+                                        'borderWidth' => 3,
+                                        'fill' => true,
+                                        'tension' => 0.4
+                                    ],
+                                    [
+                                        'label' => 'Completed',
+                                        'data' => array_column($monthlyData, 'completed'),
+                                        'backgroundColor' => 'rgba(139, 92, 246, 0.1)',
+                                        'borderColor' => '#8b5cf6',
+                                        'borderWidth' => 3,
+                                        'fill' => true,
+                                        'tension' => 0.4
+                                    ],
+                                    [
+                                        'label' => 'Pending',
+                                        'data' => array_column($monthlyData, 'pending'),
+                                        'backgroundColor' => 'rgba(245, 158, 11, 0.1)',
+                                        'borderColor' => '#f59e0b',
+                                        'borderWidth' => 3,
+                                        'fill' => true,
+                                        'tension' => 0.4
+                                    ]
+                                ]"
+                                title="Booking Trend Analysis"
+                                subtitle="Detailed booking volume and status breakdown over time"
+                                height="350px"
+                                :gradient="true"
+                                :animation="true"
+                                :statistics="[
+                                    [
+                                        'label' => 'Avg Daily',
+                                        'value' => isset($bookingAnalytics['avg_daily_bookings']) ? $bookingAnalytics['avg_daily_bookings'] : '0',
+                                        'color' => 'info'
+                                    ],
+                                    [
+                                        'label' => 'Peak Day',
+                                        'value' => isset($bookingAnalytics['peak_day']) ? $bookingAnalytics['peak_day']['formatted_date'] . ' (' . $bookingAnalytics['peak_day']['count'] . ')' : 'N/A',
+                                        'color' => 'warning'
+                                    ],
+                                    [
+                                        'label' => 'Growth Rate',
+                                        'value' => isset($bookingAnalytics['growth_rate']) ? $bookingAnalytics['growth_rate'] . '%' : '0%',
+                                        'color' => isset($bookingAnalytics['growth_rate']) && $bookingAnalytics['growth_rate'] >= 0 ? 'success' : 'danger'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Top Clients Chart -->
+                    @if($clientBookingData->count() > 0)
+                    <div class="row mt-3">
+                        <div class="col-md-8">
+                            <x-advanced-chart 
+                                id="top-clients-booking-chart"
+                                type="bar"
+                                :labels="array_column($clientBookingData->take(10)->toArray(), 'client_name')"
+                                :datasets="[
+                                    [
+                                        'label' => 'Total Revenue',
+                                        'data' => array_column($clientBookingData->take(10)->toArray(), 'total_revenue'),
+                                        'backgroundColor' => 'rgba(139, 92, 246, 0.8)',
+                                        'borderColor' => '#8b5cf6',
+                                        'borderWidth' => 1
+                                    ],
+                                    [
+                                        'label' => 'Paid Revenue',
+                                        'data' => array_column($clientBookingData->take(10)->toArray(), 'paid_revenue'),
+                                        'backgroundColor' => 'rgba(16, 185, 129, 0.8)',
+                                        'borderColor' => '#10b981',
+                                        'borderWidth' => 1
+                                    ],
+                                    [
+                                        'label' => 'Outstanding',
+                                        'data' => array_column($clientBookingData->take(10)->toArray(), 'outstanding_revenue'),
+                                        'backgroundColor' => 'rgba(245, 158, 11, 0.8)',
+                                        'borderColor' => '#f59e0b',
+                                        'borderWidth' => 1
+                                    ]
+                                ]"
+                                title="Top Clients by Booking Revenue"
+                                subtitle="Highest revenue generating clients with payment breakdown"
+                                height="350px"
+                                :gradient="true"
+                                :animation="true"
+                                :statistics="[
+                                    [
+                                        'label' => 'Top Client',
+                                        'value' => $clientBookingData->count() > 0 ? $clientBookingData->first()['client_name'] : 'N/A',
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Max Revenue',
+                                        'value' => '$' . number_format($clientBookingData->count() > 0 ? $clientBookingData->first()['total_revenue'] : 0, 2),
+                                        'color' => 'success'
+                                    ],
+                                    [
+                                        'label' => 'Best Payment Rate',
+                                        'value' => $clientBookingData->count() > 0 ? $clientBookingData->sortByDesc('payment_completion_rate')->first()['payment_completion_rate'] . '%' : 'N/A',
+                                        'color' => 'info'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-chart-pie me-2"></i>Booking Insights
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6 mb-3">
+                                            <div class="border rounded p-2">
+                                                <h4 class="text-primary mb-1">{{ $clientBookingData->count() }}</h4>
+                                                <small class="text-muted">Active Clients</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="border rounded p-2">
+                                                <h4 class="text-success mb-1">{{ $bookingAnalytics['payment_completion_rate'] }}%</h4>
+                                                <small class="text-muted">Payment Rate</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="border rounded p-2">
+                                                <h4 class="text-info mb-1">${{ number_format($bookingAnalytics['avg_booking_value'], 0) }}</h4>
+                                                <small class="text-muted">Avg Value</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="border rounded p-2">
+                                                <h4 class="text-warning mb-1">${{ number_format($bookingAnalytics['outstanding_revenue'], 0) }}</h4>
+                                                <small class="text-muted">Outstanding</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <h6 class="mb-3">Top Performers</h6>
+                                    @foreach($clientBookingData->take(3) as $index => $client)
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <span class="badge bg-{{ $index === 0 ? 'warning' : ($index === 1 ? 'secondary' : 'info') }}">
+                                                #{{ $index + 1 }}
+                                            </span>
+                                            <strong>{{ Str::limit($client['client_name'], 15) }}</strong>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">${{ number_format($client['total_revenue'], 0) }}</small><br>
+                                            <small class="text-success">{{ $client['payment_completion_rate'] }}% paid</small>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Additional Analytics Charts -->
+                    <div class="row mt-3" style="padding-top: 70px;">
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="hourly-booking-distribution-chart"
+                                type="bar"
+                                :labels="array_column($bookingAnalytics['hourly_distribution'], 'label')"
+                                :data="array_column($bookingAnalytics['hourly_distribution'], 'count')"
+                                title="Hourly Booking Distribution"
+                                subtitle="Peak hours for booking submissions"
+                                    height="350px"
+                                :colors="['#8b5cf6']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Peak Hour',
+                                        'value' => isset($bookingAnalytics['hourly_distribution']) && count($bookingAnalytics['hourly_distribution']) > 0 ? collect($bookingAnalytics['hourly_distribution'])->sortByDesc('count')->first()['label'] ?? 'N/A' : 'N/A',
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Peak Count',
+                                        'value' => isset($bookingAnalytics['hourly_distribution']) && count($bookingAnalytics['hourly_distribution']) > 0 ? collect($bookingAnalytics['hourly_distribution'])->max('count') : 0,
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="payment-rate-trend-chart"
+                                type="line"
+                                :labels="array_column($monthlyData, 'period')"
+                                :data="array_column($monthlyData, 'payment_rate')"
+                                title="Payment Rate Trend"
+                                subtitle="Payment completion rate changes over time"
+                                height="350px"
+                                :colors="['#10b981']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Avg Payment Rate',
+                                        'value' => count($monthlyData) > 0 ? round(array_sum(array_column($monthlyData, 'payment_rate')) / count($monthlyData), 1) . '%' : '0%',
+                                        'color' => 'success'
+                                    ],
+                                    [
+                                        'label' => 'Best Period',
+                                        'value' => count($monthlyData) > 0 ? max(array_column($monthlyData, 'payment_rate')) . '%' : '0%',
+                                        'color' => 'info'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                    </div>
 
                     <!-- Bookings Table -->
                     <div class="card mt-3">

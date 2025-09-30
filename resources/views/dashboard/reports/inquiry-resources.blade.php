@@ -158,6 +158,88 @@
                         </div>
                     </div>
 
+                    <!-- Charts Row -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="resource-type-distribution-chart"
+                                type="doughnut"
+                                :labels="array_column($resourceTypeChartData, 'label')"
+                                :data="array_column($resourceTypeChartData, 'count')"
+                                title="Resource Type Distribution"
+                                subtitle="Breakdown of resource assignments by type"
+                                height="350px"
+                                :colors="['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Total Assignments',
+                                        'value' => array_sum(array_column($resourceTypeChartData, 'count')),
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Assignment Rate',
+                                        'value' => $resourceAssignmentRate . '%',
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="resource-trend-chart"
+                                type="line"
+                                :labels="array_column($monthlyData, 'month')"
+                                :data="array_column($monthlyData, 'count')"
+                                title="Resource Assignment Trend"
+                                subtitle="Resource assignments over time"
+                                height="350px"
+                                :colors="['#8b5cf6']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Avg Monthly',
+                                        'value' => count($monthlyData) > 0 ? round(array_sum(array_column($monthlyData, 'count')) / count($monthlyData)) : 0,
+                                        'color' => 'info'
+                                    ],
+                                    [
+                                        'label' => 'Peak Month',
+                                        'value' => count($monthlyData) > 0 ? max(array_column($monthlyData, 'count')) : 0,
+                                        'color' => 'warning'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                    </div>
+
+                    <!-- Top Resources Chart -->
+                    @if($topResources->count() > 0)
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <x-dashboard-chart 
+                                id="top-resources-chart"
+                                type="bar"
+                                :labels="array_column($topResources->take(10)->toArray(), 'resource_name')"
+                                :data="array_column($topResources->take(10)->toArray(), 'count')"
+                                title="Top Resources by Usage"
+                                subtitle="Most frequently assigned resources"
+                                height="300px"
+                                :colors="['#8b5cf6']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Top Resource',
+                                        'value' => $topResources->count() > 0 ? $topResources->first()['resource_name'] : 'N/A',
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Max Usage',
+                                        'value' => $topResources->count() > 0 ? $topResources->first()['count'] : 0,
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Top Resources and Staff Performance -->
                     <div class="row mb-4">
                         <div class="col-md-6">

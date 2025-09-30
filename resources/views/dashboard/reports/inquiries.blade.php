@@ -143,6 +143,256 @@
                         </div>
                     </div>
 
+                    <!-- Charts Row -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="inquiry-status-chart"
+                                type="doughnut"
+                                :labels="array_column($statusData, 'label')"
+                                :data="array_column($statusData, 'count')"
+                                title="Inquiry Status Distribution"
+                                subtitle="Breakdown of inquiries by status"
+                                height="350px"
+                                :colors="['#10b981', '#f59e0b', '#ef4444', '#8b5cf6']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Total Inquiries',
+                                        'value' => $inquiries->count(),
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Conversion Rate',
+                                        'value' => $conversionRate . '%',
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-advanced-chart 
+                                id="inquiry-trend-chart"
+                                type="line"
+                                :labels="array_column($monthlyData, 'period')"
+                                :datasets="[
+                                    [
+                                        'label' => 'Total Inquiries',
+                                        'data' => array_column($monthlyData, 'total'),
+                                        'backgroundColor' => 'rgba(6, 182, 212, 0.1)',
+                                        'borderColor' => '#06b6d4',
+                                        'borderWidth' => 3,
+                                        'fill' => true,
+                                        'tension' => 0.4
+                                    ],
+                                    [
+                                        'label' => 'Confirmed',
+                                        'data' => array_column($monthlyData, 'confirmed'),
+                                        'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                                        'borderColor' => '#10b981',
+                                        'borderWidth' => 3,
+                                        'fill' => true,
+                                        'tension' => 0.4
+                                    ],
+                                    [
+                                        'label' => 'Pending',
+                                        'data' => array_column($monthlyData, 'pending'),
+                                        'backgroundColor' => 'rgba(245, 158, 11, 0.1)',
+                                        'borderColor' => '#f59e0b',
+                                        'borderWidth' => 3,
+                                        'fill' => true,
+                                        'tension' => 0.4
+                                    ]
+                                ]"
+                                title="Inquiry Trend Analysis"
+                                subtitle="Detailed inquiry volume and status breakdown over time"
+                                height="350px"
+                                :gradient="true"
+                                :animation="true"
+                                :statistics="[
+                                    [
+                                        'label' => 'Avg Daily',
+                                        'value' => isset($trendAnalysis['avg_daily_inquiries']) ? $trendAnalysis['avg_daily_inquiries'] : '0',
+                                        'color' => 'info'
+                                    ],
+                                    [
+                                        'label' => 'Peak Day',
+                                        'value' => isset($trendAnalysis['peak_day']) ? $trendAnalysis['peak_day']['formatted_date'] . ' (' . $trendAnalysis['peak_day']['count'] . ')' : 'N/A',
+                                        'color' => 'warning'
+                                    ],
+                                    [
+                                        'label' => 'Growth Rate',
+                                        'value' => isset($trendAnalysis['growth_rate']) ? $trendAnalysis['growth_rate'] . '%' : '0%',
+                                        'color' => isset($trendAnalysis['growth_rate']) && $trendAnalysis['growth_rate'] >= 0 ? 'success' : 'danger'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Top Clients Chart -->
+                    @if($clientData->count() > 0)
+                    <div class="row mt-3">
+                        <div class="col-md-8">
+                            <x-advanced-chart 
+                                id="top-clients-chart"
+                                type="bar"
+                                :labels="array_column($clientData->take(10)->toArray(), 'client_name')"
+                                :datasets="[
+                                    [
+                                        'label' => 'Total Inquiries',
+                                        'data' => array_column($clientData->take(10)->toArray(), 'total_inquiries'),
+                                        'backgroundColor' => 'rgba(139, 92, 246, 0.8)',
+                                        'borderColor' => '#8b5cf6',
+                                        'borderWidth' => 1
+                                    ],
+                                    [
+                                        'label' => 'Confirmed',
+                                        'data' => array_column($clientData->take(10)->toArray(), 'confirmed_inquiries'),
+                                        'backgroundColor' => 'rgba(16, 185, 129, 0.8)',
+                                        'borderColor' => '#10b981',
+                                        'borderWidth' => 1
+                                    ],
+                                    [
+                                        'label' => 'Pending',
+                                        'data' => array_column($clientData->take(10)->toArray(), 'pending_inquiries'),
+                                        'backgroundColor' => 'rgba(245, 158, 11, 0.8)',
+                                        'borderColor' => '#f59e0b',
+                                        'borderWidth' => 1
+                                    ]
+                                ]"
+                                title="Top Clients by Inquiry Volume & Status"
+                                subtitle="Most active clients with detailed status breakdown"
+                                height="350px"
+                                :gradient="true"
+                                :animation="true"
+                                :statistics="[
+                                    [
+                                        'label' => 'Top Client',
+                                        'value' => $clientData->count() > 0 ? $clientData->first()['client_name'] : 'N/A',
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Max Inquiries',
+                                        'value' => $clientData->count() > 0 ? $clientData->first()['total_inquiries'] : 0,
+                                        'color' => 'success'
+                                    ],
+                                    [
+                                        'label' => 'Best Conversion',
+                                        'value' => $clientData->count() > 0 ? $clientData->sortByDesc('conversion_rate')->first()['conversion_rate'] . '%' : 'N/A',
+                                        'color' => 'info'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-chart-pie me-2"></i>Client Insights
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6 mb-3">
+                                            <div class="border rounded p-2">
+                                                <h4 class="text-primary mb-1">{{ $clientData->count() }}</h4>
+                                                <small class="text-muted">Active Clients</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="border rounded p-2">
+                                                <h4 class="text-success mb-1">{{ $clientData->avg('conversion_rate') }}%</h4>
+                                                <small class="text-muted">Avg Conversion</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="border rounded p-2">
+                                                <h4 class="text-info mb-1">{{ $clientData->avg('avg_response_time') }}h</h4>
+                                                <small class="text-muted">Avg Response Time</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="border rounded p-2">
+                                                <h4 class="text-warning mb-1">{{ $clientData->sum('total_inquiries') }}</h4>
+                                                <small class="text-muted">Total Inquiries</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <h6 class="mb-3">Top Performers</h6>
+                                    @foreach($clientData->take(3) as $index => $client)
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <span class="badge bg-{{ $index === 0 ? 'warning' : ($index === 1 ? 'secondary' : 'info') }}">
+                                                #{{ $index + 1 }}
+                                            </span>
+                                            <strong>{{ Str::limit($client['client_name'], 15) }}</strong>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">{{ $client['total_inquiries'] }} inquiries</small><br>
+                                            <small class="text-success">{{ $client['conversion_rate'] }}% conversion</small>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Additional Analytics Charts -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="hourly-distribution-chart"
+                                type="bar"
+                                :labels="array_column($trendAnalysis['hourly_distribution'], 'label')"
+                                :data="array_column($trendAnalysis['hourly_distribution'], 'count')"
+                                title="Hourly Inquiry Distribution"
+                                subtitle="Peak hours for inquiry submissions"
+                                height="300px"
+                                :colors="['#8b5cf6']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Peak Hour',
+                                        'value' => isset($trendAnalysis['hourly_distribution']) && count($trendAnalysis['hourly_distribution']) > 0 ? collect($trendAnalysis['hourly_distribution'])->sortByDesc('count')->first()['label'] ?? 'N/A' : 'N/A',
+                                        'color' => 'primary'
+                                    ],
+                                    [
+                                        'label' => 'Peak Count',
+                                        'value' => isset($trendAnalysis['hourly_distribution']) && count($trendAnalysis['hourly_distribution']) > 0 ? collect($trendAnalysis['hourly_distribution'])->max('count') : 0,
+                                        'color' => 'success'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-dashboard-chart 
+                                id="conversion-trend-chart"
+                                type="line"
+                                :labels="array_column($monthlyData, 'period')"
+                                :data="array_column($monthlyData, 'conversion_rate')"
+                                title="Conversion Rate Trend"
+                                subtitle="Conversion rate changes over time"
+                                height="300px"
+                                :colors="['#10b981']"
+                                :statistics="[
+                                    [
+                                        'label' => 'Avg Conversion',
+                                        'value' => count($monthlyData) > 0 ? round(array_sum(array_column($monthlyData, 'conversion_rate')) / count($monthlyData), 1) . '%' : '0%',
+                                        'color' => 'success'
+                                    ],
+                                    [
+                                        'label' => 'Best Period',
+                                        'value' => count($monthlyData) > 0 ? max(array_column($monthlyData, 'conversion_rate')) . '%' : '0%',
+                                        'color' => 'info'
+                                    ]
+                                ]"
+                                :exportable="true" />
+                        </div>
+                    </div>
 
                     <!-- Inquiries Table -->
                     <div class="card mt-3">

@@ -112,7 +112,7 @@
 @endphp
 
 @if($showCard)
-    <div class="{{ $cardClass }}">
+    <div class="{{ $cardClass }} chart-card">
         @if($title || $refreshable || $exportable)
             <div class="{{ $cardHeaderClass }}">
                 <div class="d-flex justify-content-between align-items-center">
@@ -124,7 +124,7 @@
                             <small class="text-muted">{{ $subtitle }}</small>
                         @endif
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="chart-controls d-flex gap-2">
                         @if($refreshable)
                             <button type="button" class="btn btn-sm btn-outline-primary chart-refresh-btn">
                                 <i class="fa fa-refresh"></i>
@@ -137,8 +137,12 @@
                                     <i class="fa fa-download"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item chart-export-btn" href="#" data-format="png">PNG</a></li>
-                                    <li><a class="dropdown-item chart-export-btn" href="#" data-format="jpg">JPG</a></li>
+                                    <li><a class="dropdown-item chart-export-btn" href="#" data-format="png">
+                                        <i class="fa fa-image"></i> PNG
+                                    </a></li>
+                                    <li><a class="dropdown-item chart-export-btn" href="#" data-format="jpg">
+                                        <i class="fa fa-image"></i> JPG
+                                    </a></li>
                                 </ul>
                             </div>
                         @endif
@@ -149,21 +153,19 @@
         
         <div class="{{ $cardBodyClass }}">
             @if($statistics)
-                <div class="row mb-3">
+                <div class="statistics-grid">
                     @foreach($statistics as $stat)
-                        <div class="col-md-{{ 12 / count($statistics) }}">
-                            <div class="stat-item text-center">
-                                <h4 class="mb-1 text-{{ $stat['color'] ?? 'primary' }}">
-                                    {{ $stat['value'] }}
-                                </h4>
-                                <small class="text-muted">{{ $stat['label'] }}</small>
-                                @if(isset($stat['trend']))
-                                    <div class="trend-indicator mt-1">
-                                        <i class="fa fa-arrow-{{ $stat['trend'] }} text-{{ $stat['trend'] === 'up' ? 'success' : ($stat['trend'] === 'down' ? 'danger' : 'secondary') }}"></i>
-                                        <small class="text-muted">{{ $stat['trendValue'] ?? '' }}</small>
-                                    </div>
-                                @endif
-                            </div>
+                        <div class="stat-item text-center">
+                            <h4 class="mb-1 text-{{ $stat['color'] ?? 'primary' }}">
+                                {{ $stat['value'] }}
+                            </h4>
+                            <small class="text-muted">{{ $stat['label'] }}</small>
+                            @if(isset($stat['trend']))
+                                <div class="trend-indicator mt-1">
+                                    <i class="fa fa-arrow-{{ $stat['trend'] }} text-{{ $stat['trend'] === 'up' ? 'success' : ($stat['trend'] === 'down' ? 'danger' : 'secondary') }}"></i>
+                                    <small class="text-muted">{{ $stat['trendValue'] ?? '' }}</small>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
