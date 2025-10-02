@@ -88,12 +88,16 @@
             <x-dashboard.sidebar.link-with-child
                 title="Resource Management"
                 icon="package"
-                :permissions="['hotels.list','vehicles.list','guides.list','representatives.list']"
+                :permissions="['hotels.list','vehicles.list','guides.list','representatives.list','tickets.list','nile_cruises.list','dahabias.list','restaurants.list']"
                 :children="[
                     ['title' => 'Hotels', 'link' => route('dashboard.hotels.index'), 'permissions' => ['hotels.list'] ],
                     ['title' => 'Vehicles', 'link' => route('dashboard.vehicles.index'), 'permissions' => ['vehicles.list'] ],
                     ['title' => 'Guides', 'link' => route('dashboard.guides.index'), 'permissions' => ['guides.list'] ],
                     ['title' => 'Representatives', 'link' => route('dashboard.representatives.index'), 'permissions' => ['representatives.list'] ],
+                    ['title' => 'Tickets', 'link' => route('dashboard.tickets.index'), 'permissions' => ['tickets.list'] ],
+                    ['title' => 'Nile Cruises', 'link' => route('dashboard.nile-cruises.index'), 'permissions' => ['nile_cruises.list'] ],
+                    ['title' => 'Dahabias', 'link' => route('dashboard.dahabias.index'), 'permissions' => ['dahabias.list'] ],
+                    ['title' => 'Restaurants', 'link' => route('dashboard.restaurants.index'), 'permissions' => ['restaurants.list'] ],
                     ['title' => 'Hotel Calendar', 'link' => route('dashboard.hotels.calendar'), 'permissions' => ['hotels.calendar'] ],
                     ['title' => 'Vehicle Calendar', 'link' => route('dashboard.vehicles.calendar'), 'permissions' => ['vehicles.calendar'] ],
                     ['title' => 'Guide Calendar', 'link' => route('dashboard.guides.calendar'), 'permissions' => ['guides.calendar'] ],

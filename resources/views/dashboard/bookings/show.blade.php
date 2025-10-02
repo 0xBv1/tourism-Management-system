@@ -451,9 +451,92 @@
                                 <h5>Related Inquiry</h5>
                             </div>
                             <div class="card-body">
-                              
+                                @if($booking->inquiry->resources && $booking->inquiry->resources->count() > 0)
+                                    <div class="mb-4">
+                                        <h6 class="fw-bold text-primary">Resources</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Type</th>
+                                                        <th>Name</th>
+                                                        <th>Check-in</th>
+                                                        <th>Check-out</th>
+                                                        <th>Rooms</th>
+                                                        <th>Adults</th>
+                                                        <th>Children</th>
+                                                        <th>Rate/Adult</th>
+                                                        <th>Rate/Child</th>
+                                                        <th>Price Type</th>
+                                                        <th>Effective Price</th>
+                                                        <th>Original</th>
+                                                        <th>New</th>
+                                                        <th>Δ%</th>
+                                                        <th>Note</th>
+                                                        <th>Added By</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($booking->inquiry->resources as $res)
+                                                        <tr>
+                                                            <td>
+                                                                <span class="badge bg-{{ $res->resource_type === 'hotel' ? 'primary' : ($res->resource_type === 'vehicle' ? 'success' : ($res->resource_type === 'guide' ? 'info' : ($res->resource_type === 'representative' ? 'warning' : 'secondary'))) }}">
+                                                                    {{ ucfirst($res->resource_type) }}
+                                                                </span>
+                                                            </td>
+                                                            <td>{{ $res->resource_name }}</td>
+                                                            <td>{{ $res->check_in ? $res->check_in->format('Y-m-d') : '—' }}</td>
+                                                            <td>{{ $res->check_out ? $res->check_out->format('Y-m-d') : '—' }}</td>
+                                                            <td>{{ $res->number_of_rooms ?? '—' }}</td>
+                                                            <td>{{ $res->number_of_adults ?? '—' }}</td>
+                                                            <td>{{ $res->number_of_children ?? '—' }}</td>
+                                                            <td>{{ !is_null($res->rate_per_adult) ? ($res->currency . ' ' . number_format($res->rate_per_adult, 2)) : '—' }}</td>
+                                                            <td>{{ !is_null($res->rate_per_child) ? ($res->currency . ' ' . number_format($res->rate_per_child, 2)) : '—' }}</td>
+                                                            <td>
+                                                                @if($res->price_type)
+                                                                    <span class="badge bg-info">{{ $res->price_type }}</span>
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if(!is_null($res->effective_price))
+                                                                    <span class="badge bg-secondary">{{ $res->currency }} {{ number_format($res->effective_price, 2) }}</span>
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if(!is_null($res->original_price))
+                                                                    {{ $res->currency }} {{ number_format($res->original_price, 2) }}
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if(!is_null($res->new_price))
+                                                                    {{ $res->currency }} {{ number_format($res->new_price, 2) }}
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if(!is_null($res->increase_percent))
+                                                                    {{ number_format($res->increase_percent, 2) }}%
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                            <td>{{ $res->price_note ?: '—' }}</td>
+                                                            <td>{{ $res->addedBy->name ?? '—' }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endif
 
-                              
                                 <!-- User Assignments Section -->
                                 @php
                                     $assignedUsers = $booking->inquiry->getAllAssignedUsers();

@@ -12,28 +12,28 @@
         <!-- Cards -->
         <div class="row">
             <x-dashboard.partials.box-card permission="users.list" title="Users" :count="\App\Models\User::count()" icon="users"
-                                           color="danger"/>
+                                           color="danger" :url="route('dashboard.users.index')"/>
 
             <x-dashboard.partials.box-card permission="countries.list" title="Countries" :count="\App\Models\Country::count()" icon="globe"
-                                           color="primary"/>
+                                           color="primary" :url="Route::has('dashboard.countries.index') ? route('dashboard.countries.index') : null"/>
 
             <x-dashboard.partials.box-card permission="inquiries.list" title="Inquiries" :count="\App\Models\Inquiry::count()" icon="message-circle"
-                                           color="success"/>
+                                           color="success" :url="route('dashboard.inquiries.index')"/>
 
             <x-dashboard.partials.box-card permission="bookings.list" title="Bookings" :count="\App\Models\BookingFile::count()" icon="file-text"
-                                           color="warning"/>
+                                           color="warning" :url="route('dashboard.bookings.index')"/>
 
             <x-dashboard.partials.box-card permission="hotels.list" title="Hotels" :count="\App\Models\Hotel::count()" icon="home"
-                                           color="info"/>
+                                           color="info" :url="route('dashboard.hotels.index')"/>
 
             <x-dashboard.partials.box-card permission="vehicles.list" title="Vehicles" :count="\App\Models\Vehicle::count()" icon="truck"
-                                           color="secondary"/>
+                                           color="secondary" :url="route('dashboard.vehicles.index')"/>
 
             <x-dashboard.partials.box-card permission="guides.list" title="Guides" :count="\App\Models\Guide::count()" icon="user"
-                                           color="dark"/>
+                                           color="dark" :url="route('dashboard.guides.index')"/>
 
             <x-dashboard.partials.box-card permission="clients.list" title="Clients" :count="\App\Models\Client::count()" icon="users"
-                                           color="primary"/>
+                                           color="primary" :url="Route::has('dashboard.clients.index') ? route('dashboard.clients.index') : null"/>
         </div>
 
         <!-- Quick Actions -->

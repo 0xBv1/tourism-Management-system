@@ -20,6 +20,10 @@ use App\Http\Controllers\Dashboard\ResourceReportController;
 use App\Http\Controllers\Dashboard\PaymentController;
 use App\Http\Controllers\Dashboard\NotificationController;
 use App\Http\Controllers\Dashboard\InquiryResourceController;
+use App\Http\Controllers\Dashboard\TicketController;
+use App\Http\Controllers\Dashboard\DahabiaController;
+use App\Http\Controllers\Dashboard\RestaurantController;
+use App\Http\Controllers\Dashboard\NileCruiseController;
 use Illuminate\Support\Facades\Route;
 
 //controllers
@@ -43,18 +47,7 @@ Route::group([
     Route::post('notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     
-    // Debug route for testing
-    Route::get('debug/user-roles', function() {
-        $user = auth()->user();
-        return response()->json([
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'user_email' => $user->email,
-            'roles' => $user->roles->pluck('name'),
-            'permissions' => $user->getAllPermissions()->pluck('name'),
-        ]);
-    })->name('debug.user-roles');
-    
+
     // User Management
     Route::resource('users', UserController::class)->except('show');
     Route::resource('roles', RoleController::class)->except('show');
@@ -72,6 +65,8 @@ Route::group([
         Route::get('resources/available', [InquiryResourceController::class, 'getAvailableResources'])
             ->name('resources.available');
     });
+    Route::get('inquiries/resources/{id}', [InquiryResourceController::class, 'show'])
+        ->name('inquiries.resources.show');
     Route::delete('inquiries/resources/{id}', [InquiryResourceController::class, 'destroy'])
         ->name('inquiries.resources.destroy');
     
@@ -107,6 +102,12 @@ Route::group([
     Route::resource('vehicles', VehicleController::class);
     Route::resource('guides', GuideController::class);
     Route::resource('representatives', RepresentativeController::class);
+
+    // Ticket Resource Management
+    Route::resource('tickets', TicketController::class);
+    Route::resource('nile-cruises', NileCruiseController::class);
+    Route::resource('dahabias', DahabiaController::class);
+    Route::resource('restaurants', RestaurantController::class);
     
     // Resource Assignment
     Route::group(['prefix' => 'resource-assignments', 'as' => 'resource-assignments.'], function () {

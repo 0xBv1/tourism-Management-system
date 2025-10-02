@@ -250,7 +250,7 @@
             <!-- Resources Management Section -->
             <div class="row mt-4">
                 <div class="col-sm-12">
-                    @include('dashboard.inquiries.partials.resources')
+                    @include('dashboard.inquiries.partials.resources-improved')
                 </div>
             </div>
             

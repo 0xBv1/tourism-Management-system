@@ -38,6 +38,26 @@
                     <i class="fas fa-plus-circle me-1"></i>Extra Services
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ticket-tab" data-bs-toggle="tab" data-bs-target="#ticket" type="button" role="tab" aria-controls="ticket" aria-selected="false">
+                    <i class="fas fa-ticket-alt me-1"></i>Tickets
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="nile-cruise-tab" data-bs-toggle="tab" data-bs-target="#nile-cruise" type="button" role="tab" aria-controls="nile-cruise" aria-selected="false">
+                    <i class="fas fa-ship me-1"></i>Nile Cruises
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="dahabia-tab" data-bs-toggle="tab" data-bs-target="#dahabia" type="button" role="tab" aria-controls="dahabia" aria-selected="false">
+                    <i class="fas fa-sailboat me-1"></i>Dahabias
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="restaurant-tab" data-bs-toggle="tab" data-bs-target="#restaurant" type="button" role="tab" aria-controls="restaurant" aria-selected="false">
+                    <i class="fas fa-utensils me-1"></i>Restaurants
+                </button>
+            </li>
         </ul>
 
         <!-- Tab Content -->
@@ -302,11 +322,27 @@
         <!-- Separator -->
         <hr class="my-4">
 
-        <!-- Resources Table -->
+        <!-- Enhanced Resources Table -->
         <div class="table-responsive">
-            <h6 class="mb-3">
-                <i class="fas fa-list me-2"></i>Current Resources
-            </h6>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Current Resources
+                    @if($inquiry->resources->count() > 0)
+                        <span class="badge bg-info">{{ $inquiry->resources->count() }} items</span>
+                    @endif
+                </h6>
+                @if($inquiry->resources->count() > 0)
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary" id="toggleDetailsBtn">
+                            <i class="fas fa-eye me-1"></i>Toggle Details
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="calculateTotalBtn">
+                            <i class="fas fa-calculator me-1"></i>Calculate Total
+                        </button>
+                    </div>
+                @endif
+            </div>
+            
             @if(!Gate::allows('manage-inquiry-resources'))
                 <div class="alert alert-info mb-3">
                     <i class="fas fa-info-circle me-2"></i>
@@ -314,11 +350,15 @@
                     You can see which resources are available and who added them.
                 </div>
             @endif
+            
             <table class="table table-striped" id="resourcesTable">
                 <thead>
                     <tr>
                         <th>Type</th>
                         <th>Resource Name</th>
+                        <th class="resource-details-col" style="display: none;">Details</th>
+                        <th>Pricing</th>
+                        <th>Duration/Dates</th>
                         <th>Added By</th>
                         <th>Added At</th>
                         @if(Gate::allows('manage-inquiry-resources'))
@@ -328,82 +368,206 @@
                 </thead>
                 <tbody>
                     @forelse($inquiry->resources as $resource)
-                        <tr data-resource-id="{{ $resource->id }}">
+                        <tr data-resource-id="{{ $resource->id }}" class="resource-row">
                             <td>
                                 <span class="badge bg-{{ $resource->resource_type === 'hotel' ? 'primary' : ($resource->resource_type === 'vehicle' ? 'success' : ($resource->resource_type === 'guide' ? 'info' : ($resource->resource_type === 'representative' ? 'warning' : 'secondary'))) }}">
+                                    <i class="fas fa-{{ $resource->resource_type === 'hotel' ? 'hotel' : ($resource->resource_type === 'vehicle' ? 'car' : ($resource->resource_type === 'guide' ? 'user-tie' : ($resource->resource_type === 'representative' ? 'handshake' : 'plus-circle'))) }} me-1"></i>
                                     {{ ucfirst($resource->resource_type) }}
                                 </span>
                             </td>
                             <td>
-                                <div><strong>{{ $resource->resource_name }}</strong></div>
+                                <div class="fw-bold">{{ $resource->resource_name }}</div>
+                                @if($resource->resource_details && isset($resource->resource_details['city']))
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ $resource->resource_details['city'] }}
+                                    </small>
+                                @endif
+                                @if($resource->resource_type === 'hotel' && ($resource->number_of_rooms || $resource->number_of_adults || $resource->number_of_children))
+                                    <div class="small text-muted mt-1">
+                                        @if($resource->number_of_rooms)
+                                            <span class="me-2"><i class="fas fa-bed me-1"></i>{{ $resource->number_of_rooms }} room(s)</span>
+                                        @endif
+                                        @if($resource->number_of_adults)
+                                            <span class="me-2"><i class="fas fa-user me-1"></i>{{ $resource->number_of_adults }} adult(s)</span>
+                                        @endif
+                                        @if($resource->number_of_children)
+                                            <span><i class="fas fa-child me-1"></i>{{ $resource->number_of_children }} child(ren)</span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="resource-details-col" style="display: none;">
+                                <button class="btn btn-sm btn-outline-info view-details-btn" 
+                                        data-resource-id="{{ $resource->id }}"
+                                        title="View detailed information">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </td>
+                            <td>
+                                @if($resource->effective_price)
+                                    <div class="fw-bold text-success">
+                                        {{ $resource->currency ?? '$' }} {{ number_format($resource->effective_price, 2) }}
+                                        @if($resource->price_type)
+                                            <small class="text-muted">/ {{ $resource->price_type }}</small>
+                                        @endif
+                                    </div>
+                                    @if($resource->total_cost && $resource->total_cost != $resource->effective_price)
+                                        <div class="small text-primary">
+                                            <strong>Total: {{ $resource->currency ?? '$' }} {{ number_format($resource->total_cost, 2) }}</strong>
+                                        </div>
+                                    @endif
+                                    @if($resource->original_price && $resource->original_price != $resource->effective_price)
+                                        <div class="small text-muted">
+                                            Original: {{ $resource->currency ?? '$' }} {{ number_format($resource->original_price, 2) }}
+                                            @if($resource->increase_percent)
+                                                <span class="text-{{ $resource->increase_percent >= 0 ? 'success' : 'danger' }}">
+                                                    ({{ $resource->increase_percent > 0 ? '+' : '' }}{{ number_format($resource->increase_percent, 1) }}%)
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="text-muted">No pricing set</span>
+                                @endif
+                            </td>
+                            <td>
                                 @php
                                     $hasStartEnd = $resource->start_at || $resource->end_at;
                                     $hasHotelDates = $resource->check_in || $resource->check_out;
                                 @endphp
-                                @if($hasStartEnd)
-                                    <div class="small text-muted">
-                                        From: {{ $resource->start_at ? $resource->start_at->format('Y-m-d H:i') : '—' }} | To: {{ $resource->end_at ? $resource->end_at->format('Y-m-d H:i') : '—' }}
-                                    </div>
-                                @endif
                                 @if($resource->resource_type === 'hotel' && $hasHotelDates)
-                                    <div class="small text-muted">
-                                        Check-in: {{ $resource->check_in ? $resource->check_in->format('Y-m-d') : '—' }} | Check-out: {{ $resource->check_out ? $resource->check_out->format('Y-m-d') : '—' }}
-                                    </div>
-                                @endif
-                                @if($resource->resource_type === 'hotel' && ($resource->number_of_rooms || $resource->number_of_adults || $resource->number_of_children))
-                                    <div class="small text-muted">
-                                        Rooms: {{ $resource->number_of_rooms ?? '—' }} | Adults: {{ $resource->number_of_adults ?? '—' }} | Children: {{ $resource->number_of_children ?? '—' }}
-                                    </div>
-                                @endif
-                                @if(!is_null($resource->effective_price))
                                     <div class="small">
-                                        <span class="badge bg-info">{{ $resource->price_type ?? 'day' }}</span>
-                                        <span class="badge bg-secondary">{{ $resource->currency }} {{ number_format($resource->effective_price, 2) }}</span>
+                                        <i class="fas fa-calendar-check me-1 text-success"></i>
+                                        <strong>Check-in:</strong> {{ $resource->check_in ? $resource->check_in->format('M d, Y') : '—' }}
                                     </div>
-                                @endif
-                                @if($resource->original_price || $resource->new_price || $resource->increase_percent)
-                                    <div class="small text-muted">
-                                        @if(!is_null($resource->original_price))
-                                            Original: {{ $resource->currency }} {{ number_format($resource->original_price, 2) }}
-                                        @endif
-                                        @if(!is_null($resource->new_price))
-                                            | New: {{ $resource->currency }} {{ number_format($resource->new_price, 2) }}
-                                        @endif
-                                        @if(!is_null($resource->increase_percent))
-                                            | Δ%: {{ number_format($resource->increase_percent, 2) }}%
-                                        @endif
+                                    <div class="small">
+                                        <i class="fas fa-calendar-times me-1 text-danger"></i>
+                                        <strong>Check-out:</strong> {{ $resource->check_out ? $resource->check_out->format('M d, Y') : '—' }}
                                     </div>
-                                @endif
-                                @if($resource->price_note)
-                                    <div class="small text-muted">{{ $resource->price_note }}</div>
+                                    @if($resource->check_in && $resource->check_out)
+                                        <div class="small text-info">
+                                            <i class="fas fa-clock me-1"></i>{{ $resource->check_in->diffInDays($resource->check_out) }} night(s)
+                                        </div>
+                                    @endif
+                                @elseif($hasStartEnd)
+                                    <div class="small">
+                                        <i class="fas fa-play me-1 text-success"></i>
+                                        <strong>Start:</strong> {{ $resource->start_at ? $resource->start_at->format('M d, Y H:i') : '—' }}
+                                    </div>
+                                    <div class="small">
+                                        <i class="fas fa-stop me-1 text-danger"></i>
+                                        <strong>End:</strong> {{ $resource->end_at ? $resource->end_at->format('M d, Y H:i') : '—' }}
+                                    </div>
+                                    @if($resource->duration_in_days)
+                                        <div class="small text-info">
+                                            <i class="fas fa-clock me-1"></i>{{ $resource->duration_in_days }} day(s)
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="text-muted small">No dates specified</span>
                                 @endif
                             </td>
                             <td>
-                                <span class="badge bg-info">{{ $resource->addedBy->name }}</span>
-                                @if($resource->addedBy->hasRole(['Operator', 'Admin', 'Administrator']))
-                                    <small class="text-muted d-block">Operator</small>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm me-2">
+                                        <div class="avatar-title rounded-circle bg-light text-primary">
+                                            {{ substr($resource->addedBy->name, 0, 2) }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ $resource->addedBy->name }}</div>
+                                        @if($resource->addedBy->hasRole(['Operator', 'Admin', 'Administrator']))
+                                            <small class="text-success">
+                                                <i class="fas fa-user-cog me-1"></i>Operator
+                                            </small>
+                                        @else
+                                            <small class="text-muted">
+                                                {{ $resource->addedBy->roles->first()->name ?? 'User' }}
+                                            </small>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">{{ $resource->created_at->format('M d, Y') }}</div>
+                                <div class="small text-muted">{{ $resource->created_at->format('H:i') }}</div>
+                                @if($resource->created_at != $resource->updated_at)
+                                    <div class="small text-info">
+                                        <i class="fas fa-edit me-1"></i>Updated {{ $resource->updated_at->diffForHumans() }}
+                                    </div>
                                 @endif
                             </td>
-                            <td>{{ $resource->created_at->format('M d, Y H:i') }}</td>
                             @if(Gate::allows('manage-inquiry-resources'))
                                 <td>
-                                    <button class="btn btn-sm btn-outline-danger remove-resource" 
-                                            data-resource-id="{{ $resource->id }}"
-                                            data-resource-name="{{ $resource->resource_name }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button class="btn btn-outline-info view-details-btn" 
+                                                data-resource-id="{{ $resource->id }}"
+                                                title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger remove-resource" 
+                                                data-resource-id="{{ $resource->id }}"
+                                                data-resource-name="{{ $resource->resource_name }}"
+                                                title="Remove Resource">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             @endif
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="{{ Gate::allows('manage-inquiry-resources') ? '5' : '4' }}" class="text-center text-muted">
+                        <tr id="no-resources-row">
+                            <td colspan="{{ Gate::allows('manage-inquiry-resources') ? '8' : '7' }}" class="text-center text-muted py-4">
                                 <i class="fas fa-info-circle me-2"></i>No resources added yet
+                                @if(Gate::allows('manage-inquiry-resources'))
+                                    <div class="mt-2">
+                                        <small>Use the tabs above to add hotels, vehicles, guides, representatives, or extra services to this inquiry.</small>
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
+                @if($inquiry->resources->count() > 0)
+                <tfoot>
+                    <tr class="table-info">
+                        <td colspan="{{ Gate::allows('manage-inquiry-resources') ? '7' : '6' }}" class="text-end fw-bold">
+                            <span id="total-resources">Total Resources: {{ $inquiry->resources->count() }}</span>
+                        </td>
+                        @if(Gate::allows('manage-inquiry-resources'))
+                            <td class="text-center fw-bold" id="total-cost">
+                                <span class="text-primary">Total Cost: <span id="calculated-total">Calculate</span></span>
+                            </td>
+                        @endif
+                    </tr>
+                </tfoot>
+                @endif
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Details Modal -->
+<div class="modal fade" id="resourceDetailsModal" tabindex="-1" aria-labelledby="resourceDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resourceDetailsModalLabel">
+                    <i class="fas fa-info-circle me-2"></i>Resource Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="resourceDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading resource details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -468,6 +632,35 @@
     border: none;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+}
+
+.avatar-title {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.resource-row:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-group-sm > .btn, .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+#resourcesTable tfoot td {
+    background-color: #e3f2fd;
+    font-weight: 600;
+}
 </style>
 @endpush
 
@@ -476,7 +669,7 @@
 // Wait for jQuery to be available
 function waitForJQuery() {
     if (typeof $ !== 'undefined') {
-        console.log('=== RESOURCES SCRIPT LOADED ===');
+        console.log('=== IMPROVED RESOURCES SCRIPT LOADED ===');
         console.log('jQuery version:', $.fn.jquery);
         
         $(document).ready(function() {
@@ -486,10 +679,36 @@ function waitForJQuery() {
             console.log('Inquiry ID:', inquiryId);
             console.log('CSRF Token:', csrfToken);
             
-            // Test if elements exist
-            console.log('Hotel select exists:', $('#hotel_select').length > 0);
-            console.log('Hotel button exists:', $('#addHotelBtn').length > 0);
-            
+            // Toggle details column
+            $('#toggleDetailsBtn').on('click', function() {
+                $('.resource-details-col').toggle();
+                const isVisible = $('.resource-details-col').is(':visible');
+                $(this).find('i').removeClass('fa-eye fa-eye-slash').addClass(isVisible ? 'fa-eye-slash' : 'fa-eye');
+                $(this).find('span').text(isVisible ? 'Hide Details' : 'Show Details');
+            });
+
+            // Calculate total cost
+            $('#calculateTotalBtn').on('click', function() {
+                let totalCost = 0;
+                let currency = '$';
+                let hasValidPricing = false;
+
+                $('.resource-row').each(function() {
+                    const resourceId = $(this).data('resource-id');
+                    // This would need to be enhanced to actually calculate from the resource data
+                    // For now, we'll show a placeholder
+                });
+
+                $('#calculated-total').text('$0.00 (Feature in development)');
+                showAlert('info', 'Total cost calculation is being enhanced. This will show accurate totals based on durations and pricing.');
+            });
+
+            // View resource details
+            $(document).on('click', '.view-details-btn', function() {
+                const resourceId = $(this).data('resource-id');
+                showResourceDetails(resourceId);
+            });
+
             // Handle resource selection changes - Direct approach
             $('#hotel_select').on('change', function() {
                 const resourceId = $(this).val();
@@ -615,6 +834,7 @@ function waitForJQuery() {
                     resource_id: resourceId,
                     _token: csrfToken
                 };
+                
                 if (resourceType === 'hotel') {
                     formData.check_in = $('#hotel_check_in').val();
                     formData.check_out = $('#hotel_check_out').val();
@@ -628,6 +848,19 @@ function waitForJQuery() {
                     const currency = selected.data('currency');
                     const newPrice = $('#hotel_new_price').val();
                     const increasePercent = $('#hotel_increase_percent').val();
+                    if (currency) formData.currency = currency;
+                    if (newPrice) formData.new_price = newPrice;
+                    if (increasePercent) formData.increase_percent = increasePercent;
+                } else if (resourceType === 'vehicle') {
+                    formData.start_date = $('#vehicle_from_date').val();
+                    formData.start_time = $('#vehicle_from_time').val();
+                    formData.end_date = $('#vehicle_to_date').val();
+                    formData.end_time = $('#vehicle_to_time').val();
+                    formData.price_type = $('#vehicle_price_type').val();
+                    const selected = $('#vehicle_select').find('option:selected');
+                    const currency = selected.data('currency');
+                    const newPrice = $('#vehicle_new_price').val();
+                    const increasePercent = $('#vehicle_increase_percent').val();
                     if (currency) formData.currency = currency;
                     if (newPrice) formData.new_price = newPrice;
                     if (increasePercent) formData.increase_percent = increasePercent;
@@ -646,58 +879,10 @@ function waitForJQuery() {
                         if (response.success) {
                             showAlert('success', response.message);
                             
-                            // Add new row to table
-                            const newRow = `
-                                <tr data-resource-id="${response.data.id}">
-                                    <td>
-                                        <span class="badge bg-${getResourceTypeColor(response.data.resource_type)}">
-                                            ${response.data.resource_type.charAt(0).toUpperCase() + response.data.resource_type.slice(1)}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div><strong>${response.data.resource_name}</strong></div>
-                                        ${response.data.start_at || response.data.end_at ? `
-                                        <div class="small text-muted">
-                                            From: ${response.data.start_at || '—'} | To: ${response.data.end_at || '—'}
-                                        </div>` : ''}
-                                        ${response.data.effective_price ? `
-                                        <div class="small">
-                                            <span class="badge bg-info">${response.data.price_type || 'day'}</span>
-                                            <span class="badge bg-secondary">${response.data.currency || ''} ${Number(response.data.effective_price).toFixed(2)}</span>
-                                        </div>` : ''}
-                                        ${(response.data.original_price || response.data.new_price || response.data.increase_percent) ? `
-                                        <div class="small text-muted">
-                                            ${response.data.original_price ? `Original: ${response.data.currency || ''} ${Number(response.data.original_price).toFixed(2)}` : ''}
-                                            ${response.data.new_price ? ` | New: ${response.data.currency || ''} ${Number(response.data.new_price).toFixed(2)}` : ''}
-                                            ${response.data.increase_percent ? ` | Δ%: ${Number(response.data.increase_percent).toFixed(2)}%` : ''}
-                                        </div>` : ''}
-                                        ${response.data.price_note ? `
-                                        <div class="small text-muted">${response.data.price_note}</div>` : ''}
-                                    </td>
-                                    <td>${response.data.added_by}</td>
-                                    <td>${new Date(response.data.created_at).toLocaleDateString()}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-danger remove-resource" 
-                                                data-resource-id="${response.data.id}"
-                                                data-resource-name="${response.data.resource_name}">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
-                            
-                            // Remove empty row if exists
-                            const emptyRow = $('#resourcesTable tbody tr:first');
-                            if (emptyRow.find('td').length === 1) {
-                                emptyRow.remove();
-                            }
-                            
-                            // Add new row
-                            $('#resourcesTable tbody').prepend(newRow);
-                            
-                            // Reset the select
-                            select.val('');
-                            button.prop('disabled', true);
+                            // Reload the page to show the updated resources table
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
                         } else {
                             showAlert('error', response.message || 'Failed to add resource');
                         }
@@ -742,15 +927,23 @@ function waitForJQuery() {
                                     $(this).remove();
                                     
                                     // Show empty message if no resources left
-                                    if ($('#resourcesTable tbody tr').length === 0) {
+                                    if ($('#resourcesTable tbody tr:visible').length === 0) {
+                                        const colSpan = $('#resourcesTable thead tr th').length;
                                         $('#resourcesTable tbody').html(`
-                                            <tr>
-                                                <td colspan="5" class="text-center text-muted">
+                                            <tr id="no-resources-row">
+                                                <td colspan="${colSpan}" class="text-center text-muted py-4">
                                                     <i class="fas fa-info-circle me-2"></i>No resources added yet
+                                                    <div class="mt-2">
+                                                        <small>Use the tabs above to add hotels, vehicles, guides, representatives, or extra services to this inquiry.</small>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         `);
                                     }
+                                    
+                                    // Update total count
+                                    const remainingCount = $('#resourcesTable tbody tr:visible').length;
+                                    $('#total-resources').text(`Total Resources: ${remainingCount}`);
                                 });
                             } else {
                                 showAlert('error', response.message || 'Failed to remove resource');
@@ -769,22 +962,156 @@ function waitForJQuery() {
                 }
             });
 
-            
-            // Helper function to get resource type color
-            function getResourceTypeColor(type) {
+            // Function to show resource details
+            function showResourceDetails(resourceId) {
+                $('#resourceDetailsModal').modal('show');
+                $('#resourceDetailsContent').html(`
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading resource details...</p>
+                    </div>
+                `);
+
+                $.ajax({
+                    url: `/dashboard/inquiries/resources/${resourceId}`,
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            const data = response.data;
+                            const details = data.resource_details;
+                            
+                            let detailsHtml = `
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-${getResourceIcon(data.resource_type)} me-2"></i>
+                                            ${details.name}
+                                        </h6>
+                                        <table class="table table-sm">
+                                            <tr><td><strong>Type:</strong></td><td>${data.resource_type.charAt(0).toUpperCase() + data.resource_type.slice(1)}</td></tr>
+                                            ${details.city ? `<tr><td><strong>City:</strong></td><td>${details.city}</td></tr>` : ''}
+                                            ${details.status ? `<tr><td><strong>Status:</strong></td><td><span class="badge bg-info">${details.status}</span></td></tr>` : ''}
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-secondary mb-3">Assignment Details</h6>
+                                        <table class="table table-sm">
+                                            <tr><td><strong>Added By:</strong></td><td>${data.added_by.name}</td></tr>
+                                            <tr><td><strong>Added On:</strong></td><td>${data.created_at}</td></tr>
+                                            ${data.formatted_price ? `<tr><td><strong>Price:</strong></td><td>${data.formatted_price}</td></tr>` : ''}
+                                            ${data.total_cost ? `<tr><td><strong>Total Cost:</strong></td><td>${data.currency || '$'} ${parseFloat(data.total_cost).toFixed(2)}</td></tr>` : ''}
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+
+                            if (details.details && Object.keys(details.details).length > 0) {
+                                detailsHtml += `
+                                    <hr>
+                                    <h6 class="text-info mb-3">Resource Specifications</h6>
+                                    <div class="row">
+                                `;
+                                
+                                const detailsArray = Object.entries(details.details).filter(([key, value]) => value !== null && value !== '');
+                                const halfLength = Math.ceil(detailsArray.length / 2);
+                                
+                                detailsHtml += '<div class="col-md-6"><table class="table table-sm">';
+                                for (let i = 0; i < halfLength; i++) {
+                                    if (detailsArray[i]) {
+                                        const [key, value] = detailsArray[i];
+                                        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        detailsHtml += `<tr><td><strong>${formattedKey}:</strong></td><td>${Array.isArray(value) ? value.join(', ') : value}</td></tr>`;
+                                    }
+                                }
+                                detailsHtml += '</table></div>';
+                                
+                                if (detailsArray.length > halfLength) {
+                                    detailsHtml += '<div class="col-md-6"><table class="table table-sm">';
+                                    for (let i = halfLength; i < detailsArray.length; i++) {
+                                        const [key, value] = detailsArray[i];
+                                        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        detailsHtml += `<tr><td><strong>${formattedKey}:</strong></td><td>${Array.isArray(value) ? value.join(', ') : value}</td></tr>`;
+                                    }
+                                    detailsHtml += '</table></div>';
+                                }
+                                
+                                detailsHtml += '</div>';
+                            }
+
+                            // Add booking details if available
+                            if (data.start_at || data.end_at || data.check_in || data.check_out) {
+                                detailsHtml += `
+                                    <hr>
+                                    <h6 class="text-success mb-3">Booking Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <table class="table table-sm">
+                                `;
+                                
+                                if (data.check_in || data.check_out) {
+                                    if (data.check_in) detailsHtml += `<tr><td><strong>Check-in:</strong></td><td>${data.check_in}</td></tr>`;
+                                    if (data.check_out) detailsHtml += `<tr><td><strong>Check-out:</strong></td><td>${data.check_out}</td></tr>`;
+                                } else {
+                                    if (data.start_at) detailsHtml += `<tr><td><strong>Start:</strong></td><td>${data.start_at}</td></tr>`;
+                                    if (data.end_at) detailsHtml += `<tr><td><strong>End:</strong></td><td>${data.end_at}</td></tr>`;
+                                }
+                                
+                                if (data.duration_in_days) {
+                                    detailsHtml += `<tr><td><strong>Duration:</strong></td><td>${data.duration_in_days} day(s)</td></tr>`;
+                                }
+                                
+                                detailsHtml += '</table></div><div class="col-md-6"><table class="table table-sm">';
+                                
+                                if (data.number_of_rooms) detailsHtml += `<tr><td><strong>Rooms:</strong></td><td>${data.number_of_rooms}</td></tr>`;
+                                if (data.number_of_adults) detailsHtml += `<tr><td><strong>Adults:</strong></td><td>${data.number_of_adults}</td></tr>`;
+                                if (data.number_of_children) detailsHtml += `<tr><td><strong>Children:</strong></td><td>${data.number_of_children}</td></tr>`;
+                                if (data.rate_per_adult) detailsHtml += `<tr><td><strong>Rate/Adult:</strong></td><td>${data.currency || '$'} ${parseFloat(data.rate_per_adult).toFixed(2)}</td></tr>`;
+                                if (data.rate_per_child) detailsHtml += `<tr><td><strong>Rate/Child:</strong></td><td>${data.currency || '$'} ${parseFloat(data.rate_per_child).toFixed(2)}</td></tr>`;
+                                
+                                detailsHtml += '</table></div></div>';
+                            }
+
+                            $('#resourceDetailsContent').html(detailsHtml);
+                        } else {
+                            $('#resourceDetailsContent').html(`
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Failed to load resource details: ${response.message}
+                                </div>
+                            `);
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#resourceDetailsContent').html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Failed to load resource details. Please try again.
+                            </div>
+                        `);
+                    }
+                });
+            }
+
+            // Helper function to get resource icon
+            function getResourceIcon(type) {
                 switch(type) {
-                    case 'hotel': return 'primary';
-                    case 'vehicle': return 'success';
-                    case 'guide': return 'info';
-                    case 'representative': return 'warning';
-                    case 'extra': return 'secondary';
-                    default: return 'secondary';
+                    case 'hotel': return 'hotel';
+                    case 'vehicle': return 'car';
+                    case 'guide': return 'user-tie';
+                    case 'representative': return 'handshake';
+                    case 'extra': return 'plus-circle';
+                    default: return 'question-circle';
                 }
             }
             
             // Helper function to show alerts
             function showAlert(type, message) {
-                const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                const alertClass = type === 'success' ? 'alert-success' : (type === 'info' ? 'alert-info' : 'alert-danger');
                 const alertHtml = `
                     <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
                         ${message}

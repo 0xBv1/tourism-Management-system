@@ -3,12 +3,14 @@
     'count'=>0,
     'icon'=>'box',
     'color'=>'secondary',
-    'permission' => ''
+    'permission' => '',
+    'url' => null,
 ])
 @if(empty($permission) || admin()->can($permission))
     <div class="col-xxl-3 col-md-6 xl-50">
     <div class="card o-hidden widget-cards">
-        <div class="{{ $color }}-box card-body">
+        @php($wrapperTag = $url ? 'a' : 'div')
+        <<?= $wrapperTag ?> @if($url) href="{{ $url }}" @endif class="{{ $color }}-box card-body" style="display:block; text-decoration:none;">
             <div class="media static-top-widget align-items-center">
                 <div class="icons-widgets">
                     <div class="align-self-center text-center">
@@ -22,7 +24,7 @@
                     </h3>
                 </div>
             </div>
-        </div>
+        </<?= $wrapperTag ?>>
     </div>
 </div>
 @endif

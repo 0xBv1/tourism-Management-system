@@ -32,7 +32,7 @@ class InquiryController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function create()
     {
@@ -62,7 +62,7 @@ class InquiryController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \App\Http\Requests\Dashboard\InquiryRequest  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(InquiryRequest $request)
     {
@@ -85,7 +85,7 @@ class InquiryController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function show(Inquiry $inquiry)
     {
@@ -93,7 +93,7 @@ class InquiryController extends Controller
         
         // Load all available resources for the navigation tabs
         $availableResources = [
-            'hotels' => Hotel::active()->with('city')->get(['id', 'name', 'city_id']),
+            'hotels' => Hotel::active()->with('city')->get(['id', 'name', 'city_id', 'price_per_night', 'currency']),
             'vehicles' => Vehicle::active()->with('city')->get(['id', 'name', 'type', 'city_id', 'price_per_day', 'price_per_hour', 'currency']),
             'guides' => Guide::active()->with('city')->get(['id', 'name', 'city_id']),
             'representatives' => Representative::active()->with('city')->get(['id', 'name', 'city_id']),
@@ -124,7 +124,7 @@ class InquiryController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function edit(Inquiry $inquiry)
     {
@@ -155,7 +155,7 @@ class InquiryController extends Controller
      *
      * @param  \App\Http\Requests\Dashboard\InquiryRequest  $request
      * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(InquiryRequest $request, Inquiry $inquiry)
     {
@@ -182,7 +182,7 @@ class InquiryController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Inquiry $inquiry)
     {
@@ -196,7 +196,7 @@ class InquiryController extends Controller
      * Confirm an inquiry
      *
      * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function confirm(Inquiry $inquiry)
     {
@@ -216,7 +216,7 @@ class InquiryController extends Controller
      * Show confirmation form with payment details
      *
      * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function showConfirmForm(Inquiry $inquiry)
     {
@@ -247,7 +247,7 @@ class InquiryController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function processConfirmation(Request $request, Inquiry $inquiry)
     {

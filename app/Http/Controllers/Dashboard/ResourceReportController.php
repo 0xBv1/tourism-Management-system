@@ -124,7 +124,7 @@ class ResourceReportController extends Controller
             ->orderBy('start_date')
             ->get();
 
-        return view('dashboard.reports.resource-details', compact(
+        return view('dashboard.reports.resource-details-improved', compact(
             'resource',
             'utilization',
             'bookings',
@@ -297,7 +297,7 @@ class ResourceReportController extends Controller
     {
         $totalResources = Hotel::count() + Vehicle::count() + Guide::count() + Representative::count();
         
-        $totalBookings = \App\Models\ResourceBooking::whereBetween('start_date', [$startDate, $endDate])
+        $totalBookings = ResourceBooking::whereBetween('start_date', [$startDate, $endDate])
             ->orWhereBetween('end_date', [$startDate, $endDate])
             ->orWhere(function ($query) use ($startDate, $endDate) {
                 $query->where('start_date', '<=', $startDate)
@@ -305,7 +305,7 @@ class ResourceReportController extends Controller
             })
             ->count();
 
-        $totalRevenue = \App\Models\ResourceBooking::whereBetween('start_date', [$startDate, $endDate])
+        $totalRevenue = ResourceBooking::whereBetween('start_date', [$startDate, $endDate])
             ->orWhereBetween('end_date', [$startDate, $endDate])
             ->orWhere(function ($query) use ($startDate, $endDate) {
                 $query->where('start_date', '<=', $startDate)
