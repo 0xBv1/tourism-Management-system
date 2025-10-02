@@ -118,11 +118,11 @@
                     ['title' => 'Bookings Report', 'link' => route('dashboard.reports.bookings'), 'permissions' => ['reports.bookings'] ],
                     ['title' => 'Finance Report', 'link' => route('dashboard.reports.finance'), 'permissions' => ['reports.finance'] ],
                     ['title' => 'Operational Report', 'link' => route('dashboard.reports.operational'), 'permissions' => ['reports.operational'] ],
-                    ['title' => 'Performance Report', 'link' => route('dashboard.reports.performance'), 'permissions' => ['reports.performance'] ],
-                    ['title' => 'Resource Utilization', 'link' => route('dashboard.reports.resource-utilization'), 'permissions' => ['resource-reports.index'] ],
-                ]"
+ ]"
             />
-
+<!--                    ['title' => 'Performance Report', 'link' => route('dashboard.reports.performance'), 'permissions' => ['reports.performance'] ],
+                    ['title' => 'Resource Utilization', 'link' => route('dashboard.reports.resource-utilization'), 'permissions' => ['resource-reports.index'] ],
+                 -->
             <x-dashboard.sidebar.single-link :permissions="['settings.show']" title="Settings" link="{{ route('dashboard.settings.show') }}" icon="settings" />
 
             {{--Sidebar Auto Generation--}}

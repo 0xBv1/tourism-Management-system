@@ -75,8 +75,25 @@
                         <select class="form-select" id="vehicle_select" name="vehicle_id">
                             <option value="">Choose a vehicle...</option>
                             @foreach($availableResources['vehicles'] as $vehicle)
-                                <option value="{{ $vehicle->id }}">
-                                    {{ $vehicle->name }}@if($vehicle->type) - {{ $vehicle->type }}@endif @if($vehicle->city) ({{ $vehicle->city->name }})@endif
+                                @php
+                                    $currency = $vehicle->currency ?: '$';
+                                    $ppd = $vehicle->price_per_day;
+                                    $pph = $vehicle->price_per_hour;
+                                    $priceParts = [];
+                                    if(!is_null($ppd) && $ppd !== '') {
+                                        $priceParts[] = $currency . ' ' . number_format((float)$ppd, 2) . ' /day';
+                                    }
+                                    if(!is_null($pph) && $pph !== '') {
+                                        $priceParts[] = $currency . ' ' . number_format((float)$pph, 2) . ' /hour';
+                                    }
+                                    $priceText = count($priceParts) ? ' - ' . implode(' | ', $priceParts) : '';
+                                @endphp
+                                <option 
+                                    value="{{ $vehicle->id }}"
+                                    data-price-per-day="{{ $vehicle->price_per_day }}"
+                                    data-price-per-hour="{{ $vehicle->price_per_hour }}"
+                                    data-currency="{{ $vehicle->currency }}">
+                                    {{ $vehicle->name }}@if($vehicle->type) - {{ $vehicle->type }}@endif @if($vehicle->city) ({{ $vehicle->city->name }})@endif{!! $priceText !!}
                                 </option>
                             @endforeach
                         </select>
@@ -87,6 +104,47 @@
                             <button type="button" class="btn btn-primary w-100" id="addVehicleBtn" >
                                 <i class="fas fa-plus me-1"></i>Add Vehicle
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="vehicle_from_date" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="vehicle_from_date" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="vehicle_from_time" class="form-label">From Time</label>
+                        <input type="time" class="form-control" id="vehicle_from_time" />
+                    </div>
+            
+                    <div class="col-md-3">
+                        <label for="vehicle_to_time" class="form-label">To Time</label>
+                        <input type="time" class="form-control" id="vehicle_to_time" />
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="vehicle_price_type" class="form-label">Price Type</label>
+                        <select id="vehicle_price_type" class="form-select">
+                            <option value="day" selected>Per Day</option>
+                            <option value="hour">Per Hour</option>
+                        </select>
+                    </div>
+                   
+                    <div class="col-md-3">
+                        <label for="vehicle_new_price" class="form-label">New Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="vehicle_currency_badge_new">$</span>
+                            <input type="number" step="0.01" class="form-control" id="vehicle_new_price" placeholder="Enter new price" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="vehicle_increase_percent" class="form-label">Increase By (%)</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" id="vehicle_increase_percent" placeholder="e.g. 10" />
+                            <button type="button" class="btn btn-outline-secondary" id="vehicle_increase_btn">Increase Price</button>
                         </div>
                     </div>
                 </div>
@@ -328,6 +386,25 @@ function waitForJQuery() {
                 const resourceId = $(this).val();
                 $('#addVehicleBtn').prop('disabled', !resourceId);
                 console.log('Vehicle selected:', resourceId, 'Button disabled:', $('#addVehicleBtn').prop('disabled'));
+
+                // Populate original price & currency from selected option
+                const selected = $(this).find('option:selected');
+                const priceType = $('#vehicle_price_type').val();
+                const currency = selected.data('currency') || '$';
+                const original = priceType === 'hour' ? selected.data('price-per-hour') : selected.data('price-per-day');
+
+                $('#vehicle_currency_badge').text(currency || '$');
+                $('#vehicle_currency_badge_new').text(currency || '$');
+                $('#vehicle_original_price').val(original ? Number(original).toFixed(2) : '');
+            });
+
+            // Update original price when price type changes
+            $('#vehicle_price_type').on('change', function() {
+                const selected = $('#vehicle_select').find('option:selected');
+                if (!selected.val()) return;
+                const priceType = $(this).val();
+                const original = priceType === 'hour' ? selected.data('price-per-hour') : selected.data('price-per-day');
+                $('#vehicle_original_price').val(original ? Number(original).toFixed(2) : '');
             });
             
             $('#guide_select').on('change', function() {
@@ -355,6 +432,24 @@ function waitForJQuery() {
             
             $('#addVehicleBtn').on('click', function() {
                 addResource('vehicle');
+            });
+
+            // Increase price by percentage button
+            $('#vehicle_increase_btn').on('click', function() {
+                const originalStr = $('#vehicle_original_price').val();
+                const percentStr = $('#vehicle_increase_percent').val();
+                const original = parseFloat(originalStr);
+                const percent = parseFloat(percentStr);
+                if (isNaN(original)) {
+                    showAlert('error', 'Original price is not set. Select a vehicle first.');
+                    return;
+                }
+                if (isNaN(percent)) {
+                    showAlert('error', 'Please enter a valid percentage to increase.');
+                    return;
+                }
+                const increased = original * (1 + percent / 100);
+                $('#vehicle_new_price').val(increased.toFixed(2));
             });
             
             $('#addGuideBtn').on('click', function() {

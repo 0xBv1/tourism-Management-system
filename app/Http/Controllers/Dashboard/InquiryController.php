@@ -94,7 +94,7 @@ class InquiryController extends Controller
         // Load all available resources for the navigation tabs
         $availableResources = [
             'hotels' => Hotel::active()->with('city')->get(['id', 'name', 'city_id']),
-            'vehicles' => Vehicle::active()->with('city')->get(['id', 'name', 'type', 'city_id']),
+            'vehicles' => Vehicle::active()->with('city')->get(['id', 'name', 'type', 'city_id', 'price_per_day', 'price_per_hour', 'currency']),
             'guides' => Guide::active()->with('city')->get(['id', 'name', 'city_id']),
             'representatives' => Representative::active()->with('city')->get(['id', 'name', 'city_id']),
             'extras' => Extra::active()->get(['id', 'name', 'category', 'price', 'currency']),

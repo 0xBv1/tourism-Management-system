@@ -219,12 +219,15 @@ class InquiryResourceController extends Controller
                     'city' => $hotel->city->name ?? 'Unknown City'
                 ];
             })->toArray(),
-            'vehicle' => Vehicle::active()->with('city')->get(['id', 'name', 'type', 'city_id'])->map(function($vehicle) {
+            'vehicle' => Vehicle::active()->with('city')->get(['id', 'name', 'type', 'city_id', 'price_per_day', 'price_per_hour', 'currency'])->map(function($vehicle) {
                 return [
                     'id' => $vehicle->id,
                     'name' => $vehicle->name,
                     'type' => $vehicle->type,
-                    'city' => $vehicle->city->name ?? 'Unknown City'
+                    'city' => $vehicle->city->name ?? 'Unknown City',
+                    'price_per_day' => $vehicle->price_per_day,
+                    'price_per_hour' => $vehicle->price_per_hour,
+                    'currency' => $vehicle->currency
                 ];
             })->toArray(),
             'guide' => Guide::active()->with('city')->get(['id', 'name', 'city_id'])->map(function($guide) {
