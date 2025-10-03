@@ -66,13 +66,6 @@
                                 </a>
                             </div>
                             @endif
-                            @if(admin()->can('reports.index'))
-                            <div class="col-md-3 col-sm-6 mb-3">
-                                <a href="{{ route('dashboard.reports.index') }}" class="btn btn-warning btn-block">
-                                    <i data-feather="bar-chart-2" class="mr-2"></i>View Reports
-                                </a>
-                            </div>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -241,10 +234,6 @@
                                                 <li class="mb-2">
                                                     <i data-feather="check-circle" class="text-success mr-2"></i>
                                                     <strong>Calendar Integration:</strong> Visual resource scheduling
-                                                </li>
-                                                <li class="mb-2">
-                                                    <i data-feather="check-circle" class="text-success mr-2"></i>
-                                                    <strong>Comprehensive Reports:</strong> Detailed analytics and insights
                                                 </li>
                                                 <li class="mb-2">
                                                     <i data-feather="check-circle" class="text-success mr-2"></i>

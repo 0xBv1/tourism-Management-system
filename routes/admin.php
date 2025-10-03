@@ -16,14 +16,12 @@ use App\Http\Controllers\Dashboard\VehicleController;
 use App\Http\Controllers\Dashboard\GuideController;
 use App\Http\Controllers\Dashboard\RepresentativeController;
 use App\Http\Controllers\Dashboard\ResourceAssignmentController;
-use App\Http\Controllers\Dashboard\ResourceReportController;
 use App\Http\Controllers\Dashboard\PaymentController;
 use App\Http\Controllers\Dashboard\NotificationController;
 use App\Http\Controllers\Dashboard\InquiryResourceController;
 use App\Http\Controllers\Dashboard\TicketController;
 use App\Http\Controllers\Dashboard\DahabiaController;
 use App\Http\Controllers\Dashboard\RestaurantController;
-use App\Http\Controllers\Dashboard\NileCruiseController;
 use Illuminate\Support\Facades\Route;
 
 //controllers
@@ -105,7 +103,6 @@ Route::group([
 
     // Ticket Resource Management
     Route::resource('tickets', TicketController::class);
-    Route::resource('nile-cruises', NileCruiseController::class);
     Route::resource('dahabias', DahabiaController::class);
     Route::resource('restaurants', RestaurantController::class);
     
@@ -123,24 +120,6 @@ Route::group([
         Route::get('utilization', [ResourceAssignmentController::class, 'getUtilizationReport'])->name('utilization');
     });
     
-    // Resource Reports
-    Route::group(['prefix' => 'reports', 'as' => 'reports.'], function () {
-        Route::get('resource-utilization', [ResourceReportController::class, 'index'])->name('resource-utilization');
-        Route::get('resource-utilization/export', [ResourceReportController::class, 'export'])->name('resource-utilization.export');
-        Route::get('resource-details/{resourceType}/{resourceId}', [ResourceReportController::class, 'showResourceDetails'])->name('resource-details');
-    });
-
-    // Comprehensive Reports
-    Route::group(['prefix' => 'reports', 'as' => 'reports.'], function () {
-        Route::get('/', [App\Http\Controllers\Dashboard\ReportsController::class, 'index'])->name('index');
-        Route::get('inquiries', [App\Http\Controllers\Dashboard\ReportsController::class, 'inquiries'])->name('inquiries');
-        Route::get('bookings', [App\Http\Controllers\Dashboard\ReportsController::class, 'bookings'])->name('bookings');
-        Route::get('finance', [App\Http\Controllers\Dashboard\ReportsController::class, 'finance'])->name('finance');
-        Route::get('operational', [App\Http\Controllers\Dashboard\ReportsController::class, 'operational'])->name('operational');
-        Route::get('performance', [App\Http\Controllers\Dashboard\ReportsController::class, 'performance'])->name('performance');
-        Route::get('inquiry-resources', [App\Http\Controllers\Dashboard\ReportsController::class, 'inquiryResources'])->name('inquiry-resources');
-        Route::get('export/{type}', [App\Http\Controllers\Dashboard\ReportsController::class, 'export'])->name('export');
-    });
 
     // Payment Management
     Route::resource('payments', PaymentController::class);

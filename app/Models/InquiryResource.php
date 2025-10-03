@@ -8,6 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use App\Traits\HasAuditLog;
 
+// Import all resource models
+use App\Models\Hotel;
+use App\Models\Vehicle;
+use App\Models\Guide;
+use App\Models\Representative;
+use App\Models\Extra;
+use App\Models\Ticket;
+use App\Models\Dahabia;
+use App\Models\Restaurant;
+
 class InquiryResource extends Model
 {
     use HasFactory, HasAuditLog;
@@ -68,10 +78,11 @@ class InquiryResource extends Model
         return $this->belongsTo(User::class, 'added_by');
     }
 
+
     /**
-     * Get the resource (Hotel, Vehicle, Guide, Representative, Extra).
+     * Get the resource model via morphTo relationship.
      */
-    public function resource(): MorphTo
+    public function resource()
     {
         return $this->morphTo('resource', 'resource_type', 'resource_id');
     }
@@ -95,7 +106,10 @@ class InquiryResource extends Model
             'vehicle' => Vehicle::class,
             'guide' => Guide::class,
             'representative' => Representative::class,
-            'extra' => Extra::class, // We'll create this model
+            'extra' => Extra::class,
+            'ticket' => Ticket::class,
+            'dahabia' => Dahabia::class,
+            'restaurant' => Restaurant::class,
             default => throw new \InvalidArgumentException("Invalid resource type: {$this->resource_type}")
         };
     }
@@ -115,6 +129,10 @@ class InquiryResource extends Model
             'guide' => $this->resource->name,
             'representative' => $this->resource->name,
             'extra' => $this->resource->name ?? 'Extra Service',
+            'ticket' => $this->resource->name ?? 'Ticket',
+            'nile_cruise' => $this->resource->name ?? 'Nile Cruise',
+            'dahabia' => $this->resource->name ?? 'Dahabia',
+            'restaurant' => $this->resource->name ?? 'Restaurant',
             default => 'Unknown Resource'
         };
     }
@@ -208,6 +226,45 @@ class InquiryResource extends Model
                     'price' => $actualResource->price ?? null,
                     'currency' => $actualResource->currency ?? null,
                     'unit' => $actualResource->unit ?? null,
+                ];
+                break;
+
+            case 'ticket':
+                $details['details'] = [
+                    'category' => $actualResource->category ?? null,
+                    'description' => $actualResource->description ?? null,
+                    'price_per_person' => $actualResource->price_per_person ?? null,
+                    'currency' => $actualResource->currency ?? null,
+                    'location' => $actualResource->location ?? null,
+                ];
+                break;
+
+            case 'nile_cruise':
+                $details['details'] = [
+                    'capacity' => $actualResource->capacity ?? null,
+                    'price_per_person' => $actualResource->price_per_person ?? null,
+                    'price_per_cabin' => $actualResource->price_per_cabin ?? null,
+                    'currency' => $actualResource->currency ?? null,
+                    'duration' => $actualResource->duration ?? null,
+                ];
+                break;
+
+            case 'dahabia':
+                $details['details'] = [
+                    'capacity' => $actualResource->capacity ?? null,
+                    'price_per_person' => $actualResource->price_per_person ?? null,
+                    'price_per_charter' => $actualResource->price_per_charter ?? null,
+                    'currency' => $actualResource->currency ?? null,
+                    'duration' => $actualResource->duration ?? null,
+                ];
+                break;
+
+            case 'restaurant':
+                $details['details'] = [
+                    'cuisine_type' => $actualResource->cuisine_type ?? null,
+                    'capacity' => $actualResource->capacity ?? null,
+                    'currency' => $actualResource->currency ?? null,
+                    'location' => $actualResource->location ?? null,
                 ];
                 break;
         }

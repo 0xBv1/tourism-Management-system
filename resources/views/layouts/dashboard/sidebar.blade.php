@@ -88,14 +88,13 @@
             <x-dashboard.sidebar.link-with-child
                 title="Resource Management"
                 icon="package"
-                :permissions="['hotels.list','vehicles.list','guides.list','representatives.list','tickets.list','nile_cruises.list','dahabias.list','restaurants.list']"
+                :permissions="['hotels.list','vehicles.list','guides.list','representatives.list','tickets.list','dahabias.list','restaurants.list']"
                 :children="[
                     ['title' => 'Hotels', 'link' => route('dashboard.hotels.index'), 'permissions' => ['hotels.list'] ],
                     ['title' => 'Vehicles', 'link' => route('dashboard.vehicles.index'), 'permissions' => ['vehicles.list'] ],
                     ['title' => 'Guides', 'link' => route('dashboard.guides.index'), 'permissions' => ['guides.list'] ],
                     ['title' => 'Representatives', 'link' => route('dashboard.representatives.index'), 'permissions' => ['representatives.list'] ],
                     ['title' => 'Tickets', 'link' => route('dashboard.tickets.index'), 'permissions' => ['tickets.list'] ],
-                    ['title' => 'Nile Cruises', 'link' => route('dashboard.nile-cruises.index'), 'permissions' => ['nile_cruises.list'] ],
                     ['title' => 'Dahabias', 'link' => route('dashboard.dahabias.index'), 'permissions' => ['dahabias.list'] ],
                     ['title' => 'Restaurants', 'link' => route('dashboard.restaurants.index'), 'permissions' => ['restaurants.list'] ],
                     ['title' => 'Hotel Calendar', 'link' => route('dashboard.hotels.calendar'), 'permissions' => ['hotels.calendar'] ],
@@ -112,21 +111,6 @@
                 icon="link-2" 
             />             -->
 
-            <x-dashboard.sidebar.link-with-child
-                title="Reports"
-                icon="bar-chart-2"
-                :permissions="['reports.index','reports.inquiries','reports.bookings','reports.finance','reports.operational','reports.performance']"
-                :children="[
-                    ['title' => 'Dashboard', 'link' => route('dashboard.reports.index'), 'permissions' => ['reports.index'] ],
-                    ['title' => 'Inquiries Report', 'link' => route('dashboard.reports.inquiries'), 'permissions' => ['reports.inquiries'] ],
-                    ['title' => 'Bookings Report', 'link' => route('dashboard.reports.bookings'), 'permissions' => ['reports.bookings'] ],
-                    ['title' => 'Finance Report', 'link' => route('dashboard.reports.finance'), 'permissions' => ['reports.finance'] ],
-                    ['title' => 'Operational Report', 'link' => route('dashboard.reports.operational'), 'permissions' => ['reports.operational'] ],
- ]"
-            />
-<!--                    ['title' => 'Performance Report', 'link' => route('dashboard.reports.performance'), 'permissions' => ['reports.performance'] ],
-                    ['title' => 'Resource Utilization', 'link' => route('dashboard.reports.resource-utilization'), 'permissions' => ['resource-reports.index'] ],
-                 -->
             <x-dashboard.sidebar.single-link :permissions="['settings.show']" title="Settings" link="{{ route('dashboard.settings.show') }}" icon="settings" />
 
             {{--Sidebar Auto Generation--}}

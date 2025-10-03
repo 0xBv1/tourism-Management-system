@@ -13,6 +13,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
+        \App\Models\Inquiry::class => \App\Policies\InquiryPolicy::class,
+        \App\Models\Chat::class => \App\Policies\ChatPolicy::class,
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
     ];
 
@@ -27,7 +29,7 @@ class AuthServiceProvider extends ServiceProvider
 
         // Gate for managing inquiry resources
         Gate::define('manage-inquiry-resources', function ($user) {
-            return $user->hasAnyRole(['Operator', 'Admin', 'Administrator']);
+            return $user->hasAnyRole(['Operator', 'Admin', 'Administrator' ,'Reservation']);
         });
     }
 }

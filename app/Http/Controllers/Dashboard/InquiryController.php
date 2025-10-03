@@ -14,6 +14,9 @@ use App\Models\Vehicle;
 use App\Models\Guide;
 use App\Models\Representative;
 use App\Models\Extra;
+use App\Models\Ticket;
+use App\Models\Dahabia;
+use App\Models\Restaurant;
 use App\Enums\InquiryStatus;
 use Illuminate\Http\Request;
 
@@ -98,6 +101,9 @@ class InquiryController extends Controller
             'guides' => Guide::active()->with('city')->get(['id', 'name', 'city_id']),
             'representatives' => Representative::active()->with('city')->get(['id', 'name', 'city_id']),
             'extras' => Extra::active()->get(['id', 'name', 'category', 'price', 'currency']),
+            'tickets' => Ticket::active()->with('city')->get(['id', 'name', 'city_id', 'price_per_person', 'currency']),
+            'dahabias' => Dahabia::active()->with('city')->get(['id', 'name', 'city_id', 'price_per_person', 'price_per_charter', 'currency']),
+            'restaurants' => Restaurant::active()->with('city')->get(['id', 'name', 'city_id', 'currency']),
         ];
         $users = User::with('roles')
             ->whereHas('roles', function($query) {

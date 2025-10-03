@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class Inquiry extends Model
 {
@@ -211,8 +213,8 @@ class Inquiry extends Model
             $filepath = "booking-files/{$filename}";
             
             // Delete old file if it exists
-            if (\Storage::disk('public')->exists($this->bookingFile->file_path)) {
-                \Storage::disk('public')->delete($this->bookingFile->file_path);
+            if (Storage::disk('public')->exists($this->bookingFile->file_path)) {
+                Storage::disk('public')->delete($this->bookingFile->file_path);
             }
             
             // Update booking file record
@@ -223,10 +225,10 @@ class Inquiry extends Model
             ]);
             
             // Store the new PDF file
-            \Storage::disk('public')->put($filepath, $pdfContent);
+            Storage::disk('public')->put($filepath, $pdfContent);
             
         } catch (\Exception $e) {
-            \Log::error("Failed to regenerate booking file for inquiry {$this->id}: " . $e->getMessage());
+            Log::error("Failed to regenerate booking file for inquiry {$this->id}: " . $e->getMessage());
         }
     }
 
@@ -236,7 +238,7 @@ class Inquiry extends Model
     private function generateBookingFilePDF(): string
     {
         // Load all necessary relationships for PDF generation
-        $this->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles', 'resources.resource', 'resources.addedBy', 'bookingFile.payments']);
+        $this->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles', 'resources.addedBy', 'bookingFile.payments']);
         
         $data = [
             'inquiry' => $this,

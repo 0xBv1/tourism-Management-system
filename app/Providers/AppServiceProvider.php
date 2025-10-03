@@ -3,9 +3,9 @@
 namespace App\Providers;
 
 use App\Enums\SettingKey;
-use App\Enums\PaymentMethod;
-use App\Payments\PaymentFactory;
-use App\Payments\PaymentGateway;
+// use App\Enums\PaymentMethod;  // TODO: Create PaymentMethod enum if needed
+// use App\Payments\PaymentFactory;  // TODO: Create PaymentFactory class if needed
+// use App\Payments\PaymentGateway;  // TODO: Create PaymentGateway interface if needed
 use App\Channels\WhatsappChannel;
 use App\Notifications\Channels\WhatsAppChannel as WhatsAppNotificationChannel;
 use App\Notifications\Channels\SmsChannel;
@@ -16,6 +16,9 @@ use App\Models\Vehicle;
 use App\Models\Guide;
 use App\Models\Representative;
 use App\Models\Extra;
+use App\Models\Ticket;
+use App\Models\Dahabia;
+use App\Models\Restaurant;
 use App\Observers\BookingFileObserver;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
@@ -48,8 +51,9 @@ class AppServiceProvider extends ServiceProvider
             return $app->make(SmsChannel::class);
         });
 
-        $this->app->bind(PaymentGateway::class,
-            fn() => PaymentFactory::instance(request('payment_method', PaymentMethod::COD->value)));
+        // TODO: Uncomment when PaymentGateway and PaymentFactory classes are created
+        // $this->app->bind(PaymentGateway::class,
+        //     fn() => PaymentFactory::instance(request('payment_method', PaymentMethod::COD->value)));
 
             $this->app->bind(RecaptchaService::class, function ($app) {
                 return new RecaptchaService();
@@ -84,6 +88,9 @@ class AppServiceProvider extends ServiceProvider
             'guide' => Guide::class,
             'representative' => Representative::class,
             'extra' => Extra::class,
+            'ticket' => Ticket::class,
+            'dahabia' => Dahabia::class,
+            'restaurant' => Restaurant::class,
         ]);
         
 //        Str::macro('htmlEntityDecode', fn($value) => Str::of(html_entity_decode($value)));

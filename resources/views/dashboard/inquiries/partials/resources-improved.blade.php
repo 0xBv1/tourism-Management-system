@@ -1,4 +1,4 @@
-@if(admin()->hasRole(['Sales' ,'Finance']) || Gate::allows('manage-inquiry-resources'))
+@if(admin()->hasRole(['Sales' ,'Finance' ]) || Gate::allows('manage-inquiry-resources'))
 <div class="card mb-4">
     <div class="card-header">
         <h5 class="card-title mb-0">
@@ -11,59 +11,124 @@
     </div>
     <div class="card-body">
         @if(Gate::allows('manage-inquiry-resources'))
+        @php
+            $user = auth()->user();
+            $isOperator = $user->hasRole('Operator');
+            $isReservation = $user->hasRole('Reservation');
+            $isAdmin = $user->hasRole(['Admin', 'Administrator']);
+            
+            // Determine which tabs to show based on role
+            $showHotels = $isReservation || $isAdmin;
+            $showVehicles = $isOperator || $isAdmin;
+            $showGuides = $isOperator || $isAdmin;
+            $showRepresentatives = $isOperator || $isAdmin;
+            $showExtraServices = ($isOperator || $isReservation) || $isAdmin;
+            $showTickets = $isReservation || $isAdmin;
+            $showDahabias = $isReservation || $isAdmin;
+            $showRestaurants = $isReservation || $isAdmin;
+            
+            // Determine active tab (first visible tab)
+            $activeTabSet = false;
+            $firstTabId = '';
+            if ($showHotels && !$activeTabSet) {
+                $firstTabId = 'hotel';
+                $activeTabSet = true;
+            } elseif ($showVehicles && !$activeTabSet) {
+                $firstTabId = 'vehicle';
+                $activeTabSet = true;
+            } elseif ($showGuides && !$activeTabSet) {
+                $firstTabId = 'guide';
+                $activeTabSet = true;
+            } elseif ($showRepresentatives && !$activeTabSet) {
+                $firstTabId = 'representative';
+                $activeTabSet = true;
+            } elseif ($showExtraServices && !$activeTabSet) {
+                $firstTabId = 'extra';
+                $activeTabSet = true;
+            } elseif ($showTickets && !$activeTabSet) {
+                $firstTabId = 'ticket';
+                $activeTabSet = true;
+            } elseif ($showDahabias && ! $activeTabSet) {
+                $firstTabId = 'dahabia';
+                $activeTabSet = true;
+            } elseif ($showRestaurants && !$activeTabSet) {
+                $firstTabId = 'restaurant';
+                $activeTabSet = true;
+            }
+        @endphp
+        
         <!-- Resource Type Navigation -->
         <ul class="nav nav-tabs mb-4" id="resourceTabs" role="tablist">
+            @if($showHotels)
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="hotel-tab" data-bs-toggle="tab" data-bs-target="#hotel" type="button" role="tab" aria-controls="hotel" aria-selected="true">
+                <button class="nav-link {{ $activeTabSet && $firstTabId === 'hotel' ? 'active' : '' }}" id="hotel-tab" data-bs-toggle="tab" data-bs-target="#hotel" type="button" role="tab" aria-controls="hotel" aria-selected="{{ $activeTabSet && $firstTabId === 'hotel' ? 'true' : 'false' }}">
                     <i class="fas fa-hotel me-1"></i>Hotels
                 </button>
             </li>
+            @endif
+            
+            @if($showVehicles)
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="vehicle-tab" data-bs-toggle="tab" data-bs-target="#vehicle" type="button" role="tab" aria-controls="vehicle" aria-selected="false">
+                <button class="nav-link {{ $activeTabSet && $firstTabId === 'vehicle' ? 'active' : '' }}" id="vehicle-tab" data-bs-toggle="tab" data-bs-target="#vehicle" type="button" role="tab" aria-controls="vehicle" aria-selected="{{ $activeTabSet && $firstTabId === 'vehicle' ? 'true' : 'false' }}">
                     <i class="fas fa-car me-1"></i>Vehicles
                 </button>
             </li>
+            @endif
+            
+            @if($showGuides)
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="guide-tab" data-bs-toggle="tab" data-bs-target="#guide" type="button" role="tab" aria-controls="guide" aria-selected="false">
+                <button class="nav-link {{ $activeTabSet && $firstTabId === 'guide' ? 'active' : '' }}" id="guide-tab" data-bs-toggle="tab" data-bs-target="#guide" type="button" role="tab" aria-controls="guide" aria-selected="{{ $activeTabSet && $firstTabId === 'guide' ? 'true' : 'false' }}">
                     <i class="fas fa-user-tie me-1"></i>Guides
                 </button>
             </li>
+            @endif
+            
+            @if($showRepresentatives)
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="representative-tab" data-bs-toggle="tab" data-bs-target="#representative" type="button" role="tab" aria-controls="representative" aria-selected="false">
+                <button class="nav-link {{ $activeTabSet && $firstTabId === 'representative' ? 'active' : '' }}" id="representative-tab" data-bs-toggle="tab" data-bs-target="#representative" type="button" role="tab" aria-controls="representative" aria-selected="{{ $activeTabSet && $firstTabId === 'representative' ? 'true' : 'false' }}">
                     <i class="fas fa-handshake me-1"></i>Representatives
                 </button>
             </li>
+            @endif
+            
+            @if($showExtraServices)
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="extra-tab" data-bs-toggle="tab" data-bs-target="#extra" type="button" role="tab" aria-controls="extra" aria-selected="false">
+                <button class="nav-link {{ $activeTabSet && $firstTabId === 'extra' ? 'active' : '' }}" id="extra-tab" data-bs-toggle="tab" data-bs-target="#extra" type="button" role="tab" aria-controls="extra" aria-selected="{{ $activeTabSet && $firstTabId === 'extra' ? 'true' : 'false' }}">
                     <i class="fas fa-plus-circle me-1"></i>Extra Services
                 </button>
             </li>
+            @endif
+            
+            @if($showTickets)
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="ticket-tab" data-bs-toggle="tab" data-bs-target="#ticket" type="button" role="tab" aria-controls="ticket" aria-selected="false">
+                <button class="nav-link {{ $activeTabSet && $firstTabId === 'ticket' ? 'active' : '' }}" id="ticket-tab" data-bs-toggle="tab" data-bs-target="#ticket" type="button" role="tab" aria-controls="ticket" aria-selected="{{ $activeTabSet && $firstTabId === 'ticket' ? 'true' : 'false' }}">
                     <i class="fas fa-ticket-alt me-1"></i>Tickets
                 </button>
             </li>
+            @endif
+            
+            @if($showDahabias)
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="nile-cruise-tab" data-bs-toggle="tab" data-bs-target="#nile-cruise" type="button" role="tab" aria-controls="nile-cruise" aria-selected="false">
-                    <i class="fas fa-ship me-1"></i>Nile Cruises
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="dahabia-tab" data-bs-toggle="tab" data-bs-target="#dahabia" type="button" role="tab" aria-controls="dahabia" aria-selected="false">
+                <button class="nav-link {{ $activeTabSet && $firstTabId === 'dahabia' ? 'active' : '' }}" id="dahabia-tab" data-bs-toggle="tab" data-bs-target="#dahabia" type="button" role="tab" aria-controls="dahabia" aria-selected="{{ $activeTabSet && $firstTabId === 'dahabia' ? 'true' : 'false' }}">
                     <i class="fas fa-sailboat me-1"></i>Dahabias
                 </button>
             </li>
+            @endif
+            
+            @if($showRestaurants)
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="restaurant-tab" data-bs-toggle="tab" data-bs-target="#restaurant" type="button" role="tab" aria-controls="restaurant" aria-selected="false">
+                <button class="nav-link {{ $activeTabSet && $firstTabId === 'restaurant' ? 'active' : '' }}" id="restaurant-tab" data-bs-toggle="tab" data-bs-target="#restaurant" type="button" role="tab" aria-controls="restaurant" aria-selected="{{ $activeTabSet && $firstTabId === 'restaurant' ? 'true' : 'false' }}">
                     <i class="fas fa-utensils me-1"></i>Restaurants
                 </button>
             </li>
+            @endif
         </ul>
 
         <!-- Tab Content -->
         <div class="tab-content" id="resourceTabContent">
             <!-- Hotel Tab -->
-            <div class="tab-pane fade show active" id="hotel" role="tabpanel" aria-labelledby="hotel-tab">
+            @if($showHotels)
+            <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'hotel' ? 'show active' : '' }}" id="hotel" role="tabpanel" aria-labelledby="hotel-tab">
                 <div class="row">
                     <div class="col-md-8">
                         <label for="hotel_select" class="form-label">Select Hotel</label>
@@ -154,9 +219,11 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <!-- Vehicle Tab -->
-            <div class="tab-pane fade" id="vehicle" role="tabpanel" aria-labelledby="vehicle-tab">
+            @if($showVehicles)
+            <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'vehicle' ? 'show active' : '' }}" id="vehicle" role="tabpanel" aria-labelledby="vehicle-tab">
                 <div class="row">
                     <div class="col-md-8">
                         <label for="vehicle_select" class="form-label">Select Vehicle</label>
@@ -241,9 +308,11 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <!-- Guide Tab -->
-            <div class="tab-pane fade" id="guide" role="tabpanel" aria-labelledby="guide-tab">
+            @if($showGuides)
+            <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'guide' ? 'show active' : '' }}" id="guide" role="tabpanel" aria-labelledby="guide-tab">
                 <div class="row">
                     <div class="col-md-8">
                         <label for="guide_select" class="form-label">Select Guide</label>
@@ -266,9 +335,12 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <!-- Representative Tab -->
-            <div class="tab-pane fade" id="representative" role="tabpanel" aria-labelledby="representative-tab">
+            @if($showRepresentatives)
+            <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'representative' ? 'show active' : '' }}" id="representative" role="tabpanel" aria-labelledby="representative-tab">
+
                 <div class="row">
                     <div class="col-md-8">
                         <label for="representative_select" class="form-label">Select Representative</label>
@@ -291,9 +363,12 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <!-- Extra Services Tab -->
-            <div class="tab-pane fade" id="extra" role="tabpanel" aria-labelledby="extra-tab">
+            @if($showExtraServices)
+            <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'extra' ? 'show active' : '' }}" id="extra" role="tabpanel" aria-labelledby="extra-tab">
+
                 <div class="row">
                     <div class="col-md-8">
                         <label for="extra_select" class="form-label">Select Extra Service</label>
@@ -316,6 +391,207 @@
                     </div>
                 </div>
             </div>
+            @endif
+
+            <!-- Tickets Tab -->
+            @if($showTickets)
+            <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'ticket' ? 'show active' : '' }}" id="ticket" role="tabpanel" aria-labelledby="ticket-tab">
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <label for="ticket_select" class="form-label">Select Ticket</label>
+                        <select class="form-select" id="ticket_select" name="ticket_id">
+                            <option value="">Choose a ticket...</option>
+                            @foreach($availableResources['tickets'] as $ticket)
+                                @php
+                                    $currency = $ticket->currency ?: '$';
+                                    $price = $ticket->price_per_person ?? null;
+                                    $priceText = $price ? (' - ' . $currency . ' ' . number_format((float)$price, 2) . ' /person') : '';
+                                @endphp
+                                <option value="{{ $ticket->id }}" data-price-per-person="{{ $ticket->price_per_person ?? '' }}" data-currency="{{ $ticket->currency ?? '' }}">
+                                    {{ $ticket->name }}@if($ticket->city) ({{ $ticket->city->name }})@endif{!! $priceText !!}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="button" class="btn btn-primary w-100" id="addTicketBtn" >
+                                <i class="fas fa-plus me-1"></i>Add Ticket
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="ticket_date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="ticket_date" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="ticket_time" class="form-label">Time</label>
+                        <input type="time" class="form-control" id="ticket_time" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="ticket_quantity" class="form-label">Quantity</label>
+                        <input type="number" min="1" step="1" class="form-control" id="ticket_quantity" placeholder="e.g. 2" />
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="ticket_price_type" class="form-label">Price Type</label>
+                        <select id="ticket_price_type" class="form-select">
+                            <option value="person" selected>Per Person</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="ticket_new_price" class="form-label">New Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="ticket_currency_badge_new">$</span>
+                            <input type="number" step="0.01" class="form-control" id="ticket_new_price" placeholder="Enter new price" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="ticket_increase_percent" class="form-label">Increase By (%)</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" id="ticket_increase_percent" placeholder="e.g. 10" />
+                            <button type="button" class="btn btn-outline-secondary" id="ticket_increase_btn">Increase Price</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+
+            <!-- Dahabia Tab -->
+            @if($showDahabias)
+            <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'dahabia' ? 'show active' : '' }}" id="dahabia" role="tabpanel" aria-labelledby="dahabia-tab">
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <label for="dahabia_select" class="form-label">Select Dahabia</label>
+                        <select class="form-select" id="dahabia_select" name="dahabia_id">
+                            <option value="">Choose a dahabia...</option>
+                            @foreach($availableResources['dahabias'] as $dahabia)
+                                @php
+                                    $currency = $dahabia->currency ?: '$';
+                                    $pricePerPerson = $dahabia->price_per_person ?? null;
+                                    $pricePerCharter = $dahabia->price_per_charter ?? null;
+                                    $priceParts = [];
+                                    if(!is_null($pricePerPerson) && $pricePerPerson !== '') {
+                                        $priceParts[] = $currency . ' ' . number_format((float)$pricePerPerson, 2) . ' /person';
+                                    }
+                                    if(!is_null($pricePerCharter) && $pricePerCharter !== '') {
+                                        $priceParts[] = $currency . ' ' . number_format((float)$pricePerCharter, 2) . ' /charter';
+                                    }
+                                    $priceText = count($priceParts) ? ' - ' . implode(' | ', $priceParts) : '';
+                                @endphp
+                                <option value="{{ $dahabia->id }}" data-price-per-person="{{ $dahabia->price_per_person }}" data-price-per-charter="{{ $dahabia->price_per_charter }}" data-currency="{{ $dahabia->currency }}">
+                                    {{ $dahabia->name }}@if($dahabia->city) ({{ $dahabia->city->name }})@endif{!! $priceText !!}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="button" class="btn btn-primary w-100" id="addDahabiaBtn" >
+                                <i class="fas fa-plus me-1"></i>Add Dahabia
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="dahabia_from_date" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="dahabia_from_date" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dahabia_from_time" class="form-label">From Time</label>
+                        <input type="time" class="form-control" id="dahabia_from_time" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dahabia_to_date" class="form-label">To Date</label>
+                        <input type="date" class="form-control" id="dahabia_to_date" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dahabia_to_time" class="form-label">To Time</label>
+                        <input type="time" class="form-control" id="dahabia_to_time" />
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="dahabia_price_type" class="form-label">Price Type</label>
+                        <select id="dahabia_price_type" class="form-select">
+                            <option value="person" selected>Per Person</option>
+                            <option value="charter">Per Charter</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dahabia_new_price" class="form-label">New Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="dahabia_currency_badge_new">$</span>
+                            <input type="number" step="0.01" class="form-control" id="dahabia_new_price" placeholder="Enter new price" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dahabia_increase_percent" class="form-label">Increase By (%)</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" id="dahabia_increase_percent" placeholder="e.g. 10" />
+                            <button type="button" class="btn btn-outline-secondary" id="dahabia_increase_btn">Increase Price</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Restaurant Tab -->
+            @if($showRestaurants)
+            <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'restaurant' ? 'show active' : '' }}" id="restaurant" role="tabpanel" aria-labelledby="restaurant-tab">
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <label for="restaurant_select" class="form-label">Select Restaurant</label>
+                        <select class="form-select" id="restaurant_select" name="restaurant_id">
+                            <option value="">Choose a restaurant...</option>
+                            @foreach($availableResources['restaurants'] as $restaurant)
+                                <option value="{{ $restaurant->id }}"> 
+                                    {{ $restaurant->name }}@if($restaurant->city) ({{ $restaurant->city->name }})@endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="button" class="btn btn-primary w-100" id="addRestaurantBtn" >
+                                <i class="fas fa-plus me-1"></i>Add Restaurant
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="restaurant_date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="restaurant_date" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="restaurant_time" class="form-label">Time</label>
+                        <input type="time" class="form-control" id="restaurant_time" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="restaurant_seats" class="form-label">Number of Seats</label>
+                        <input type="number" min="1" step="1" class="form-control" id="restaurant_seats" placeholder="e.g. 4" />
+                    </div>
+                </div>
+
+            </div>
+            @endif
         </div>
         @endif
 
@@ -333,9 +609,7 @@
                 </h6>
                 @if($inquiry->resources->count() > 0)
                     <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-secondary" id="toggleDetailsBtn">
-                            <i class="fas fa-eye me-1"></i>Toggle Details
-                        </button>
+                        
                         <button type="button" class="btn btn-outline-primary" id="calculateTotalBtn">
                             <i class="fas fa-calculator me-1"></i>Calculate Total
                         </button>
@@ -370,9 +644,34 @@
                     @forelse($inquiry->resources as $resource)
                         <tr data-resource-id="{{ $resource->id }}" class="resource-row">
                             <td>
-                                <span class="badge bg-{{ $resource->resource_type === 'hotel' ? 'primary' : ($resource->resource_type === 'vehicle' ? 'success' : ($resource->resource_type === 'guide' ? 'info' : ($resource->resource_type === 'representative' ? 'warning' : 'secondary'))) }}">
-                                    <i class="fas fa-{{ $resource->resource_type === 'hotel' ? 'hotel' : ($resource->resource_type === 'vehicle' ? 'car' : ($resource->resource_type === 'guide' ? 'user-tie' : ($resource->resource_type === 'representative' ? 'handshake' : 'plus-circle'))) }} me-1"></i>
-                                    {{ ucfirst($resource->resource_type) }}
+                                @php
+                                    $badgeColor = match($resource->resource_type) {
+                                        'hotel' => 'bg-primary',
+                                        'vehicle' => 'bg-success',
+                                        'guide' => 'bg-info',
+                                        'representative' => 'bg-warning',
+                                        'extra' => 'bg-secondary',
+                                        'ticket' => 'bg-purple',
+                                        'dahabia' => 'bg-cyan',
+                                        'restaurant' => 'bg-orange',
+                                        default => 'bg-secondary'
+                                    };
+                                    
+                                    $icon = match($resource->resource_type) {
+                                        'hotel' => 'fas fa-hotel',
+                                        'vehicle' => 'fas fa-car',
+                                        'guide' => 'fas fa-user-tie',
+                                        'representative' => 'fas fa-handshake',
+                                        'extra' => 'fas fa-plus-circle',
+                                        'ticket' => 'fas fa-ticket-alt',
+                                        'dahabia' => 'fas fa-sailboat',
+                                        'restaurant' => 'fas fa-utensils',
+                                        default => 'fas fa-question-circle'
+                                    };
+                                @endphp
+                                <span class="badge {{ $badgeColor }}">
+                                    <i class="{{ $icon }} me-1"></i>
+                                    {{ ucfirst(str_replace('_', ' ', $resource->resource_type)) }}
                                 </span>
                             </td>
                             <td>
@@ -759,6 +1058,31 @@ function waitForJQuery() {
                 console.log('Extra selected:', resourceId, 'Button disabled:', $('#addExtraBtn').prop('disabled'));
             });
             
+            $('#ticket_select').on('change', function() {
+                const resourceId = $(this).val();
+                $('#addTicketBtn').prop('disabled', !resourceId);
+                console.log('Ticket selected:', resourceId, 'Button disabled:', $('#addTicketBtn').prop('disabled'));
+                const selected = $(this).find('option:selected');
+                const currency = selected.data('currency') || '$';
+                $('#ticket_currency_badge_new').text(currency);
+            });
+            
+            
+            $('#dahabia_select').on('change', function() {
+                const resourceId = $(this).val();
+                $('#addDahabiaBtn').prop('disabled', !resourceId);
+                console.log('Dahabia selected:', resourceId, 'Button disabled:', $('#addDahabiaBtn').prop('disabled'));
+                const selected = $(this).find('option:selected');
+                const currency = selected.data('currency') || '$';
+                $('#dahabia_currency_badge_new').text(currency);
+            });
+            
+            $('#restaurant_select').on('change', function() {
+                const resourceId = $(this).val();
+                $('#addRestaurantBtn').prop('disabled', !resourceId);
+                console.log('Restaurant selected:', resourceId, 'Button disabled:', $('#addRestaurantBtn').prop('disabled'));
+            });
+            
             // Handle add resource button clicks
             $('#addHotelBtn').on('click', function() {
                 addResource('hotel');
@@ -799,6 +1123,19 @@ function waitForJQuery() {
                 addResource('extra');
             });
             
+            $('#addTicketBtn').on('click', function() {
+                addResource('ticket');
+            });
+            
+            
+            $('#addDahabiaBtn').on('click', function() {
+                addResource('dahabia');
+            });
+            
+            $('#addRestaurantBtn').on('click', function() {
+                addResource('restaurant');
+            });
+            
             // Increase price by percentage button (compute from DB price via selected option)
             $('#hotel_increase_btn').on('click', function() {
                 const selected = $('#hotel_select').find('option:selected');
@@ -815,6 +1152,41 @@ function waitForJQuery() {
                 const increased = original * (1 + percent / 100);
                 $('#hotel_new_price').val(increased.toFixed(2));
             });
+            
+            $('#ticket_increase_btn').on('click', function() {
+                const selected = $('#ticket_select').find('option:selected');
+                const original = parseFloat(selected.data('price-per-person'));
+                const percent = parseFloat($('#ticket_increase_percent').val());
+                if (!selected.val() || isNaN(original)) {
+                    showAlert('error', 'Select a ticket with a valid price first.');
+                    return;
+                }
+                if (isNaN(percent)) {
+                    showAlert('error', 'Please enter a valid percentage to increase/decrease.');
+                    return;
+                }
+                const increased = original * (1 + percent / 100);
+                $('#ticket_new_price').val(increased.toFixed(2));
+            });
+            
+            
+            $('#dahabia_increase_btn').on('click', function() {
+                const selected = $('#dahabia_select').find('option:selected');
+                const priceType = $('#dahabia_price_type').val();
+                const percent = parseFloat($('#dahabia_increase_percent').val());
+                const original = priceType === 'charter' ? parseFloat(selected.data('price-per-charter')) : parseFloat(selected.data('price-per-person'));
+                if (!selected.val() || isNaN(original)) {
+                    showAlert('error', 'Select a dahabia with a valid price first.');
+                    return;
+                }
+                if (isNaN(percent)) {
+                    showAlert('error', 'Please enter a valid percentage to increase/decrease.');
+                    return;
+                }
+                const increased = original * (1 + percent / 100);
+                $('#dahabia_new_price').val(increased.toFixed(2));
+            });
+            
             
             // Function to add a resource
             function addResource(resourceType) {
@@ -864,6 +1236,36 @@ function waitForJQuery() {
                     if (currency) formData.currency = currency;
                     if (newPrice) formData.new_price = newPrice;
                     if (increasePercent) formData.increase_percent = increasePercent;
+                } else if (resourceType === 'ticket') {
+                    formData.start_date = $('#ticket_date').val();
+                    formData.start_time = $('#ticket_time').val();
+                    formData.number_of_rooms = $('#ticket_quantity').val(); // Repurpose field for quantity
+                    formData.price_type = $('#ticket_price_type').val();
+                    const selected = $('#ticket_select').find('option:selected');
+                    const currency = selected.data('currency');
+                    const newPrice = $('#ticket_new_price').val();
+                    const increasePercent = $('#ticket_increase_percent').val();
+                    if (currency) formData.currency = currency;
+                    if (newPrice) formData.new_price = newPrice;
+                    if (increasePercent) formData.increase_percent = increasePercent;
+                } else if (resourceType === 'dahabia') {
+                        formData.start_date = $('#dahabia_from_date').val();
+                        formData.start_time = $('#dahabia_from_time').val();
+                        formData.end_date = $('#dahabia_to_date').val();
+                        formData.end_time = $('#dahabia_to_time').val();
+                        formData.price_type = $('#dahabia_price_type').val();
+                        const selected = $('#dahabia_select').find('option:selected');
+                        const currency = selected.data('currency');
+                        const newPrice = $('#dahabia_new_price').val();
+                        const increasePercent = $('#dahabia_increase_percent').val();
+                        if (currency) formData.currency = currency;
+                        if (newPrice) formData.new_price = newPrice;
+                        if (increasePercent) formData.increase_percent = increasePercent;
+                } else if (resourceType === 'restaurant') {
+                    formData.start_date = $('#restaurant_date').val();
+                    formData.start_time = $('#restaurant_time').val();
+                    formData.number_of_rooms = $('#restaurant_seats').val(); // Repurpose field for seats
+                    // No pricing fields for restaurants since price_per_meal was removed
                 }
                 
                 const originalText = button.html();
@@ -1105,6 +1507,9 @@ function waitForJQuery() {
                     case 'guide': return 'user-tie';
                     case 'representative': return 'handshake';
                     case 'extra': return 'plus-circle';
+                    case 'ticket': return 'ticket-alt';
+                    case 'dahabia': return 'sailboat';
+                    case 'restaurant': return 'utensils';
                     default: return 'question-circle';
                 }
             }

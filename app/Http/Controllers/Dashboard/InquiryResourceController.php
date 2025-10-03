@@ -13,7 +13,6 @@ use App\Models\Extra;
 use App\Models\Ticket;
 use App\Models\Dahabia;
 use App\Models\Restaurant;
-use App\Models\NileCruise;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
@@ -38,13 +37,13 @@ class InquiryResourceController extends Controller
 
             // Validate the request
             $validator = Validator::make($request->all(), [
-                'resource_type' => 'required|string|in:hotel,vehicle,guide,representative,extra,ticket,nile_cruise,dahabia,restaurant',
+                'resource_type' => 'required|string|in:hotel,vehicle,guide,representative,extra,ticket,dahabia,restaurant',
                 'resource_id' => 'required|integer|min:1',
                 'start_date' => 'nullable|date',
                 'start_time' => 'nullable|date_format:H:i',
                 'end_date' => 'nullable|date',
                 'end_time' => 'nullable|date_format:H:i',
-                'price_type' => 'nullable|in:day,hour',
+                'price_type' => 'nullable|' . $this->getPriceTypeValidation($request->resource_type),
                 // hotel fields
                 'check_in' => 'nullable|date',
                 'check_out' => 'nullable|date',
@@ -274,7 +273,7 @@ class InquiryResourceController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'resource_type' => 'required|string|in:hotel,vehicle,guide,representative,extra,ticket,nile_cruise,dahabia,restaurant',
+            'resource_type' => 'required|string|in:hotel,vehicle,guide,representative,extra,ticket,dahabia,restaurant',
         ]);
 
         if ($validator->fails()) {
@@ -302,7 +301,7 @@ class InquiryResourceController extends Controller
             $inquiryResource = InquiryResource::with(['resource', 'addedBy', 'inquiry'])->findOrFail($id);
 
             // Check if user can view this resource
-            if (!Gate::allows('manage-inquiry-resources') && !Gate::allows('view-inquiry', $inquiryResource->inquiry)) {
+            if (!Gate::allows('manage-inquiry-resources') && !Gate::allows('view', $inquiryResource->inquiry)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You are not authorized to view this resource.'
@@ -369,7 +368,6 @@ class InquiryResourceController extends Controller
             'representative' => Representative::where('id', $resourceId)->exists(),
             'extra' => Extra::where('id', $resourceId)->exists(),
             'ticket' => Ticket::where('id', $resourceId)->exists(),
-            'nile_cruise' => NileCruise::where('id', $resourceId)->exists(),
             'dahabia' => Dahabia::where('id', $resourceId)->exists(),
             'restaurant' => Restaurant::where('id', $resourceId)->exists(),
             default => false
@@ -431,16 +429,6 @@ class InquiryResourceController extends Controller
                     'currency' => $ticket->currency
                 ];
             })->toArray(),
-            'nile_cruise' => NileCruise::active()->with('city')->get(['id', 'name', 'city_id', 'price_per_person', 'price_per_cabin', 'currency'])->map(function($cruise) {
-                return [
-                    'id' => $cruise->id,
-                    'name' => $cruise->name,
-                    'city' => $cruise->city->name ?? 'Unknown City',
-                    'price_per_person' => $cruise->price_per_person,
-                    'price_per_cabin' => $cruise->price_per_cabin,
-                    'currency' => $cruise->currency
-                ];
-            })->toArray(),
             'dahabia' => Dahabia::active()->with('city')->get(['id', 'name', 'city_id', 'price_per_person', 'price_per_charter', 'currency'])->map(function($dahabia) {
                 return [
                     'id' => $dahabia->id,
@@ -451,16 +439,31 @@ class InquiryResourceController extends Controller
                     'currency' => $dahabia->currency
                 ];
             })->toArray(),
-            'restaurant' => Restaurant::active()->with('city')->get(['id', 'name', 'city_id', 'price_per_meal', 'currency'])->map(function($restaurant) {
+            'restaurant' => Restaurant::active()->with('city')->get(['id', 'name', 'city_id', 'currency'])->map(function($restaurant) {
                 return [
                     'id' => $restaurant->id,
                     'name' => $restaurant->name,
                     'city' => $restaurant->city->name ?? 'Unknown City',
-                    'price_per_meal' => $restaurant->price_per_meal,
                     'currency' => $restaurant->currency
                 ];
             })->toArray(),
             default => []
+        };
+    }
+
+    /**
+     * Get price type validation rules based on resource type.
+     */
+    private function getPriceTypeValidation($resourceType): string
+    {
+        return match($resourceType) {
+            'hotel' => 'in:day',
+            'vehicle' => 'in:day,hour',
+            'guide', 'representative', 'extra' => 'in:hour,day',
+            'ticket' => 'in:person',
+            'dahabia' => 'in:person,charter',
+            'restaurant' => 'in:meal',
+            default => 'in:day,hour'
         };
     }
 }

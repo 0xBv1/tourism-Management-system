@@ -23,22 +23,15 @@ class RestaurantRequest extends FormRequest
             'phone' => 'Phone',
             'email' => 'Email',
             'website' => 'Website',
-            'cuisine_type' => 'Cuisine Type',
             'price_range' => 'Price Range',
-            'price_per_meal' => 'Price Per Meal',
             'currency' => 'Currency',
             'cuisines' => 'Cuisines',
-            'features' => 'Features',
-            'amenities' => 'Amenities',
             'images' => 'Images',
             'status' => 'Status',
             'active' => 'Active',
             'enabled' => 'Enabled',
-            'opening_hours' => 'Opening Hours',
             'capacity' => 'Capacity',
             'reservation_required' => 'Reservation Required',
-            'dress_code' => 'Dress Code',
-            'notes' => 'Notes',
         ];
     }
 
@@ -52,26 +45,13 @@ class RestaurantRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
-            'cuisine_type' => ['required', 'string', 'max:100'],
             'price_range' => ['nullable', 'string', 'max:50'],
-            'price_per_meal' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['required', 'string', 'max:3'],
-            'cuisines' => ['nullable', 'array'],
-            'cuisines.*' => ['string', 'max:100'],
-            'features' => ['nullable', 'array'],
-            'features.*' => ['string', 'max:100'],
-            'amenities' => ['nullable', 'array'],
-            'amenities.*' => ['string', 'max:100'],
-            'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['string', 'max:500'],
-            'status' => ['required', Rule::enum(ResourceStatus::class)],
-            'active' => ['nullable', 'boolean'],
-            'enabled' => ['nullable', 'boolean'],
-            'opening_hours' => ['nullable', 'array'],
+                     
+            'active' => ['nullable'],
+            'enabled' => ['nullable'],
             'capacity' => ['nullable', 'integer', 'min:1'],
-            'reservation_required' => ['nullable', 'boolean'],
-            'dress_code' => ['nullable', 'string', 'max:100'],
-            'notes' => ['nullable', 'string'],
+            'reservation_required' => ['nullable'],
         ];
     }
 
@@ -80,6 +60,7 @@ class RestaurantRequest extends FormRequest
         $data = $this->validated();
         $data['active'] = $this->filled('active');
         $data['enabled'] = $this->filled('enabled');
+        $data['reservation_required'] = $this->filled('reservation_required');
         return $data;
     }
 }

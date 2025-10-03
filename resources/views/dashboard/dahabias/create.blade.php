@@ -65,16 +65,7 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="vessel_length" class="form-label">Vessel Length</label>
-                                            <input type="text" class="form-control @error('vessel_length') is-invalid @enderror" 
-                                                   id="vessel_length" name="vessel_length" value="{{ old('vessel_length') }}" placeholder="e.g., 42 meters">
-                                            @error('vessel_length')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
+                                    
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="capacity" class="form-label">Maximum Capacity</label>

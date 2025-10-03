@@ -28,7 +28,7 @@ class DahabiaController extends Controller
         
         session()->flash('message', 'Dahabia Created Successfully!');
         session()->flash('type', 'success');
-        return redirect()->route('dashboard.dahabias.edit', $dahabia);
+        return redirect()->route('dashboard.dahabias.index');
     }
 
     public function show(Dahabia $dahabia)

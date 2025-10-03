@@ -119,16 +119,18 @@ class ResourceAssignmentController extends Controller
             $filters
         );
 
+        $resourceType = $request->resource_type;
+
         return response()->json([
-            'resources' => $resources->map(function ($resource) {
+            'resources' => $resources->map(function ($resource) use ($resourceType) {
                 return [
                     'id' => $resource->id,
                     'name' => $resource->name,
                     'description' => $resource->description ?? '',
-                    'price' => $this->getResourcePrice($resource, $request->resource_type),
+                    'price' => $this->getResourcePrice($resource, $resourceType),
                     'currency' => $resource->currency ?? 'USD',
                     'city' => $resource->city->name ?? '',
-                    'additional_info' => $this->getAdditionalInfo($resource, $request->resource_type),
+                    'additional_info' => $this->getAdditionalInfo($resource, $resourceType),
                 ];
             })
         ]);

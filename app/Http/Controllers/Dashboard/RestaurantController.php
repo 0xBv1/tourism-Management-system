@@ -28,7 +28,7 @@ class RestaurantController extends Controller
         
         session()->flash('message', 'Restaurant Created Successfully!');
         session()->flash('type', 'success');
-        return redirect()->route('dashboard.restaurants.edit', $restaurant);
+        return redirect()->route('dashboard.restaurants.index');
     }
 
     public function show(Restaurant $restaurant)

@@ -24,34 +24,22 @@ class Restaurant extends Model
         'website',
         'cuisine_type',
         'price_range',
-        'price_per_meal',
         'currency',
         'cuisines',
-        'features',
-        'amenities',
-        'images',
         'status',
         'active',
         'enabled',
-        'opening_hours',
         'capacity',
         'reservation_required',
-        'dress_code',
-        'notes',
     ];
 
     protected $casts = [
         'status' => ResourceStatus::class,
         'active' => 'boolean',
         'enabled' => 'boolean',
-        'price_per_meal' => 'decimal:2',
         'capacity' => 'integer',
         'reservation_required' => 'boolean',
         'cuisines' => 'array',
-        'features' => 'array',
-        'amenities' => 'array',
-        'images' => 'array',
-        'opening_hours' => 'array',
     ];
 
     public function city(): BelongsTo
@@ -87,7 +75,8 @@ class Restaurant extends Model
 
     public function scopeByPriceRange($query, $minPrice, $maxPrice)
     {
-        return $query->whereBetween('price_per_meal', [$minPrice, $maxPrice]);
+        // Price range is now categorical, so we'll use price_range field instead
+        return $query->whereNotNull('price_range');
     }
 
     public function scopeByPriceRangeCategory($query, $priceRange)

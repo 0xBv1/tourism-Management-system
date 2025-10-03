@@ -13,7 +13,7 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-utensils me-2"></i>{{ __('Restaurants Management') }}
                     </h4>
-                    @can('create-restaurants')
+                    @can('restaurants.create')
                         <a href="{{ route('dashboard.restaurants.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus me-1"></i>{{ __('Create New Restaurant') }}
                         </a>

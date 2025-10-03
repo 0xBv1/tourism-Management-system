@@ -42,9 +42,7 @@ class TicketRequest extends FormRequest
             'price_per_person' => ['required', 'numeric', 'min:0'],
             'currency' => ['required', 'string', 'max:3'],
             'duration_hours' => ['nullable', 'numeric', 'min:0'],
-            'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['string', 'max:500'],
-            
+                     
             'active' => ['nullable'],
             'enabled' => ['nullable'],
             'min_age' => ['nullable', 'integer', 'min:0', 'max:18'],

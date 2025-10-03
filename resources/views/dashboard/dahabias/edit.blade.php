@@ -3,9 +3,9 @@
 @section('content')
     <div class="page-body">
         <!-- Container-fluid starts-->
-        <x-dashboard.partials.breadcrumb title="Create Nile Cruise">
-            <li class="breadcrumb-item"><a href="{{ route('dashboard.nile-cruises.index') }}">Nile Cruises</a></li>
-            <li class="breadcrumb-item active">Create</li>
+        <x-dashboard.partials.breadcrumb title="Edit Dahabia">
+            <li class="breadcrumb-item"><a href="{{ route('dashboard.dahabias.index') }}">Dahabias</a></li>
+            <li class="breadcrumb-item active">Edit</li>
         </x-dashboard.partials.breadcrumb>
         <!-- Container-fluid Ends-->
 
@@ -16,17 +16,18 @@
                     <x-dashboard.partials.message-alert />
                     <div class="card">
                         <div class="card-header">
-                            <h5>Create Nile Cruise</h5>
+                            <h5>Edit Dahabia</h5>
                         </div>
                         <div class="card-body">
-                            <form action="{{ route('dashboard.nile-cruises.store') }}" method="POST" enctype="multipart/form-data">
+                            <form action="{{ route('dashboard.dahabias.update', $dahabia) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
+                                @method('PUT')
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="name" class="form-label">Nile Cruise Name <span class="text-danger">*</span></label>
+                                            <label for="name" class="form-label">Dahabia Name <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                                   id="name" name="name" value="{{ old('name') }}" required>
+                                                   id="name" name="name" value="{{ old('name', $dahabia->name) }}" required>
                                             @error('name')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -39,7 +40,7 @@
                                                     id="city_id" name="city_id" required>
                                                 <option value="">Select City</option>
                                                 @foreach($cities as $city)
-                                                    <option value="{{ $city->id }}" {{ old('city_id') == $city->id ? 'selected' : '' }}>
+                                                    <option value="{{ $city->id }}" {{ old('city_id', $dahabia->city_id) == $city->id ? 'selected' : '' }}>
                                                         {{ $city->name }}
                                                     </option>
                                                 @endforeach
@@ -56,7 +57,7 @@
                                         <div class="mb-3">
                                             <label for="description" class="form-label">Description</label>
                                             <textarea class="form-control @error('description') is-invalid @enderror" 
-                                                      id="description" name="description" rows="3">{{ old('description') }}</textarea>
+                                                      id="description" name="description" rows="3">{{ old('description', $dahabia->description) }}</textarea>
                                             @error('description')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -65,22 +66,12 @@
                                 </div>
 
                                 <div class="row">
+                                    
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="vessel_type" class="form-label">Vessel Type <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control @error('vessel_type') is-invalid @enderror" 
-                                                   id="vessel_type" name="vessel_type" value="{{ old('vessel_type') }}" 
-                                                   placeholder="e.g., Luxury Ship, Traditional Felucca" required>
-                                            @error('vessel_type')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="capacity" class="form-label">Capacity <span class="text-danger">*</span></label>
+                                            <label for="capacity" class="form-label">Maximum Capacity</label>
                                             <input type="number" class="form-control @error('capacity') is-invalid @enderror" 
-                                                   id="capacity" name="capacity" value="{{ old('capacity') }}" min="1" required>
+                                                   id="capacity" name="capacity" value="{{ old('capacity', $dahabia->capacity) }}" min="1" placeholder="Number of passengers">
                                             @error('capacity')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -93,7 +84,7 @@
                                         <div class="mb-3">
                                             <label for="price_per_person" class="form-label">Price Per Person</label>
                                             <input type="number" step="0.01" class="form-control @error('price_per_person') is-invalid @enderror" 
-                                                   id="price_per_person" name="price_per_person" value="{{ old('price_per_person') }}" min="0" placeholder="0.00">
+                                                   id="price_per_person" name="price_per_person" value="{{ old('price_per_person', $dahabia->price_per_person) }}" min="0" placeholder="0.00">
                                             @error('price_per_person')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -101,10 +92,10 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
-
-                                            <input type="number" step="0.01" class="form-control @error('price_per_cabin') is-invalid @enderror" 
-                                                   id="price_per_cabin" name="price_per_cabin" value="{{ old('price_per_cabin') }}" min="0" placeholder="0.00">
-                                            @error('price_per_cabin')
+                                            <label for="price_per_charter" class="form-label">Price Per Charter</label>
+                                            <input type="number" step="0.01" class="form-control @error('price_per_charter') is-invalid @enderror" 
+                                                   id="price_per_charter" name="price_per_charter" value="{{ old('price_per_charter', $dahabia->price_per_charter) }}" min="0" placeholder="0.00">
+                                            @error('price_per_charter')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -116,7 +107,7 @@
                                                     id="currency" name="currency" required>
                                                 <option value="">Select Currency</option>
                                                 @foreach(\App\Services\Dashboard\Currency::getSupportedCurrencies() as $currencyCode => $currencyName)
-                                                    <option value="{{ $currencyCode }}" {{ old('currency', 'USD') == $currencyCode ? 'selected' : '' }}>
+                                                    <option value="{{ $currencyCode }}" {{ old('currency', $dahabia->currency ?? 'USD') == $currencyCode ? 'selected' : '' }}>
                                                         {{ $currencyCode }} - {{ $currencyName }}
                                                     </option>
                                                 @endforeach
@@ -131,9 +122,9 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="departure_location" class="form-label">Departure Location <span class="text-danger">*</span></label>
+                                            <label for="departure_location" class="form-label">Departure Location</label>
                                             <input type="text" class="form-control @error('departure_location') is-invalid @enderror" 
-                                                   id="departure_location" name="departure_location" value="{{ old('departure_location') }}" required>
+                                                   id="departure_location" name="departure_location" value="{{ old('departure_location', $dahabia->departure_location) }}" placeholder="Starting point">
                                             @error('departure_location')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -141,9 +132,9 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="arrival_location" class="form-label">Arrival Location <span class="text-danger">*</span></label>
+                                            <label for="arrival_location" class="form-label">Arrival Location</label>
                                             <input type="text" class="form-control @error('arrival_location') is-invalid @enderror" 
-                                                   id="arrival_location" name="arrival_location" value="{{ old('arrival_location') }}" required>
+                                                   id="arrival_location" name="arrival_location" value="{{ old('arrival_location', $dahabia->arrival_location) }}" placeholder="Ending point">
                                             @error('arrival_location')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -152,32 +143,12 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-12">
                                         <div class="mb-3">
-                                            <label for="duration_nights" class="form-label">Duration (Nights) <span class="text-danger">*</span></label>
-                                            <input type="number" class="form-control @error('duration_nights') is-invalid @enderror" 
-                                                   id="duration_nights" name="duration_nights" value="{{ old('duration_nights') }}" min="1" required>
-                                            @error('duration_nights')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="check_in_time" class="form-label">Check-in Time</label>
-                                            <input type="time" class="form-control @error('check_in_time') is-invalid @enderror" 
-                                                   id="check_in_time" name="check_in_time" value="{{ old('check_in_time') }}">
-                                            @error('check_in_time')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="check_out_time" class="form-label">Check-out Time</label>
-                                            <input type="time" class="form-control @error('check_out_time') is-invalid @enderror" 
-                                                   id="check_out_time" name="check_out_time" value="{{ old('check_out_time') }}">
-                                            @error('check_out_time')
+                                            <label for="route_description" class="form-label">Route Description</label>
+                                            <textarea class="form-control @error('route_description') is-invalid @enderror" 
+                                                      id="route_description" name="route_description" rows="3" placeholder="Describe the sailing route">{{ old('route_description', $dahabia->route_description) }}</textarea>
+                                            @error('route_description')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -185,33 +156,38 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="crew_count" class="form-label">Crew Count</label>
+                                            <input type="number" class="form-control @error('crew_count') is-invalid @enderror" 
+                                                   id="crew_count" name="crew_count" value="{{ old('crew_count', $dahabia->crew_count) }}" min="0" placeholder="Number of crew members">
+                                            @error('crew_count')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="duration_nights" class="form-label">Duration (Nights)</label>
+                                            <input type="number" class="form-control @error('duration_nights') is-invalid @enderror" 
+                                                   id="duration_nights" name="duration_nights" value="{{ old('duration_nights', $dahabia->duration_nights) }}" min="0" placeholder="Number of nights">
+                                            @error('duration_nights')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="meal_plan" class="form-label">Meal Plan</label>
                                             <select class="form-control @error('meal_plan') is-invalid @enderror" 
                                                     id="meal_plan" name="meal_plan">
                                                 <option value="">Select Meal Plan</option>
-                                                <option value="Bed & Breakfast" {{ old('meal_plan') == 'Bed & Breakfast' ? 'selected' : '' }}>Bed & Breakfast</option>
-                                                <option value="Half Board" {{ old('meal_plan') == 'Half Board' ? 'selected' : '' }}>Half Board</option>
-                                                <option value="Full Board" {{ old('meal_plan') == 'Full Board' ? 'selected' : '' }}>Full Board</option>
-                                                <option value="All Inclusive" {{ old('meal_plan') == 'All Inclusive' ? 'selected' : '' }}>All Inclusive</option>
+                                                <option value="full_board" {{ old('meal_plan', $dahabia->meal_plan) == 'full_board' ? 'selected' : '' }}>Full Board</option>
+                                                <option value="half_board" {{ old('meal_plan', $dahabia->meal_plan) == 'half_board' ? 'selected' : '' }}>Half Board</option>
+                                                <option value="bed_breakfast" {{ old('meal_plan', $dahabia->meal_plan) == 'bed_breakfast' ? 'selected' : '' }}>Bed & Breakfast</option>
+                                                <option value="all_inclusive" {{ old('meal_plan', $dahabia->meal_plan) == 'all_inclusive' ? 'selected' : '' }}>All Inclusive</option>
                                             </select>
                                             @error('meal_plan')
-                                                @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                                            <select class="form-control @error('status') is-invalid @enderror" 
-                                                    id="status" name="status" required>
-                                                <option value="">Select Status</option>
-                                                <option value="available" {{ old('status', 'available') == 'available' ? 'selected' : '' }}>Available</option>
-                                                <option value="occupied" {{ old('status') == 'occupied' ? 'selected' : '' }}>Occupied</option>
-                                                <option value="maintenance" {{ old('status') == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                                                <option value="out_of_service" {{ old('status') == 'out_of_service' ? 'selected' : '' }}>Out of Service</option>
-                                            </select>
-                                            @error('status')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -223,7 +199,7 @@
                                         <div class="mb-3">
                                             <label for="amenities" class="form-label">Amenities</label>
                                             <textarea class="form-control @error('amenities') is-invalid @enderror" 
-                                                      id="amenities" name="amenities" rows="2" placeholder="List available amenities (e.g., Air conditioning, WiFi, Swimming pool)">{{ old('amenities') }}</textarea>
+                                                      id="amenities" name="amenities" rows="2" placeholder="List available amenities (e.g., Air conditioning, WiFi, Minibar)">{{ old('amenities', $dahabia->amenities) }}</textarea>
                                             @error('amenities')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -236,7 +212,7 @@
                                         <div class="mb-3">
                                             <label for="notes" class="form-label">Notes</label>
                                             <textarea class="form-control @error('notes') is-invalid @enderror" 
-                                                      id="notes" name="notes" rows="2" placeholder="Additional notes">{{ old('notes') }}</textarea>
+                                                      id="notes" name="notes" rows="2" placeholder="Additional notes">{{ old('notes', $dahabia->notes) }}</textarea>
                                             @error('notes')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -248,7 +224,7 @@
                                     <div class="col-md-6">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="active" name="active" 
-                                                   {{ old('active') ? 'checked' : '' }}>
+                                                   {{ old('active', $dahabia->active) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="active">
                                                 Active
                                             </label>
@@ -257,7 +233,7 @@
                                     <div class="col-md-6">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="enabled" name="enabled" 
-                                                   {{ old('enabled') ? 'checked' : '' }}>
+                                                   {{ old('enabled', $dahabia->enabled) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="enabled">
                                                 Enabled
                                             </label>
@@ -268,9 +244,9 @@
                                 <div class="row mt-4">
                                     <div class="col-12">
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save me-1"></i>Create Nile Cruise
+                                            <i class="fas fa-save me-1"></i>Update Dahabia
                                         </button>
-                                        <a href="{{ route('dashboard.nile-cruises.index') }}" class="btn btn-secondary ms-2">
+                                        <a href="{{ route('dashboard.dahabias.index') }}" class="btn btn-secondary ms-2">
                                             <i class="fas fa-times me-1"></i>Cancel
                                         </a>
                                     </div>

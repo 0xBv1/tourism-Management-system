@@ -13,7 +13,7 @@
                     <h4 class="card-title mb-0">
                         <i class="fas fa-ship me-2"></i>{{ __('Dahabias Management') }}
                     </h4>
-                    @can('create-dahabias')
+                    @can('dahabias.create')
                         <a href="{{ route('dashboard.dahabias.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus me-1"></i>{{ __('Create New Dahabia') }}
                         </a>

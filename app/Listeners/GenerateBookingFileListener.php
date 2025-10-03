@@ -93,7 +93,7 @@ class GenerateBookingFileListener implements ShouldQueue
     private function generateBookingFilePDF($inquiry): string
     {
         // Load all necessary relationships for PDF generation
-        $inquiry->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles', 'resources.resource', 'resources.addedBy', 'bookingFile.payments']);
+        $inquiry->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles', 'resources.addedBy', 'bookingFile.payments']);
         
         $data = [
             'inquiry' => $inquiry,
