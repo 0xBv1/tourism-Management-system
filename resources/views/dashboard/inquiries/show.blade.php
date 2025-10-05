@@ -127,6 +127,45 @@
                                         <label class="form-label fw-bold">Subject:</label>
                                         <p class="form-control-plaintext">{{ $inquiry->subject }}</p>
                                     </div>
+{{-- tour_itinerary section --}}
+                                    
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Tour Itinerary:</label>
+                                            <div class="border p-3 rounded bg-[#8b5cf6] ">
+                                                <div id="tour-itinerary-display" class="tour-itinerary-content fw-bold" style="white-space: pre-wrap; line-height: 1.6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                                    @if($inquiry->tour_itinerary)
+                                                        {{ $inquiry->tour_itinerary }}
+                                                    @else
+                                                        <em class="text-muted">No tour itinerary added yet.</em>
+                                                    @endif
+                                                </div>
+                                                <div id="tour-itinerary-edit" style="display: none;">
+                                                    <textarea id="tour-itinerary-textarea" class="form-control" rows="8" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">{{ $inquiry->tour_itinerary }}</textarea>
+                                                    <div class="mt-2">
+                                                        <button type="button" id="save-tour-itinerary" class="btn btn-success btn-sm">
+                                                            <i class="fa fa-save"></i> Save
+                                                        </button>
+                                                        <button type="button" id="cancel-tour-itinerary" class="btn btn-secondary btn-sm ms-2">
+                                                            <i class="fa fa-times"></i> Cancel
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                @if(admin()->hasRole(['Sales']))
+                                                    <div class="mt-2">
+                                                        <button type="button" id="edit-tour-itinerary" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fa fa-edit"></i> Edit Itinerary
+                                                        </button>
+                                                    </div>
+                                                @elseif(!admin()->hasRole(['Sales']))
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">
+                                                            <i class="fa fa-lock"></i> Only Sales role can edit this content
+                                                        </small>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    
 
                                     {{-- Payment Information section hidden as requested --}}
                                     {{-- 
@@ -266,6 +305,115 @@
         <!-- Container-fluid Ends-->
     </div>
 @endsection
+
+@push('js')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editButton = document.getElementById('edit-tour-itinerary');
+    const saveButton = document.getElementById('save-tour-itinerary');
+    const cancelButton = document.getElementById('cancel-tour-itinerary');
+    const displayDiv = document.getElementById('tour-itinerary-display');
+    const editDiv = document.getElementById('tour-itinerary-edit');
+    const textarea = document.getElementById('tour-itinerary-textarea');
+    
+    if (editButton) {
+        editButton.addEventListener('click', function() {
+            displayDiv.style.display = 'none';
+            editDiv.style.display = 'block';
+            editButton.style.display = 'none';
+            textarea.focus();
+        });
+    }
+    
+    if (cancelButton) {
+        cancelButton.addEventListener('click', function() {
+            displayDiv.style.display = 'block';
+            editDiv.style.display = 'none';
+            editButton.style.display = 'inline-block';
+            // Reset textarea to original content
+            const originalContent = displayDiv.textContent.trim();
+            textarea.value = originalContent === 'No tour itinerary added yet.' ? '' : originalContent;
+        });
+    }
+    
+    if (saveButton) {
+        saveButton.addEventListener('click', function() {
+            const tourItinerary = textarea.value;
+            
+            // Show loading state
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+            
+            // Send AJAX request
+            fetch('{{ route("dashboard.inquiries.update-tour-itinerary", $inquiry) }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    tour_itinerary: tourItinerary
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update display content
+                    if (data.tour_itinerary && data.tour_itinerary.trim()) {
+                        displayDiv.textContent = data.tour_itinerary;
+                    } else {
+                        displayDiv.innerHTML = '<em class="text-muted">No tour itinerary added yet.</em>';
+                    }
+                    
+                    // Switch back to display mode
+                    displayDiv.style.display = 'block';
+                    editDiv.style.display = 'none';
+                    editButton.style.display = 'inline-block';
+                    
+                    // Show success message
+                    showAlert('success', data.message);
+                } else {
+                    showAlert('error', data.message || 'Failed to update tour itinerary');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while updating tour itinerary');
+            })
+            .finally(() => {
+                // Reset button state
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="fa fa-save"></i> Save';
+            });
+        });
+    }
+    
+    function showAlert(type, message) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at the top of the page body
+        const pageBody = document.querySelector('.page-body');
+        if (pageBody) {
+            pageBody.insertBefore(alertDiv, pageBody.firstChild);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    }
+});
+</script>
+@endpush
 
 
 

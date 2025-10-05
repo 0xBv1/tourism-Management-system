@@ -280,4 +280,36 @@ class InquiryController extends Controller
         session()->flash('type', 'success');
         return redirect()->route('dashboard.inquiries.show', $inquiry);
     }
+
+    /**
+     * Update tour itinerary for an inquiry
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Inquiry  $inquiry
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateTourItinerary(Request $request, Inquiry $inquiry)
+    {
+        // Check if user has Sales role
+        if (!admin()->hasRole(['Sales'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only Sales role can edit tour itinerary.'
+            ], 403);
+        }
+
+        $request->validate([
+            'tour_itinerary' => ['nullable', 'string']
+        ]);
+
+        $inquiry->update([
+            'tour_itinerary' => $request->tour_itinerary
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tour itinerary updated successfully!',
+            'tour_itinerary' => $inquiry->tour_itinerary
+        ]);
+    }
 }

@@ -162,6 +162,22 @@
                                     @enderror
                                 </div>
 
+                                @if(admin()->hasRole(['Sales']))
+                                    <div class="mb-3">
+                                        <label for="tour_itinerary" class="form-label">Tour Itinerary</label>
+                                        <textarea class="form-control @error('tour_itinerary') is-invalid @enderror" 
+                                                  id="tour_itinerary" name="tour_itinerary" rows="8" 
+                                                  placeholder="Enter detailed tour itinerary...">{{ old('tour_itinerary', $inquiry->tour_itinerary) }}</textarea>
+                                        @error('tour_itinerary')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <small class="form-text text-muted">Only Sales role can edit this field. All roles can view it.</small>
+                                    </div>
+                                @else
+                                    <!-- Hidden field to maintain form data for non-Sales roles -->
+                                    <input type="hidden" name="tour_itinerary" value="{{ $inquiry->tour_itinerary }}">
+                                @endif
+
                                 @if(admin()->can('inquiries.edit') || admin()->hasRole(['Administrator', 'Admin', 'Sales', 'Reservation', 'Operator']))
                                     <div class="row">
                                         <div class="col-12">

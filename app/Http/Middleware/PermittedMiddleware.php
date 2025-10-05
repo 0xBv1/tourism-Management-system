@@ -23,6 +23,7 @@ class PermittedMiddleware
         'dashboard.debug.user-roles',
         'dashboard.inquiries.confirm-form',
         'dashboard.inquiries.process-confirmation',
+        'dashboard.inquiries.update-tour-itinerary',
         'dashboard.inquiries.resources.store',
         'dashboard.inquiries.resources.show',
         'dashboard.inquiries.resources.available',

@@ -26,6 +26,7 @@ class Inquiry extends Model
         'tour_name',
         'nationality',
         'subject',
+        'tour_itinerary',
         'status',
         'client_id',
         'assigned_to',

@@ -55,6 +55,7 @@ Route::group([
     Route::post('inquiries/{inquiry}/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
     Route::get('inquiries/{inquiry}/confirm-form', [InquiryController::class, 'showConfirmForm'])->name('inquiries.confirm-form');
     Route::post('inquiries/{inquiry}/process-confirmation', [InquiryController::class, 'processConfirmation'])->name('inquiries.process-confirmation');
+    Route::patch('inquiries/{inquiry}/tour-itinerary', [InquiryController::class, 'updateTourItinerary'])->name('inquiries.update-tour-itinerary');
     
     // Inquiry Resources Management
     Route::group(['prefix' => 'inquiries/{inquiry}', 'as' => 'inquiries.'], function () {
