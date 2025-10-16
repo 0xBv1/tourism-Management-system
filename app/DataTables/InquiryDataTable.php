@@ -117,10 +117,16 @@ class InquiryDataTable extends DataTable
      */
     public function html(): HtmlBuilder
     {
+        // Force HTTPS for AJAX URLs when running on Replit
+        $ajaxUrl = route('dashboard.inquiries.index');
+        if (str_contains(request()->getHost(), 'replit.dev') || str_contains(request()->getHost(), 'repl.co')) {
+            $ajaxUrl = str_replace('http://', 'https://', $ajaxUrl);
+        }
+        
         return $this->builder()
             ->setTableId('data-table')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->ajax($ajaxUrl)
             ->dom('Blfrtip')
             ->orderBy(0)
             ->selectStyleSingle()
