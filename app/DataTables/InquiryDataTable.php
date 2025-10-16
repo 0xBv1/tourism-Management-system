@@ -10,6 +10,7 @@ use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
+use Yajra\DataTables\Services\DataTable;
 
 /**
  * InquiryDataTable Class
@@ -24,7 +25,7 @@ use Yajra\DataTables\Html\Column;
  * - Export functionality (Excel, CSV, Print)
  * - Responsive design with Bootstrap styling
  */
-class InquiryDataTable extends BaseDataTable
+class InquiryDataTable extends DataTable
 {
     /**
      * Process and format the data for the DataTable
@@ -119,7 +120,7 @@ class InquiryDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('data-table')
             ->columns($this->getColumns())
-            ->ajax($this->getAjaxUrl())
+            ->minifiedAjax()
             ->dom('Blfrtip')
             ->orderBy(0)
             ->selectStyleSingle()
