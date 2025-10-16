@@ -46,6 +46,39 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
 }
+
+/* Meal preview styling */
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Featured meals badge */
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+/* Meals count badge */
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000 !important;
+}
+
+/* Table responsive improvements */
+.table-responsive {
+    border-radius: 0.375rem;
+}
+
+/* Action buttons spacing */
+.btn-group .btn {
+    margin-right: 2px;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
 </style>
 @endpush
 

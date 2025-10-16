@@ -72,7 +72,7 @@ class GenerateBookingFileListener implements ShouldQueue
         // Get all users assigned to this inquiry
         $assignedUsers = $inquiry->getAllAssignedUsers();
         foreach ($assignedUsers as $assignedUserData) {
-            if ($assignedUserData['user']) {
+            if (isset($assignedUserData['user']) && $assignedUserData['user']) {
                 $usersToNotify->push($assignedUserData['user']);
             }
         }

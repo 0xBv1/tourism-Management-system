@@ -26,6 +26,7 @@ class InquiryResource extends Model
         'inquiry_id',
         'resource_type',
         'resource_id',
+        'resource_name',
         'added_by',
         'start_at',
         'end_at',
@@ -43,6 +44,7 @@ class InquiryResource extends Model
         'effective_price',
         'currency',
         'price_note',
+        'resource_details',
     ];
 
     protected $casts = [
@@ -60,6 +62,7 @@ class InquiryResource extends Model
         'new_price' => 'decimal:2',
         'increase_percent' => 'decimal:2',
         'effective_price' => 'decimal:2',
+        'resource_details' => 'array',
     ];
 
     /**
@@ -119,6 +122,17 @@ class InquiryResource extends Model
      */
     public function getResourceNameAttribute(): string
     {
+        // For internal extra services, use the stored resource_name field
+        if ($this->resource_type === 'extra' && $this->attributes['resource_name']) {
+            return $this->attributes['resource_name'];
+        }
+        
+        // For other internal services, use stored resource_name if available
+        if ($this->attributes['resource_name']) {
+            return $this->attributes['resource_name'];
+        }
+        
+        // For external resources, get name from related model
         if (!$this->resource) {
             return 'Unknown Resource';
         }
@@ -310,13 +324,19 @@ class InquiryResource extends Model
         }
 
         if ($this->resource_type === 'hotel' && $this->check_in && $this->check_out) {
-            $nights = $this->check_in->diffInDays($this->check_out);
+            $checkIn = \Carbon\Carbon::parse($this->check_in);
+            $checkOut = \Carbon\Carbon::parse($this->check_out);
+            $nights = $checkIn->diffInDays($checkOut);
             $rooms = $this->number_of_rooms ?? 1;
             return $this->effective_price * $nights * $rooms;
         }
 
         if ($this->duration_in_days && $this->price_type === 'day') {
             return $this->effective_price * $this->duration_in_days;
+        }
+
+        if ($this->duration_in_days && $this->price_type === 'half_day') {
+            return $this->effective_price * $this->duration_in_days * 0.5;
         }
 
         if ($this->start_at && $this->end_at && $this->price_type === 'hour') {

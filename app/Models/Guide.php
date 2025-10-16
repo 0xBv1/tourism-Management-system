@@ -136,9 +136,10 @@ class Guide extends Model
         return $this->status->getColor();
     }
 
-    public function getStatusLabelAttribute(): string
+    public function settlements(): HasMany
     {
-        return $this->status->getLabel();
+        return $this->hasMany(Settlement::class, 'resource_id')
+            ->where('resource_type', 'guide');
     }
 
     public function isAvailable(): bool

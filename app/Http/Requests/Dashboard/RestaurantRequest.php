@@ -32,6 +32,12 @@ class RestaurantRequest extends FormRequest
             'enabled' => 'Enabled',
             'capacity' => 'Capacity',
             'reservation_required' => 'Reservation Required',
+            'meals.*.name' => 'Meal Name',
+            'meals.*.description' => 'Meal Description',
+            'meals.*.price' => 'Meal Price',
+            'meals.*.currency' => 'Meal Currency',
+            'meals.*.is_featured' => 'Featured Meal',
+            'meals.*.is_available' => 'Available Meal',
         ];
     }
 
@@ -52,6 +58,14 @@ class RestaurantRequest extends FormRequest
             'enabled' => ['nullable'],
             'capacity' => ['nullable', 'integer', 'min:1'],
             'reservation_required' => ['nullable'],
+            'meals' => ['nullable', 'array'],
+            'meals.*.name' => ['required_with:meals', 'string', 'max:255'],
+            'meals.*.description' => ['nullable', 'string'],
+            'meals.*.price' => ['required_with:meals', 'numeric', 'min:0'],
+            'meals.*.currency' => ['required_with:meals', 'string', 'max:3'],
+            'meals.*.is_featured' => ['nullable', 'boolean'],
+            'meals.*.is_available' => ['nullable', 'boolean'],
+            'meals.*.id' => ['nullable', 'integer', 'exists:meals,id'],
         ];
     }
 

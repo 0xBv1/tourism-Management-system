@@ -177,20 +177,15 @@
                 </div>
 
                 <div class="row mt-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="vehicle_from_date" class="form-label">From Date</label>
                         <input type="date" class="form-control" id="vehicle_from_date" />
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="vehicle_from_time" class="form-label">From Time</label>
                         <input type="time" class="form-control" id="vehicle_from_time" />
                     </div>
-                    <div class="col-md-3">
-                        <label for="vehicle_to_date" class="form-label">To Date</label>
-                        <input type="date" class="form-control" id="vehicle_to_date" />
-                    </div>
-            
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="vehicle_to_time" class="form-label">To Time</label>
                         <input type="time" class="form-control" id="vehicle_to_time" />
                     </div>
@@ -357,7 +352,7 @@
                                 @endif
                                 @if(!is_null($resource->effective_price))
                                     <div class="small">
-                                        <span class="badge bg-info">{{ $resource->price_type ?? 'day' }}</span>
+                                        <span class="badge bg-info">{{ ucfirst(str_replace('_', ' ', $resource->price_type ?? 'day')) }}</span>
                                         <span class="badge bg-secondary">{{ $resource->currency }} {{ number_format($resource->effective_price, 2) }}</span>
                                     </div>
                                 @endif
@@ -662,7 +657,7 @@ function waitForJQuery() {
                                         </div>` : ''}
                                         ${response.data.effective_price ? `
                                         <div class="small">
-                                            <span class="badge bg-info">${response.data.price_type || 'day'}</span>
+                                            <span class="badge bg-info">${(response.data.price_type || 'day').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                             <span class="badge bg-secondary">${response.data.currency || ''} ${Number(response.data.effective_price).toFixed(2)}</span>
                                         </div>` : ''}
                                         ${(response.data.original_price || response.data.new_price || response.data.increase_percent) ? `
@@ -702,10 +697,19 @@ function waitForJQuery() {
                             showAlert('error', response.message || 'Failed to add resource');
                         }
                     },
-                    error: function(xhr) {
+                    error: function(xhr, status, error) {
                         let message = 'Failed to add resource';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             message = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.message) {
+                                    message = response.message;
+                                }
+                            } catch (e) {
+                                // Could not parse response as JSON
+                            }
                         }
                         showAlert('error', message);
                     },

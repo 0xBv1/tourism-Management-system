@@ -103,7 +103,6 @@ class RolesAndPermissionsSeeder extends Seeder
             case 'Administrator':
                 $specificPermissions = [
                     'settings.show', 'settings.edit',
-                    'telescope.show',
                     'media.access',
                     'redirect-rules.list', 'redirect-rules.create', 'redirect-rules.edit', 'redirect-rules.delete', 'redirect-rules.restore', 'redirect-rules.export', 'redirect-rules.import'
                 ];

@@ -21,6 +21,7 @@ use App\Models\Dahabia;
 use App\Models\Restaurant;
 use App\Observers\BookingFileObserver;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Notifications\ChannelManager;
 use App\Services\Translation\Google\FreeTranslator;
@@ -67,6 +68,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Force HTTPS URLs for assets when running on Replit or production
+        if (request()->isSecure() || str_contains(request()->getHost(), 'replit.dev')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+        
         // Suppress PHP 8.3 deprecation warnings for implicitly nullable parameters
         // until vendor packages are updated to handle PHP 8.3's stricter requirements
         if (PHP_VERSION_ID >= 80300 && !config('app.debug_deprecations', false)) {

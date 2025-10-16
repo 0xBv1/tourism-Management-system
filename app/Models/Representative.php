@@ -140,6 +140,12 @@ class Representative extends Model
         return $query->whereJsonContains('service_areas', $area);
     }
 
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'resource_id')
+            ->where('resource_type', 'representative');
+    }
+
     public function getStatusColorAttribute(): string
     {
         return $this->status->getColor();

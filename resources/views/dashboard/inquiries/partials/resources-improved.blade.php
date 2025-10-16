@@ -18,15 +18,24 @@
             $isAdmin = $user->hasRole(['Admin', 'Administrator']);
             
             // Determine which tabs to show based on role
-            $showHotels = $isReservation || $isAdmin;
-            $showVehicles = $isOperator || $isAdmin;
-            $showGuides = $isOperator || $isAdmin;
-            $showRepresentatives = $isOperator || $isAdmin;
-            $showExtraServices = ($isOperator || $isReservation) || $isAdmin;
-            $showTickets = $isReservation || $isAdmin;
-            $showDahabias = $isReservation || $isAdmin;
-            $showRestaurants = $isReservation || $isAdmin;
+            // $showHotels = $isReservation || $isAdmin;
+            // $showVehicles = $isOperator || $isAdmin;
+            // $showGuides = $isOperator || $isAdmin;
+            // $showRepresentatives = $isOperator || $isAdmin;
+            // $showExtraServices = ($isOperator || $isReservation) || $isAdmin;
+            // $showTickets = $isReservation || $isAdmin;
+            // $showDahabias = $isReservation || $isAdmin;
+            // $showRestaurants = $isReservation || $isAdmin;
             
+
+            $showHotels = $isReservation ||$isOperator || $isAdmin;
+            $showVehicles =$isReservation ||$isOperator || $isAdmin;
+            $showGuides = $isReservation ||$isOperator || $isAdmin;
+            $showRepresentatives = $isReservation ||$isOperator || $isAdmin;
+            $showExtraServices = $isReservation ||$isOperator || $isAdmin;
+            $showTickets = $isReservation ||$isOperator || $isAdmin;
+            $showDahabias = $isReservation ||$isOperator || $isAdmin;
+            $showRestaurants = $isReservation ||$isOperator || $isAdmin;
             // Determine active tab (first visible tab)
             $activeTabSet = false;
             $firstTabId = '';
@@ -184,14 +193,14 @@
                         <label for="hotel_rate_per_adult" class="form-label">Rate/Adult</label>
                         <div class="input-group">
                             <span class="input-group-text" id="hotel_currency_badge_adult">$</span>
-                            <input type="number" step="0.01" class="form-control" id="hotel_rate_per_adult" placeholder="Optional" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="hotel_rate_per_adult" placeholder="Optional" />
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label for="hotel_rate_per_child" class="form-label">Rate/Child</label>
                         <div class="input-group">
                             <span class="input-group-text" id="hotel_currency_badge_child">$</span>
-                            <input type="number" step="0.01" class="form-control" id="hotel_rate_per_child" placeholder="Optional" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="hotel_rate_per_child" placeholder="Optional" />
                         </div>
                     </div>
                 </div>
@@ -207,14 +216,29 @@
                         <label for="hotel_new_price" class="form-label">New Price</label>
                         <div class="input-group">
                             <span class="input-group-text" id="hotel_currency_badge_new">$</span>
-                            <input type="number" step="0.01" class="form-control" id="hotel_new_price" placeholder="Enter new price" />
+                            <input type="number" step="0.5" class="form-control " style="width: 30%;" id="hotel_new_price" placeholder="Enter new price" />
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label for="hotel_increase_percent" class="form-label">Increase By (%)</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" id="hotel_increase_percent" placeholder="e.g. 10" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="hotel_increase_percent" placeholder="e.g. 10" />
                             <button type="button" class="btn btn-outline-secondary" id="hotel_increase_btn">Increase Price</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Allow Multiple Resources Option -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hotel_allow_multiple" name="allow_multiple">
+                            <label class="form-check-label" for="hotel_allow_multiple">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Allow adding the same resource multiple times (bypass duplicate check)
+                                </small>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -264,20 +288,15 @@
                 </div>
 
                 <div class="row mt-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="vehicle_from_date" class="form-label">From Date</label>
                         <input type="date" class="form-control" id="vehicle_from_date" />
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="vehicle_from_time" class="form-label">From Time</label>
                         <input type="time" class="form-control" id="vehicle_from_time" />
                     </div>
-                    <div class="col-md-3">
-                        <label for="vehicle_to_date" class="form-label">To Date</label>
-                        <input type="date" class="form-control" id="vehicle_to_date" />
-                    </div>
-            
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="vehicle_to_time" class="form-label">To Time</label>
                         <input type="time" class="form-control" id="vehicle_to_time" />
                     </div>
@@ -296,14 +315,29 @@
                         <label for="vehicle_new_price" class="form-label">New Price</label>
                         <div class="input-group">
                             <span class="input-group-text" id="vehicle_currency_badge_new">$</span>
-                            <input type="number" step="0.01" class="form-control" id="vehicle_new_price" placeholder="Enter new price" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="vehicle_new_price" placeholder="Enter new price" />
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label for="vehicle_increase_percent" class="form-label">Increase By (%)</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" id="vehicle_increase_percent" placeholder="e.g. 10" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="vehicle_increase_percent" placeholder="e.g. 10" />
                             <button type="button" class="btn btn-outline-secondary" id="vehicle_increase_btn">Increase Price</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Allow Multiple Resources Option -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="vehicle_allow_multiple" name="allow_multiple">
+                            <label class="form-check-label" for="vehicle_allow_multiple">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Allow adding the same resource multiple times (bypass duplicate check)
+                                </small>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -328,9 +362,119 @@
                     <div class="col-md-4">
                         <label class="form-label">&nbsp;</label>
                         <div>
-                            <button type="button" class="btn btn-primary w-100" id="addGuideBtn" >
+                            <button type="button" class="btn btn-primary w-100" id="addGuideBtn" disabled>
                                 <i class="fas fa-plus me-1"></i>Add Guide
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date and Time Section -->
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="guide_start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="guide_start_date" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="guide_start_time" class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="guide_start_time" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="guide_end_time" class="form-label">End Time</label>
+                        <input type="time" class="form-control" id="guide_end_time" />
+                    </div>
+                </div>
+
+                <!-- Pricing Section -->
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="guide_price_type" class="form-label">Price Type</label>
+                        <select id="guide_price_type" class="form-select">
+                            <option value="day">يومية (Daily)</option>
+                            <option value="half_day">نص يومية (Half Daily)</option>
+                            <option value="hour">ساعية (Hourly)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="guide_price" class="form-label">Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="guide_currency_badge">$</span>
+                            <input type="number" step="0.5" class="form-control w-22px" id="guide_price" placeholder="Enter price" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="guide_currency" class="form-label">Currency</label>
+                        <select id="guide_currency" class="form-select">
+                            @foreach(\App\Services\Dashboard\Currency::getSupportedCurrencies() as $currencyCode => $currencyName)
+                                <option value="{{ $currencyCode }}" {{ $currencyCode == 'EGP' ? 'selected' : '' }}>
+                                    {{ $currencyCode }} - {{ $currencyName }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Location and Description Section -->
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label for="guide_location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="guide_location" placeholder="e.g., Pyramids of Giza, Luxor Temple" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="guide_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="guide_description" rows="2" placeholder="Describe the tour or guide services"></textarea>
+                    </div>
+                </div>
+
+                <!-- Language Selection Section -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Languages</label>
+                        <div class="border p-3 rounded bg-light">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Available Languages</label>
+                                    <select id="available-languages" class="form-select" size="6" multiple>
+                                        <option value="arabic">العربية (Arabic)</option>
+                                        <option value="english">English</option>
+                                        <option value="french">Français (French)</option>
+                                        <option value="german">Deutsch (German)</option>
+                                        <option value="spanish">Español (Spanish)</option>
+                                        <option value="italian">Italiano (Italian)</option>
+                                        <option value="russian">Русский (Russian)</option>
+                                        <option value="chinese">中文 (Chinese)</option>
+                                        <option value="japanese">日本語 (Japanese)</option>
+                                        <option value="korean">한국어 (Korean)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Selected Languages</label>
+                                    <select id="selected-languages" class="form-select" size="6" multiple>
+                                        <!-- Selected languages will be shown here -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12 text-center">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="add-language-btn">
+                                        <i class="fas fa-arrow-right"></i> Add Selected
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm ms-2" id="remove-language-btn">
+                                        <i class="fas fa-arrow-left"></i> Remove Selected
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="clear-languages-btn">
+                                        <i class="fas fa-times"></i> Clear All
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Hold Ctrl/Cmd to select multiple languages
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -340,7 +484,6 @@
             <!-- Representative Tab -->
             @if($showRepresentatives)
             <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'representative' ? 'show active' : '' }}" id="representative" role="tabpanel" aria-labelledby="representative-tab">
-
                 <div class="row">
                     <div class="col-md-8">
                         <label for="representative_select" class="form-label">Select Representative</label>
@@ -356,9 +499,119 @@
                     <div class="col-md-4">
                         <label class="form-label">&nbsp;</label>
                         <div>
-                            <button type="button" class="btn btn-primary w-100" id="addRepresentativeBtn" >
+                            <button type="button" class="btn btn-primary w-100" id="addRepresentativeBtn" disabled>
                                 <i class="fas fa-plus me-1"></i>Add Representative
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date and Time Section -->
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="representative_start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="representative_start_date" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="representative_start_time" class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="representative_start_time" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="representative_end_time" class="form-label">End Time</label>
+                        <input type="time" class="form-control" id="representative_end_time" />
+                    </div>
+                </div>
+
+                <!-- Pricing Section -->
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label for="representative_price_type" class="form-label">Price Type</label>
+                        <select id="representative_price_type" class="form-select">
+                            <option value="day">يومية (Daily)</option>
+                            <option value="half_day">نص يومية (Half Daily)</option>
+                            <option value="hour">ساعية (Hourly)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="representative_price" class="form-label">Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="representative_currency_badge">$</span>
+                            <input type="number" step="0.5" class="form-control w-22px" id="representative_price" placeholder="Enter price" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="representative_currency" class="form-label">Currency</label>
+                        <select id="representative_currency" class="form-select">
+                            @foreach(\App\Services\Dashboard\Currency::getSupportedCurrencies() as $currencyCode => $currencyName)
+                                <option value="{{ $currencyCode }}" {{ $currencyCode == 'EGP' ? 'selected' : '' }}>
+                                    {{ $currencyCode }} - {{ $currencyName }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Location and Description Section -->
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label for="representative_location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="representative_location" placeholder="e.g., Airport, Hotel, Tourist Site" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="representative_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="representative_description" rows="2" placeholder="Describe the representative services"></textarea>
+                    </div>
+                </div>
+
+                <!-- Language Selection Section -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Languages</label>
+                        <div class="border p-3 rounded bg-light">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Available Languages</label>
+                                    <select id="available-representative-languages" class="form-select" size="6" multiple>
+                                        <option value="arabic">العربية (Arabic)</option>
+                                        <option value="english">English</option>
+                                        <option value="french">Français (French)</option>
+                                        <option value="german">Deutsch (German)</option>
+                                        <option value="spanish">Español (Spanish)</option>
+                                        <option value="italian">Italiano (Italian)</option>
+                                        <option value="russian">Русский (Russian)</option>
+                                        <option value="chinese">中文 (Chinese)</option>
+                                        <option value="japanese">日本語 (Japanese)</option>
+                                        <option value="korean">한국어 (Korean)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Selected Languages</label>
+                                    <select id="selected-representative-languages" class="form-select" size="6" multiple>
+                                        <!-- Selected languages will be shown here -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12 text-center">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="add-representative-language-btn">
+                                        <i class="fas fa-arrow-right"></i> Add Selected
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm ms-2" id="remove-representative-language-btn">
+                                        <i class="fas fa-arrow-left"></i> Remove Selected
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="clear-representative-languages-btn">
+                                        <i class="fas fa-times"></i> Clear All
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Hold Ctrl/Cmd to select multiple languages
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -368,26 +621,60 @@
             <!-- Extra Services Tab -->
             @if($showExtraServices)
             <div class="tab-pane fade {{ $activeTabSet && $firstTabId === 'extra' ? 'show active' : '' }}" id="extra" role="tabpanel" aria-labelledby="extra-tab">
-
+                
+                <!-- Service Name -->
                 <div class="row">
-                    <div class="col-md-8">
-                        <label for="extra_select" class="form-label">Select Extra Service</label>
-                        <select class="form-select" id="extra_select" name="extra_id">
-                            <option value="">Choose an extra service...</option>
-                            @foreach($availableResources['extras'] as $extra)
-                                <option value="{{ $extra->id }}">
-                                    {{ $extra->name }}@if($extra->category) - {{ $extra->category }}@endif - {{ $extra->formatted_price }}
+                    <div class="col-md-12">
+                        <label for="extra_service_name" class="form-label">Service Name</label>
+                        <input type="text" class="form-control" id="extra_service_name" placeholder="Enter service name (e.g., Airport Transfer, City Tour)" />
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <label for="extra_service_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="extra_service_description" rows="3" placeholder="Describe the extra service details"></textarea>
+                    </div>
+                </div>
+
+                <!-- Pricing Section -->
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="extra_service_price" class="form-label">Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="extra_currency_badge">$</span>
+                            <input type="number" step="0.5" class="form-control w-22px" id="extra_service_price" placeholder="Enter price" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="extra_service_currency" class="form-label">Currency</label>
+                        <select id="extra_service_currency" class="form-select">
+                            @foreach(\App\Services\Dashboard\Currency::getSupportedCurrencies() as $currencyCode => $currencyName)
+                                <option value="{{ $currencyCode }}" {{ $currencyCode == 'USD' ? 'selected' : '' }}>
+                                    {{ $currencyCode }} - {{ $currencyName }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">&nbsp;</label>
-                        <div>
-                            <button type="button" class="btn btn-primary w-100" id="addExtraBtn" >
-                                <i class="fas fa-plus me-1"></i>Add Service
-                            </button>
-                        </div>
+                        <label for="extra_service_price_type" class="form-label">Price Type</label>
+                        <select id="extra_service_price_type" class="form-select">
+                            <option value="per_person" selected>Per Person</option>
+                            <option value="per_group">Per Group</option>
+                            <option value="per_hour">Per Hour</option>
+                            <option value="per_day">Per Day</option>
+                            <option value="fixed">Fixed Price</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Add Button -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-primary w-100" id="addExtraBtn" disabled>
+                            <i class="fas fa-plus me-1"></i>Add Extra Service
+                        </button>
                     </div>
                 </div>
             </div>
@@ -450,13 +737,13 @@
                         <label for="ticket_new_price" class="form-label">New Price</label>
                         <div class="input-group">
                             <span class="input-group-text" id="ticket_currency_badge_new">$</span>
-                            <input type="number" step="0.01" class="form-control" id="ticket_new_price" placeholder="Enter new price" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="ticket_new_price" placeholder="Enter new price" />
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label for="ticket_increase_percent" class="form-label">Increase By (%)</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" id="ticket_increase_percent" placeholder="e.g. 10" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="ticket_increase_percent" placeholder="e.g. 10" />
                             <button type="button" class="btn btn-outline-secondary" id="ticket_increase_btn">Increase Price</button>
                         </div>
                     </div>
@@ -535,13 +822,13 @@
                         <label for="dahabia_new_price" class="form-label">New Price</label>
                         <div class="input-group">
                             <span class="input-group-text" id="dahabia_currency_badge_new">$</span>
-                            <input type="number" step="0.01" class="form-control" id="dahabia_new_price" placeholder="Enter new price" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="dahabia_new_price" placeholder="Enter new price" />
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label for="dahabia_increase_percent" class="form-label">Increase By (%)</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" id="dahabia_increase_percent" placeholder="e.g. 10" />
+                            <input type="number" step="0.5" class="form-control w-22px" id="dahabia_increase_percent" placeholder="e.g. 10" />
                             <button type="button" class="btn btn-outline-secondary" id="dahabia_increase_btn">Increase Price</button>
                         </div>
                     </div>
@@ -559,7 +846,7 @@
                         <select class="form-select" id="restaurant_select" name="restaurant_id">
                             <option value="">Choose a restaurant...</option>
                             @foreach($availableResources['restaurants'] as $restaurant)
-                                <option value="{{ $restaurant->id }}"> 
+                                <option value="{{ $restaurant->id }}" data-meals="{{ $restaurant->meals->toJson() }}"> 
                                     {{ $restaurant->name }}@if($restaurant->city) ({{ $restaurant->city->name }})@endif
                                 </option>
                             @endforeach
@@ -568,9 +855,53 @@
                     <div class="col-md-4">
                         <label class="form-label">&nbsp;</label>
                         <div>
-                            <button type="button" class="btn btn-primary w-100" id="addRestaurantBtn" >
+                            <button type="button" class="btn btn-primary w-100" id="addRestaurantBtn" disabled>
                                 <i class="fas fa-plus me-1"></i>Add Restaurant
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meals Selection Section -->
+                <div class="row mt-3" id="meals-selection-section" style="display: none;">
+                    <div class="col-md-12">
+                        <label class="form-label">Select Meals</label>
+                        <div class="border p-3 rounded bg-light">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Available Meals</label>
+                                    <select id="available-meals" class="form-select" size="6" multiple>
+                                        <!-- Meals will be populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Selected Meals</label>
+                                    <select id="selected-meals" class="form-select" size="6" multiple>
+                                        <!-- Selected meals will be shown here -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12 text-center">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="add-meal-btn">
+                                        <i class="fas fa-arrow-right"></i> Add Selected
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm ms-2" id="remove-meal-btn">
+                                        <i class="fas fa-arrow-left"></i> Remove Selected
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="clear-meals-btn">
+                                        <i class="fas fa-times"></i> Clear All
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Hold Ctrl/Cmd to select multiple meals
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -693,6 +1024,84 @@
                                             <span><i class="fas fa-child me-1"></i>{{ $resource->number_of_children }} child(ren)</span>
                                         @endif
                                     </div>
+                                @elseif($resource->resource_type === 'guide' && $resource->resource_details && isset($resource->resource_details['selected_languages']))
+                                    <div class="small text-muted mt-1">
+                                        <i class="fas fa-language me-1"></i>
+                                        <strong>{{ count($resource->resource_details['selected_languages']) }} language(s)</strong>
+                                    </div>
+                                    <div class="small mt-1">
+                                        @foreach($resource->resource_details['selected_languages'] as $index => $language)
+                                            @if($index < 3)
+                                                <span class="badge bg-info text-white me-1 mb-1">
+                                                    {{ ucfirst($language) }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                        @if(count($resource->resource_details['selected_languages']) > 3)
+                                            <span class="badge bg-secondary">+{{ count($resource->resource_details['selected_languages']) - 3 }} more</span>
+                                        @endif
+                                    </div>
+                                    @if($resource->resource_details['location'])
+                                        <div class="small text-muted mt-1">
+                                            <i class="fas fa-map-marker-alt me-1"></i>{{ $resource->resource_details['location'] }}
+                                        </div>
+                                    @endif
+                                @elseif($resource->resource_type === 'representative' && $resource->resource_details && isset($resource->resource_details['selected_languages']))
+                                    <div class="small text-muted mt-1">
+                                        <i class="fas fa-language me-1"></i>
+                                        <strong>{{ count($resource->resource_details['selected_languages']) }} language(s)</strong>
+                                    </div>
+                                    <div class="small mt-1">
+                                        @foreach($resource->resource_details['selected_languages'] as $index => $language)
+                                            @if($index < 3)
+                                                <span class="badge bg-warning text-dark me-1 mb-1">
+                                                    {{ ucfirst($language) }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                        @if(count($resource->resource_details['selected_languages']) > 3)
+                                            <span class="badge bg-secondary">+{{ count($resource->resource_details['selected_languages']) - 3 }} more</span>
+                                        @endif
+                                    </div>
+                                    @if($resource->resource_details['location'])
+                                        <div class="small text-muted mt-1">
+                                            <i class="fas fa-map-marker-alt me-1"></i>{{ $resource->resource_details['location'] }}
+                                        </div>
+                                    @endif
+                                @elseif($resource->resource_type === 'restaurant' && $resource->resource_details && isset($resource->resource_details['selected_meals']))
+                                    <div class="small text-muted mt-1">
+                                        <i class="fas fa-utensils me-1"></i>
+                                        <strong>{{ count($resource->resource_details['selected_meals']) }} meal(s) selected</strong>
+                                    </div>
+                                    <div class="small mt-1">
+                                        @foreach($resource->resource_details['selected_meals'] as $index => $meal)
+                                            @if($index < 3)
+                                                <span class="badge bg-light text-dark me-1 mb-1">
+                                                    @if($meal['featured'])⭐ @endif{{ $meal['meal_name'] }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                        @if(count($resource->resource_details['selected_meals']) > 3)
+                                            <span class="badge bg-secondary">+{{ count($resource->resource_details['selected_meals']) - 3 }} more</span>
+                                        @endif
+                                    </div>
+                                @elseif($resource->resource_type === 'extra' && $resource->resource_details && isset($resource->resource_details['is_internal']) && $resource->resource_details['is_internal'])
+                                    <div class="small text-muted mt-1">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <strong>Internal Service</strong>
+                                    </div>
+                                    @if($resource->resource_details['description'])
+                                        <div class="small text-muted mt-1">
+                                            {{ Str::limit($resource->resource_details['description'], 100) }}
+                                        </div>
+                                    @endif
+                                    @if($resource->resource_details['price_type'])
+                                        <div class="small mt-1">
+                                            <span class="badge bg-info text-white">
+                                                {{ ucfirst(str_replace('_', ' ', $resource->resource_details['price_type'])) }}
+                                            </span>
+                                        </div>
+                                    @endif
                                 @endif
                             </td>
                             <td class="resource-details-col" style="display: none;">
@@ -707,7 +1116,7 @@
                                     <div class="fw-bold text-success">
                                         {{ $resource->currency ?? '$' }} {{ number_format($resource->effective_price, 2) }}
                                         @if($resource->price_type)
-                                            <small class="text-muted">/ {{ $resource->price_type }}</small>
+                                            <small class="text-muted">/ {{ ucfirst(str_replace('_', ' ', $resource->price_type)) }}</small>
                                         @endif
                                     </div>
                                     @if($resource->total_cost && $resource->total_cost != $resource->effective_price)
@@ -1045,17 +1454,166 @@ function waitForJQuery() {
                 $('#addGuideBtn').prop('disabled', !resourceId);
                 console.log('Guide selected:', resourceId, 'Button disabled:', $('#addGuideBtn').prop('disabled'));
             });
+
+            // Guide currency change handler
+            $('#guide_currency').on('change', function() {
+                const selectedCurrency = $(this).val();
+                const currencySymbols = {
+                    'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$', 'AUD': 'A$',
+                    'CHF': 'CHF', 'CNY': '¥', 'INR': '₹', 'AED': 'د.إ', 'EGP': 'EGP'
+                };
+                const symbol = currencySymbols[selectedCurrency] || selectedCurrency;
+                $('#guide_currency_badge').text(symbol);
+            });
+
+            // Language selection functionality
+            $('#add-language-btn').on('click', function() {
+                const selectedLanguages = $('#available-languages option:selected');
+                selectedLanguages.each(function() {
+                    const languageOption = $(this);
+                    const languageValue = languageOption.val();
+                    
+                    // Check if language is already selected
+                    if ($('#selected-languages option[value="' + languageValue + '"]').length === 0) {
+                        $('#selected-languages').append(languageOption.clone());
+                        languageOption.remove();
+                    }
+                });
+            });
+            
+            $('#remove-language-btn').on('click', function() {
+                const selectedLanguages = $('#selected-languages option:selected');
+                selectedLanguages.each(function() {
+                    const languageOption = $(this);
+                    const languageValue = languageOption.val();
+                    
+                    // Add back to available languages
+                    $('#available-languages').append(languageOption.clone());
+                    languageOption.remove();
+                });
+            });
+            
+            $('#clear-languages-btn').on('click', function() {
+                // Move all selected languages back to available
+                $('#selected-languages option').each(function() {
+                    $('#available-languages').append($(this).clone());
+                });
+                $('#selected-languages').empty();
+            });
+            
+            // Double-click to move languages
+            $('#available-languages').on('dblclick', 'option', function() {
+                const languageOption = $(this);
+                const languageValue = languageOption.val();
+                
+                if ($('#selected-languages option[value="' + languageValue + '"]').length === 0) {
+                    $('#selected-languages').append(languageOption.clone());
+                    languageOption.remove();
+                }
+            });
+            
+            $('#selected-languages').on('dblclick', 'option', function() {
+                const languageOption = $(this);
+                const languageValue = languageOption.val();
+                
+                $('#available-languages').append(languageOption.clone());
+                languageOption.remove();
+            });
             
             $('#representative_select').on('change', function() {
                 const resourceId = $(this).val();
                 $('#addRepresentativeBtn').prop('disabled', !resourceId);
                 console.log('Representative selected:', resourceId, 'Button disabled:', $('#addRepresentativeBtn').prop('disabled'));
             });
+
+            // Representative currency change handler
+            $('#representative_currency').on('change', function() {
+                const selectedCurrency = $(this).val();
+                const currencySymbols = {
+                    'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$', 'AUD': 'A$',
+                    'CHF': 'CHF', 'CNY': '¥', 'INR': '₹', 'AED': 'د.إ', 'EGP': 'EGP'
+                };
+                const symbol = currencySymbols[selectedCurrency] || selectedCurrency;
+                $('#representative_currency_badge').text(symbol);
+            });
+
+            // Representative language selection functionality
+            $('#add-representative-language-btn').on('click', function() {
+                const selectedLanguages = $('#available-representative-languages option:selected');
+                selectedLanguages.each(function() {
+                    const languageOption = $(this);
+                    const languageValue = languageOption.val();
+                    
+                    // Check if language is already selected
+                    if ($('#selected-representative-languages option[value="' + languageValue + '"]').length === 0) {
+                        $('#selected-representative-languages').append(languageOption.clone());
+                        languageOption.remove();
+                    }
+                });
+            });
             
-            $('#extra_select').on('change', function() {
-                const resourceId = $(this).val();
-                $('#addExtraBtn').prop('disabled', !resourceId);
-                console.log('Extra selected:', resourceId, 'Button disabled:', $('#addExtraBtn').prop('disabled'));
+            $('#remove-representative-language-btn').on('click', function() {
+                const selectedLanguages = $('#selected-representative-languages option:selected');
+                selectedLanguages.each(function() {
+                    const languageOption = $(this);
+                    const languageValue = languageOption.val();
+                    
+                    // Add back to available languages
+                    $('#available-representative-languages').append(languageOption.clone());
+                    languageOption.remove();
+                });
+            });
+            
+            $('#clear-representative-languages-btn').on('click', function() {
+                // Move all selected languages back to available
+                $('#selected-representative-languages option').each(function() {
+                    $('#available-representative-languages').append($(this).clone());
+                });
+                $('#selected-representative-languages').empty();
+            });
+            
+            // Double-click to move representative languages
+            $('#available-representative-languages').on('dblclick', 'option', function() {
+                const languageOption = $(this);
+                const languageValue = languageOption.val();
+                
+                if ($('#selected-representative-languages option[value="' + languageValue + '"]').length === 0) {
+                    $('#selected-representative-languages').append(languageOption.clone());
+                    languageOption.remove();
+                }
+            });
+            
+            $('#selected-representative-languages').on('dblclick', 'option', function() {
+                const languageOption = $(this);
+                const languageValue = languageOption.val();
+                
+                $('#available-representative-languages').append(languageOption.clone());
+                languageOption.remove();
+            });
+            
+            // Extra service form validation
+            function validateExtraServiceForm() {
+                const serviceName = $('#extra_service_name').val().trim();
+                const description = $('#extra_service_description').val().trim();
+                const price = $('#extra_service_price').val();
+                
+                const isValid = serviceName && description && price && parseFloat(price) > 0;
+                $('#addExtraBtn').prop('disabled', !isValid);
+                return isValid;
+            }
+            
+            // Validate form on input changes
+            $('#extra_service_name, #extra_service_description, #extra_service_price').on('input', validateExtraServiceForm);
+            
+            // Extra service currency change handler
+            $('#extra_service_currency').on('change', function() {
+                const selectedCurrency = $(this).val();
+                const currencySymbols = {
+                    'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$', 'AUD': 'A$',
+                    'CHF': 'CHF', 'CNY': '¥', 'INR': '₹', 'AED': 'د.إ', 'EGP': 'EGP'
+                };
+                const symbol = currencySymbols[selectedCurrency] || selectedCurrency;
+                $('#extra_currency_badge').text(symbol);
             });
             
             $('#ticket_select').on('change', function() {
@@ -1079,8 +1637,117 @@ function waitForJQuery() {
             
             $('#restaurant_select').on('change', function() {
                 const resourceId = $(this).val();
+                const selectedOption = $(this).find('option:selected');
+                const mealsData = selectedOption.data('meals');
+                
+                // Clear previous meals
+                $('#available-meals').empty();
+                $('#selected-meals').empty();
+                
+                if (resourceId && mealsData && mealsData.length > 0) {
+                    // Show meals selection section
+                    $('#meals-selection-section').show();
+                    
+                    // Populate available meals
+                    mealsData.forEach(function(meal) {
+                        const option = $('<option></option>')
+                            .attr('value', meal.id)
+                            .attr('data-price', meal.price)
+                            .attr('data-currency', meal.currency)
+                            .attr('data-featured', meal.is_featured)
+                            .text(meal.name + ' - ' + meal.currency + ' ' + parseFloat(meal.price).toFixed(2));
+                        
+                        if (meal.is_featured) {
+                            option.prepend('⭐ ');
+                        }
+                        
+                        $('#available-meals').append(option);
+                    });
+                    
+                    // Enable add button only if meals are selected
+                    $('#addRestaurantBtn').prop('disabled', true);
+                } else {
+                    // Hide meals selection section
+                    $('#meals-selection-section').hide();
                 $('#addRestaurantBtn').prop('disabled', !resourceId);
-                console.log('Restaurant selected:', resourceId, 'Button disabled:', $('#addRestaurantBtn').prop('disabled'));
+                }
+                
+                console.log('Restaurant selected:', resourceId, 'Meals count:', mealsData ? mealsData.length : 0);
+            });
+            
+            // Meal selection functionality
+            $('#add-meal-btn').on('click', function() {
+                const selectedMeals = $('#available-meals option:selected');
+                selectedMeals.each(function() {
+                    const mealOption = $(this);
+                    const mealId = mealOption.val();
+                    const mealText = mealOption.text();
+                    
+                    // Check if meal is already selected
+                    if ($('#selected-meals option[value="' + mealId + '"]').length === 0) {
+                        $('#selected-meals').append(mealOption.clone());
+                        mealOption.remove();
+                    }
+                });
+                
+                // Enable add restaurant button if meals are selected
+                if ($('#selected-meals option').length > 0) {
+                    $('#addRestaurantBtn').prop('disabled', false);
+                }
+            });
+            
+            $('#remove-meal-btn').on('click', function() {
+                const selectedMeals = $('#selected-meals option:selected');
+                selectedMeals.each(function() {
+                    const mealOption = $(this);
+                    const mealId = mealOption.val();
+                    const mealText = mealOption.text();
+                    
+                    // Add back to available meals
+                    $('#available-meals').append(mealOption.clone());
+                    mealOption.remove();
+                });
+                
+                // Disable add restaurant button if no meals selected
+                if ($('#selected-meals option').length === 0) {
+                    $('#addRestaurantBtn').prop('disabled', true);
+                }
+            });
+            
+            $('#clear-meals-btn').on('click', function() {
+                // Move all selected meals back to available
+                $('#selected-meals option').each(function() {
+                    $('#available-meals').append($(this).clone());
+                });
+                $('#selected-meals').empty();
+                $('#addRestaurantBtn').prop('disabled', true);
+            });
+            
+            // Double-click to move meals
+            $('#available-meals').on('dblclick', 'option', function() {
+                const mealOption = $(this);
+                const mealId = mealOption.val();
+                
+                if ($('#selected-meals option[value="' + mealId + '"]').length === 0) {
+                    $('#selected-meals').append(mealOption.clone());
+                    mealOption.remove();
+                    
+                    if ($('#selected-meals option').length > 0) {
+                        $('#addRestaurantBtn').prop('disabled', false);
+                    }
+                }
+            });
+            
+            $('#selected-meals').on('dblclick', 'option', function() {
+                const mealOption = $(this);
+                const mealId = mealOption.val();
+                
+                $('#available-meals').append(mealOption.clone());
+                mealOption.remove();
+                
+                if ($('#selected-meals option').length === 0) {
+                    $('#addRestaurantBtn').prop('disabled', true);
+                }
             });
             
             // Handle add resource button clicks
@@ -1190,22 +1857,38 @@ function waitForJQuery() {
             
             // Function to add a resource
             function addResource(resourceType) {
-                const selectId = '#' + resourceType + '_select';
                 const buttonId = '#add' + resourceType.charAt(0).toUpperCase() + resourceType.slice(1) + 'Btn';
-                const select = $(selectId);
                 const button = $(buttonId);
-                const resourceId = select.val();
                 
-                if (!resourceId) {
-                    showAlert('error', 'Please select a ' + resourceType + ' first');
-                    return;
+                // For internal extra services, we don't need resource_id validation
+                if (resourceType !== 'extra') {
+                    const selectId = '#' + resourceType + '_select';
+                    const select = $(selectId);
+                    const resourceId = select.val();
+                    
+                    if (!resourceId) {
+                        showAlert('error', 'Please select a ' + resourceType + ' first');
+                        return;
+                    }
                 }
                 
                 const formData = {
                     resource_type: resourceType,
-                    resource_id: resourceId,
                     _token: csrfToken
                 };
+                
+                // Add bypass duplicate check if checkbox is checked
+                const allowMultipleCheckbox = $('#' + resourceType + '_allow_multiple');
+                if (allowMultipleCheckbox.length && allowMultipleCheckbox.is(':checked')) {
+                    formData.bypass_duplicate_check = true;
+                }
+                
+                // Add resource_id only for external resources
+                if (resourceType !== 'extra') {
+                    const selectId = '#' + resourceType + '_select';
+                    const select = $(selectId);
+                    formData.resource_id = select.val();
+                }
                 
                 if (resourceType === 'hotel') {
                     formData.check_in = $('#hotel_check_in').val();
@@ -1226,7 +1909,6 @@ function waitForJQuery() {
                 } else if (resourceType === 'vehicle') {
                     formData.start_date = $('#vehicle_from_date').val();
                     formData.start_time = $('#vehicle_from_time').val();
-                    formData.end_date = $('#vehicle_to_date').val();
                     formData.end_time = $('#vehicle_to_time').val();
                     formData.price_type = $('#vehicle_price_type').val();
                     const selected = $('#vehicle_select').find('option:selected');
@@ -1261,11 +1943,103 @@ function waitForJQuery() {
                         if (currency) formData.currency = currency;
                         if (newPrice) formData.new_price = newPrice;
                         if (increasePercent) formData.increase_percent = increasePercent;
+                } else if (resourceType === 'guide') {
+                    formData.start_date = $('#guide_start_date').val();
+                    formData.start_time = $('#guide_start_time').val();
+                    formData.end_time = $('#guide_end_time').val();
+                    formData.price_type = $('#guide_price_type').val();
+                    formData.new_price = $('#guide_price').val();
+                    formData.currency = $('#guide_currency').val();
+                    formData.location = $('#guide_location').val();
+                    formData.description = $('#guide_description').val();
+                    
+                    // Get selected languages
+                    const selectedLanguages = [];
+                    $('#selected-languages option').each(function() {
+                        selectedLanguages.push($(this).val());
+                    });
+                    
+                    if (selectedLanguages.length === 0) {
+                        showAlert('error', 'Please select at least one language');
+                        button.prop('disabled', false).html(originalText);
+                        return;
+                    }
+                    
+                    formData.selected_languages = selectedLanguages;
+                } else if (resourceType === 'representative') {
+                    formData.start_date = $('#representative_start_date').val();
+                    formData.start_time = $('#representative_start_time').val();
+                    formData.end_time = $('#representative_end_time').val();
+                    formData.price_type = $('#representative_price_type').val();
+                    formData.new_price = $('#representative_price').val();
+                    formData.currency = $('#representative_currency').val();
+                    formData.location = $('#representative_location').val();
+                    formData.description = $('#representative_description').val();
+                    
+                    // Get selected languages
+                    const selectedLanguages = [];
+                    $('#selected-representative-languages option').each(function() {
+                        selectedLanguages.push($(this).val());
+                    });
+                    
+                    if (selectedLanguages.length === 0) {
+                        showAlert('error', 'Please select at least one language');
+                        button.prop('disabled', false).html(originalText);
+                        return;
+                    }
+                    
+                    formData.selected_languages = selectedLanguages;
                 } else if (resourceType === 'restaurant') {
                     formData.start_date = $('#restaurant_date').val();
                     formData.start_time = $('#restaurant_time').val();
                     formData.number_of_rooms = $('#restaurant_seats').val(); // Repurpose field for seats
-                    // No pricing fields for restaurants since price_per_meal was removed
+                    
+                    // Get selected meals
+                    const selectedMeals = [];
+                    $('#selected-meals option').each(function() {
+                        const mealOption = $(this);
+                        selectedMeals.push({
+                            id: mealOption.val(),
+                            name: mealOption.text().replace(/⭐\s*/, ''), // Remove star emoji
+                            price: mealOption.data('price'),
+                            currency: mealOption.data('currency'),
+                            featured: mealOption.data('featured')
+                        });
+                    });
+                    
+                    if (selectedMeals.length === 0) {
+                        showAlert('error', 'Please select at least one meal');
+                        button.prop('disabled', false).html(originalText);
+                        return;
+                    }
+                    
+                    formData.selected_meals = selectedMeals;
+                } else if (resourceType === 'extra') {
+                    // Internal extra service creation
+                    formData.service_name = $('#extra_service_name').val().trim();
+                    formData.description = $('#extra_service_description').val().trim();
+                    formData.price = $('#extra_service_price').val();
+                    formData.currency = $('#extra_service_currency').val();
+                    formData.price_type = $('#extra_service_price_type').val();
+                    
+                    // Validate required fields
+                    if (!formData.service_name) {
+                        showAlert('error', 'Please enter a service name');
+                        button.prop('disabled', false).html(originalText);
+                        return;
+                    }
+                    
+                    if (!formData.description) {
+                        showAlert('error', 'Please enter a service description');
+                        button.prop('disabled', false).html(originalText);
+                        return;
+                    }
+                    
+                    if (!formData.price || parseFloat(formData.price) <= 0) {
+                        showAlert('error', 'Please enter a valid price');
+                        button.prop('disabled', false).html(originalText);
+                        return;
+                    }
                 }
                 
                 const originalText = button.html();
@@ -1281,6 +2055,17 @@ function waitForJQuery() {
                         if (response.success) {
                             showAlert('success', response.message);
                             
+                            // Clear extra service form if it was an extra service
+                            if (resourceType === 'extra') {
+                                $('#extra_service_name').val('');
+                                $('#extra_service_description').val('');
+                                $('#extra_service_price').val('');
+                                $('#extra_service_currency').val('USD');
+                                $('#extra_service_price_type').val('per_person');
+                                $('#extra_currency_badge').text('$');
+                                validateExtraServiceForm();
+                            }
+                            
                             // Reload the page to show the updated resources table
                             setTimeout(function() {
                                 location.reload();
@@ -1289,10 +2074,19 @@ function waitForJQuery() {
                             showAlert('error', response.message || 'Failed to add resource');
                         }
                     },
-                    error: function(xhr) {
+                    error: function(xhr, status, error) {
                         let message = 'Failed to add resource';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             message = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.message) {
+                                    message = response.message;
+                                }
+                            } catch (e) {
+                                // Could not parse response as JSON
+                            }
                         }
                         showAlert('error', message);
                     },

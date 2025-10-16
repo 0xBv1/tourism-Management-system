@@ -12,6 +12,27 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * User Model
+ * 
+ * This model represents users in the tourism management system.
+ * It extends Laravel's Authenticatable class and includes role-based
+ * access control through the Spatie Permission package.
+ * 
+ * Features:
+ * - Authentication and authorization
+ * - Role-based access control (HasRoles trait)
+ * - Soft deletes for data retention
+ * - API token authentication (Sanctum)
+ * - Computed attributes for display
+ * 
+ * Traits Used:
+ * - HasApiTokens: For API authentication
+ * - HasFactory: For model factories
+ * - Notifiable: For sending notifications
+ * - SoftDeletes: For soft deletion
+ * - HasRoles: For role-based permissions
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
@@ -49,26 +70,34 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the user's first name.
-     *
-     * @return Attribute
+     * Get the user's first name from the full name
+     * 
+     * This accessor extracts the first name from the user's full name.
+     * It converts the name to uppercase and takes the first word.
+     * 
+     * @return Attribute The computed first name attribute
      */
     protected function firstName(): Attribute
     {
         return Attribute::make(
-            get: fn($value, $attributes) => Str::of($attributes['name'])->upper()->explode(' ')[0],
+            get: fn($value, array $attributes): string => 
+                $attributes['name'] ? Str::of($attributes['name'])->upper()->explode(' ')[0] : '',
         );
     }
 
     /**
-     * Get the user's phone number.
-     *
-     * @return Attribute
+     * Get the user's phone number with fallback
+     * 
+     * This accessor returns the user's phone number or 'N/A' if no phone
+     * number is set. Useful for display purposes where a phone number
+     * is always expected.
+     * 
+     * @return Attribute The computed phone with code attribute
      */
     protected function phoneWithCode(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->phone ? $this->phone : 'N/A',
+            get: fn(): string => $this->phone ? $this->phone : 'N/A',
         );
     }
 }

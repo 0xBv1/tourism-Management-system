@@ -40,6 +40,15 @@ class Extra extends Model
     }
 
     /**
+     * Get the settlements for this extra.
+     */
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'resource_id')
+            ->where('resource_type', 'extra');
+    }
+
+    /**
      * Scope to get only active extras.
      */
     public function scopeActive($query)

@@ -20,20 +20,49 @@ class RestaurantDataTable extends DataTable
                 $label = $restaurant->status_label;
                 return '<span class="badge bg-' . $color . '">' . $label . '</span>';
             })
-            ->editColumn('price_per_meal', function (Restaurant $restaurant) {
-                return $restaurant->price_per_meal ? $restaurant->currency . ' ' . number_format($restaurant->price_per_meal, 2) : '-';
-            })
             ->addColumn('city_name', function (Restaurant $restaurant) {
                 return $restaurant->city->name ?? '-';
             })
+            ->addColumn('meals_count', function (Restaurant $restaurant) {
+                $count = $restaurant->meals->count();
+                if ($count > 0) {
+                    return '<span class="badge bg-info">' . $count . ' meal' . ($count > 1 ? 's' : '') . '</span>';
+                }
+                return '<span class="text-muted">No meals</span>';
+            })
+            ->addColumn('meals_preview', function (Restaurant $restaurant) {
+                $meals = $restaurant->meals->take(3);
+                if ($meals->count() > 0) {
+                    $preview = $meals->map(function ($meal) {
+                        return '<small class="d-block text-truncate" style="max-width: 150px;" title="' . e($meal->name) . '">' . 
+                               '<i class="fas fa-utensils me-1 text-primary"></i>' . 
+                               e($meal->name) . ' - ' . $meal->currency . ' ' . number_format($meal->price, 2) . 
+                               '</small>';
+                    })->join('');
+                    
+                    if ($restaurant->meals->count() > 3) {
+                        $preview .= '<small class="text-muted">+ ' . ($restaurant->meals->count() - 3) . ' more</small>';
+                    }
+                    
+                    return $preview;
+                }
+                return '<span class="text-muted">No meals added</span>';
+            })
+            ->addColumn('featured_meals', function (Restaurant $restaurant) {
+                $featuredMeals = $restaurant->meals->where('is_featured', true);
+                if ($featuredMeals->count() > 0) {
+                    return '<span class="badge bg-warning"><i class="fas fa-star me-1"></i>' . $featuredMeals->count() . ' featured</span>';
+                }
+                return '<span class="text-muted">None</span>';
+            })
             ->addColumn('action', 'dashboard.restaurants.action')
             ->setRowId('id')
-            ->rawColumns(['action', 'status']);
+            ->rawColumns(['action', 'status', 'meals_count', 'meals_preview', 'featured_meals']);
     }
 
     public function query(Restaurant $model): QueryBuilder
     {
-        return $model->newQuery()->with('city');
+        return $model->newQuery()->with(['city', 'meals']);
     }
 
     public function html(): HtmlBuilder
@@ -59,9 +88,10 @@ class RestaurantDataTable extends DataTable
             Column::make('id'),
             Column::make('name'),
             Column::make('city_name')->title('City'),
-            Column::make('cuisine_type')->title('Cuisine'),
             Column::make('price_range')->title('Price Range'),
-            Column::make('price_per_meal')->title('Price/Meal'),
+            Column::make('meals_count')->title('Meals')->orderable(false)->searchable(false),
+            Column::make('meals_preview')->title('Meal Preview')->orderable(false)->searchable(false),
+            Column::make('featured_meals')->title('Featured')->orderable(false)->searchable(false),
             Column::make('capacity'),
             Column::make('status')->title('Status'),
             Column::computed('action')

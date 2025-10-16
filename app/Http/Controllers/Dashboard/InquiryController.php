@@ -7,67 +7,98 @@ use App\Events\InquiryConfirmed;
 use App\Events\NewInquiryCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\InquiryRequest;
-use App\Models\Inquiry;
+use App\Services\UserService;
 use App\Models\User;
-use App\Models\Hotel;
 use App\Models\Vehicle;
 use App\Models\Guide;
-use App\Models\Representative;
 use App\Models\Extra;
-use App\Models\Ticket;
 use App\Models\Dahabia;
-use App\Models\Restaurant;
+use App\Models\Inquiry;
 use App\Enums\InquiryStatus;
+use App\Enums\UserRole;
+use App\Models\Hotel;
+use App\Models\Representative;
+use App\Models\Ticket;
+use App\Models\Restaurant;
 use Illuminate\Http\Request;
 
+/**
+ * InquiryController Class
+ * 
+ * This controller handles all inquiry-related operations in the dashboard.
+ * It manages the complete inquiry lifecycle from creation to confirmation,
+ * including resource assignment, payment processing, and status updates.
+ * 
+ * Features:
+ * - CRUD operations for inquiries
+ * - Role-based access control
+ * - Resource assignment management
+ * - Payment processing and confirmation
+ * - Tour itinerary management
+ * - Event-driven notifications
+ * 
+ * Dependencies:
+ * - UserService: For user role management
+ * - InquiryDataTable: For data display
+ * - Various resource models (Hotel, Vehicle, Guide, etc.)
+ */
 class InquiryController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Constructor - Inject UserService dependency
+     * 
+     * @param UserService $userService Service for user role management
      */
-    public function index(InquiryDataTable $dataTable)
+    public function __construct(
+        private UserService $userService
+    ) {}
+    
+    /**
+     * Display a listing of inquiries using DataTable
+     * 
+     * Renders the inquiries index page with server-side processing,
+     * filtering, and export capabilities through the DataTable component.
+     * 
+     * @param InquiryDataTable $dataTable The DataTable instance
+     * @return mixed The rendered view with DataTable
+     */
+    public function index(InquiryDataTable $dataTable): mixed
     {
         return $dataTable->render('dashboard.inquiries.index');
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Contracts\View\View
+     * Show the form for creating a new inquiry
+     * 
+     * Prepares the create form with necessary data including:
+     * - Users grouped by roles for assignment dropdowns
+     * - Available inquiry statuses
+     * 
+     * @return \Illuminate\Contracts\View\View The create form view
      */
-    public function create()
+    public function create(): \Illuminate\Contracts\View\View
     {
-        // Get users with specific roles only
-        $users = User::with('roles')
-            ->whereHas('roles', function($query) {
-                $query->whereIn('name', ['Reservation', 'Sales', 'Operator', 'Admin']);
-            })
-            ->get();
-        
-        // Group users by their roles for better organization
-        $usersByRole = collect();
-        foreach($users as $user) {
-            foreach($user->roles as $role) {
-                if (!isset($usersByRole[$role->name])) {
-                    $usersByRole[$role->name] = collect();
-                }
-                $usersByRole[$role->name]->push($user);
-            }
-        }
-        
+        $usersByRole = $this->userService->getUsersByRole();
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.create', compact('users', 'usersByRole', 'statuses'));
+        
+        return view('dashboard.inquiries.create', compact('usersByRole', 'statuses'));
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \App\Http\Requests\Dashboard\InquiryRequest  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * Store a newly created inquiry in the database
+     * 
+     * Processes the form submission for creating a new inquiry:
+     * - Validates input data through InquiryRequest
+     * - Creates the inquiry record
+     * - Fires NewInquiryCreated event for notifications
+     * - Redirects to the inquiry details page
+     * 
+     * Note: Payment fields are handled separately in the confirmation process
+     * 
+     * @param InquiryRequest $request The validated form request
+     * @return \Illuminate\Http\RedirectResponse Redirect to inquiry details
      */
-    public function store(InquiryRequest $request)
+    public function store(InquiryRequest $request): \Illuminate\Http\RedirectResponse
     {
         $data = $request->getSanitized();
 
@@ -85,10 +116,19 @@ class InquiryController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Contracts\View\View
+     * Display the detailed view of a specific inquiry
+     * 
+     * Shows comprehensive inquiry details including:
+     * - Inquiry information and assigned users
+     * - Available resources for assignment (hotels, vehicles, guides, etc.)
+     * - Users grouped by roles for reassignment
+     * - Current status and available status options
+     * 
+     * This view allows for resource assignment, status updates, and
+     * tour itinerary management.
+     * 
+     * @param Inquiry $inquiry The inquiry to display
+     * @return \Illuminate\Contracts\View\View The inquiry details view
      */
     public function show(Inquiry $inquiry)
     {
@@ -103,65 +143,48 @@ class InquiryController extends Controller
             'extras' => Extra::active()->get(['id', 'name', 'category', 'price', 'currency']),
             'tickets' => Ticket::active()->with('city')->get(['id', 'name', 'city_id', 'price_per_person', 'currency']),
             'dahabias' => Dahabia::active()->with('city')->get(['id', 'name', 'city_id', 'price_per_person', 'price_per_charter', 'currency']),
-            'restaurants' => Restaurant::active()->with('city')->get(['id', 'name', 'city_id', 'currency']),
+            'restaurants' => Restaurant::active()->with(['city', 'meals'])->get(['id', 'name', 'city_id', 'currency']),
         ];
-        $users = User::with('roles')
-            ->whereHas('roles', function($query) {
-                $query->whereIn('name', ['Reservation', 'Sales', 'Operator', 'Admin']);
-            })
-            ->get();
-        
-        // Group users by their roles for better organization
-        $usersByRole = collect();
-        foreach($users as $user) {
-            foreach($user->roles as $role) {
-                if (!isset($usersByRole[$role->name])) {
-                    $usersByRole[$role->name] = collect();
-                }
-                $usersByRole[$role->name]->push($user);
-            }
-        }
-        
+        $usersByRole = $this->userService->getUsersByRole();
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.show', compact('inquiry', 'users', 'usersByRole', 'statuses', 'availableResources'));
+        
+        return view('dashboard.inquiries.show', compact('inquiry', 'usersByRole', 'statuses', 'availableResources'));
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Contracts\View\View
+     * Show the form for editing an existing inquiry
+     * 
+     * Prepares the edit form with current inquiry data and necessary options:
+     * - Users grouped by roles for assignment dropdowns
+     * - Available inquiry statuses
+     * - Current inquiry data for pre-population
+     * 
+     * @param Inquiry $inquiry The inquiry to edit
+     * @return \Illuminate\Contracts\View\View The edit form view
      */
     public function edit(Inquiry $inquiry)
     {
-        // Get users with specific roles only
-        $users = User::with('roles')
-            ->whereHas('roles', function($query) {
-                $query->whereIn('name', ['Reservation', 'Sales', 'Operator', 'Admin']);
-            })
-            ->get();
-        
-        // Group users by their roles for better organization
-        $usersByRole = collect();
-        foreach($users as $user) {
-            foreach($user->roles as $role) {
-                if (!isset($usersByRole[$role->name])) {
-                    $usersByRole[$role->name] = collect();
-                }
-                $usersByRole[$role->name]->push($user);
-            }
-        }
-        
+        $usersByRole = $this->userService->getUsersByRole();
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.edit', compact('inquiry', 'users', 'usersByRole', 'statuses'));
+        
+        return view('dashboard.inquiries.edit', compact('inquiry', 'usersByRole', 'statuses'));
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\Dashboard\InquiryRequest  $request
-     * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\RedirectResponse
+     * Update an existing inquiry in the database
+     * 
+     * Processes the form submission for updating an inquiry:
+     * - Validates input data through InquiryRequest
+     * - Updates the inquiry record
+     * - Handles status change to confirmed (sets confirmed_at timestamp)
+     * - Fires InquiryConfirmed event if status changed to confirmed
+     * - Redirects to the inquiry details page
+     * 
+     * Note: Payment fields are handled separately in the confirmation process
+     * 
+     * @param InquiryRequest $request The validated form request
+     * @param Inquiry $inquiry The inquiry to update
+     * @return \Illuminate\Http\RedirectResponse Redirect to inquiry details
      */
     public function update(InquiryRequest $request, Inquiry $inquiry)
     {
@@ -185,10 +208,13 @@ class InquiryController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\JsonResponse
+     * Delete an inquiry from the database
+     * 
+     * Permanently removes the inquiry record and all associated data.
+     * This action cannot be undone.
+     * 
+     * @param Inquiry $inquiry The inquiry to delete
+     * @return \Illuminate\Http\JsonResponse JSON response confirming deletion
      */
     public function destroy(Inquiry $inquiry)
     {
@@ -199,10 +225,13 @@ class InquiryController extends Controller
     }
 
     /**
-     * Confirm an inquiry
-     *
-     * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\RedirectResponse
+     * Confirm an inquiry and mark it as confirmed
+     * 
+     * Updates the inquiry status to confirmed and sets the confirmation timestamp.
+     * Fires the InquiryConfirmed event for notifications and downstream processing.
+     * 
+     * @param Inquiry $inquiry The inquiry to confirm
+     * @return \Illuminate\Http\RedirectResponse Redirect back to previous page
      */
     public function confirm(Inquiry $inquiry)
     {
@@ -219,41 +248,36 @@ class InquiryController extends Controller
     }
 
     /**
-     * Show confirmation form with payment details
-     *
-     * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Contracts\View\View
+     * Show the confirmation form with payment details
+     * 
+     * Displays a specialized form for confirming inquiries with payment information.
+     * This form includes fields for total amount, paid amount, and payment method.
+     * 
+     * @param Inquiry $inquiry The inquiry to confirm
+     * @return \Illuminate\Contracts\View\View The confirmation form view
      */
     public function showConfirmForm(Inquiry $inquiry)
     {
         $inquiry->load(['client', 'assignedUser.roles', 'assignedReservation.roles', 'assignedOperator.roles', 'assignedAdmin.roles']);
-        $users = User::with('roles')
-            ->whereHas('roles', function($query) {
-                $query->whereIn('name', ['Reservation', 'Sales', 'Operator', 'Admin']);
-            })
-            ->get();
-        
-        // Group users by their roles for better organization
-        $usersByRole = collect();
-        foreach($users as $user) {
-            foreach($user->roles as $role) {
-                if (!isset($usersByRole[$role->name])) {
-                    $usersByRole[$role->name] = collect();
-                }
-                $usersByRole[$role->name]->push($user);
-            }
-        }
-        
+        $usersByRole = $this->userService->getUsersByRole();
         $statuses = InquiryStatus::options();
-        return view('dashboard.inquiries.confirm', compact('inquiry', 'users', 'usersByRole', 'statuses'));
+        
+        return view('dashboard.inquiries.confirm', compact('inquiry', 'usersByRole', 'statuses'));
     }
 
     /**
-     * Process confirmation with payment details
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\RedirectResponse
+     * Process inquiry confirmation with payment details
+     * 
+     * Handles the submission of the confirmation form with payment information:
+     * - Validates payment amounts and method
+     * - Calculates remaining amount
+     * - Updates inquiry status to confirmed
+     * - Sets payment details and confirmation timestamp
+     * - Fires InquiryConfirmed event
+     * 
+     * @param Request $request The form request with payment data
+     * @param Inquiry $inquiry The inquiry to confirm
+     * @return \Illuminate\Http\RedirectResponse Redirect to inquiry details
      */
     public function processConfirmation(Request $request, Inquiry $inquiry)
     {
@@ -282,11 +306,15 @@ class InquiryController extends Controller
     }
 
     /**
-     * Update tour itinerary for an inquiry
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Inquiry  $inquiry
-     * @return \Illuminate\Http\JsonResponse
+     * Update the tour itinerary for an inquiry
+     * 
+     * Allows Sales role users to update the tour itinerary details for an inquiry.
+     * This method includes role-based authorization to ensure only Sales users
+     * can modify tour itineraries.
+     * 
+     * @param Request $request The request containing tour itinerary data
+     * @param Inquiry $inquiry The inquiry to update
+     * @return \Illuminate\Http\JsonResponse JSON response with success status
      */
     public function updateTourItinerary(Request $request, Inquiry $inquiry)
     {

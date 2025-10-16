@@ -63,10 +63,21 @@ class Hotel extends Model
             ->where('resource_type', 'hotel');
     }
 
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'resource_id')
+            ->where('resource_type', 'hotel');
+    }
+
     public function scopeAvailable($query)
     {
         return $query->where('status', ResourceStatus::AVAILABLE)
             ->where('available_rooms', '>', 0);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('active', true)->where('enabled', true);
     }
 
     public function scopeByCity($query, $cityId)

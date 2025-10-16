@@ -38,7 +38,7 @@ class InquiryResourceController extends Controller
             // Validate the request
             $validator = Validator::make($request->all(), [
                 'resource_type' => 'required|string|in:hotel,vehicle,guide,representative,extra,ticket,dahabia,restaurant',
-                'resource_id' => 'required|integer|min:1',
+                'resource_id' => 'required_if:resource_type,hotel,vehicle,guide,representative,ticket,dahabia,restaurant|integer|min:1',
                 'start_date' => 'nullable|date',
                 'start_time' => 'nullable|date_format:H:i',
                 'end_date' => 'nullable|date',
@@ -56,6 +56,20 @@ class InquiryResourceController extends Controller
                 'new_price' => 'nullable|numeric|min:0',
                 'increase_percent' => 'nullable|numeric',
                 'currency' => 'nullable|string|max:8',
+                // restaurant fields
+                'selected_meals' => 'nullable|array',
+                'selected_meals.*.id' => 'required_with:selected_meals|integer|exists:meals,id',
+                'selected_meals.*.name' => 'required_with:selected_meals|string',
+                'selected_meals.*.price' => 'required_with:selected_meals|numeric|min:0',
+                'selected_meals.*.currency' => 'required_with:selected_meals|string|max:3',
+                // guide fields
+                'location' => 'nullable|string|max:500',
+                'description' => 'nullable|string|max:1000',
+                'selected_languages' => 'nullable|array',
+                'selected_languages.*' => 'string|in:arabic,english,french,german,spanish,italian,russian,chinese,japanese,korean',
+                // internal extra service fields
+                'service_name' => 'required_if:resource_type,extra|string|max:255',
+                'price' => 'required_if:resource_type,extra|numeric|min:0',
             ]);
 
             if ($validator->fails()) {
@@ -69,31 +83,20 @@ class InquiryResourceController extends Controller
             // Check if inquiry exists
             $inquiry = Inquiry::findOrFail($inquiry_id);
 
-            // Validate that the resource exists
-            $resourceExists = $this->validateResourceExists($request->resource_type, $request->resource_id);
-            if (!$resourceExists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The selected resource does not exist.'
-                ], 422);
+            // Validate that the resource exists (skip for internal extra services)
+            if ($request->resource_type !== 'extra') {
+                $resourceExists = $this->validateResourceExists($request->resource_type, $request->resource_id);
+                if (!$resourceExists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'The selected resource does not exist.'
+                    ], 422);
+                }
             }
 
             DB::beginTransaction();
 
-            // Check if resource is already added to this inquiry
-            $existingResource = InquiryResource::where('inquiry_id', $inquiry_id)
-                ->where('resource_type', $request->resource_type)
-                ->where('resource_id', $request->resource_id)
-                ->first();
-
-            if ($existingResource) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This resource is already added to the inquiry.'
-                ], 422);
-            }
-
-            // Build start/end datetimes
+            // Build start/end datetimes first
             $startAt = null;
             $endAt = null;
             if ($request->filled('start_date')) {
@@ -103,10 +106,50 @@ class InquiryResourceController extends Controller
                 $endAt = $request->end_date . ' ' . ($request->end_time ?? '00:00');
             }
 
+            // Check for exact duplicate resources (same resource with same dates/times)
+            // Skip duplicate check for internal extra services or when explicitly bypassed
+            if ($request->resource_type !== 'extra' && !$request->boolean('bypass_duplicate_check')) {
+                $query = InquiryResource::where('inquiry_id', $inquiry_id)
+                    ->where('resource_type', $request->resource_type)
+                    ->where('resource_id', $request->resource_id);
+
+                // Add date/time checks for more specific duplicate detection
+                if ($request->filled('start_date')) {
+                    $query->where('start_at', $startAt);
+                }
+                if ($request->filled('end_date')) {
+                    $query->where('end_at', $endAt);
+                }
+                
+                // For hotels, also check check-in/check-out dates
+                if ($request->resource_type === 'hotel') {
+                    if ($request->filled('check_in')) {
+                        $query->where('check_in', $request->check_in);
+                    }
+                    if ($request->filled('check_out')) {
+                        $query->where('check_out', $request->check_out);
+                    }
+                }
+
+                $existingResource = $query->first();
+
+                if ($existingResource) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This resource with the same dates/times is already added to the inquiry. You can add the same resource with different dates/times.'
+                    ], 422);
+                }
+            }
+
             // Determine original price from DB for resource type
             $originalPrice = null;
             $currency = $request->currency;
-            if ($request->resource_type === 'vehicle') {
+            
+            if ($request->resource_type === 'extra') {
+                // Internal extra service - use the provided price as original
+                $originalPrice = $request->price;
+                $currency = $request->currency;
+            } elseif ($request->resource_type === 'vehicle') {
                 $vehicle = Vehicle::find($request->resource_id);
                 if ($vehicle) {
                     if (!$currency) {
@@ -149,35 +192,178 @@ class InquiryResourceController extends Controller
                 $effectivePrice = $originalPrice;
             }
 
-            // Create the inquiry resource
-            $inquiryResource = InquiryResource::create([
-                'inquiry_id' => $inquiry_id,
-                'resource_type' => $request->resource_type,
-                'resource_id' => $request->resource_id,
-                'added_by' => auth()->id(),
-                'start_at' => $startAt,
-                'end_at' => $endAt,
-                'check_in' => $request->check_in,
-                'check_out' => $request->check_out,
-                'number_of_rooms' => $request->number_of_rooms,
-                'number_of_adults' => $request->number_of_adults,
-                'number_of_children' => $request->number_of_children,
-                'rate_per_adult' => $request->rate_per_adult,
-                'rate_per_child' => $request->rate_per_child,
-                'price_type' => $request->price_type,
-                'original_price' => $originalPrice,
-                'new_price' => $request->new_price,
-                'increase_percent' => $request->increase_percent,
-                'effective_price' => $effectivePrice,
-                'currency' => $currency,
-                'price_note' => $priceNote,
-            ]);
+            // Handle restaurant with multiple meals
+            if ($request->resource_type === 'restaurant' && $request->has('selected_meals')) {
+                $selectedMeals = $request->selected_meals;
+                $totalCost = 0;
+                $mealDetails = [];
+                
+                foreach ($selectedMeals as $meal) {
+                    $mealCost = $meal['price'];
+                    $totalCost += $mealCost;
+                    
+                    $mealDetails[] = [
+                        'meal_id' => $meal['id'],
+                        'meal_name' => $meal['name'],
+                        'meal_price' => $meal['price'],
+                        'meal_currency' => $meal['currency'],
+                        'total_cost' => $mealCost,
+                        'featured' => $meal['featured'] ?? false
+                    ];
+                }
+                
+                // Create inquiry resource with meal details
+                $inquiryResource = InquiryResource::create([
+                    'inquiry_id' => $inquiry_id,
+                    'resource_type' => $request->resource_type,
+                    'resource_id' => $request->resource_id,
+                    'resource_name' => $this->getResourceName($request->resource_type, $request->resource_id),
+                    'added_by' => auth()->id(),
+                    'start_at' => $startAt,
+                    'end_at' => $endAt,
+                    'check_in' => $request->check_in,
+                    'check_out' => $request->check_out,
+                    'number_of_rooms' => $request->number_of_rooms, // seats
+                    'number_of_adults' => $request->number_of_adults,
+                    'number_of_children' => $request->number_of_children,
+                    'rate_per_adult' => $request->rate_per_adult,
+                    'rate_per_child' => $request->rate_per_child,
+                    'price_type' => 'meal',
+                    'original_price' => $totalCost,
+                    'new_price' => null,
+                    'increase_percent' => null,
+                    'effective_price' => $totalCost,
+                    'currency' => $selectedMeals[0]['currency'] ?? 'EGP',
+                    'price_note' => 'Multiple meals selected',
+                    'resource_details' => json_encode([
+                        'selected_meals' => $mealDetails,
+                        'total_meals' => count($selectedMeals)
+                    ]),
+                ]);
+            } elseif ($request->resource_type === 'guide' && $request->has('selected_languages')) {
+                $selectedLanguages = $request->selected_languages;
+                $guidePrice = $request->new_price ?? 0;
+                
+                // Create inquiry resource with guide details
+                $inquiryResource = InquiryResource::create([
+                    'inquiry_id' => $inquiry_id,
+                    'resource_type' => $request->resource_type,
+                    'resource_id' => $request->resource_id,
+                    'resource_name' => $this->getResourceName($request->resource_type, $request->resource_id),
+                    'added_by' => auth()->id(),
+                    'start_at' => $startAt,
+                    'end_at' => $endAt,
+                    'check_in' => $request->check_in,
+                    'check_out' => $request->check_out,
+                    'number_of_rooms' => $request->number_of_rooms,
+                    'number_of_adults' => $request->number_of_adults,
+                    'number_of_children' => $request->number_of_children,
+                    'rate_per_adult' => $request->rate_per_adult,
+                    'rate_per_child' => $request->rate_per_child,
+                    'price_type' => $request->price_type,
+                    'original_price' => $guidePrice,
+                    'new_price' => $request->new_price,
+                    'increase_percent' => $request->increase_percent,
+                    'effective_price' => $guidePrice,
+                    'currency' => $request->currency ?? 'EGP',
+                    'price_note' => 'Guide service',
+                    'resource_details' => json_encode([
+                        'location' => $request->location,
+                        'description' => $request->description,
+                        'selected_languages' => $selectedLanguages,
+                        'total_languages' => count($selectedLanguages)
+                    ]),
+                ]);
+            } elseif ($request->resource_type === 'representative' && $request->has('selected_languages')) {
+                $selectedLanguages = $request->selected_languages;
+                $representativePrice = $request->new_price ?? 0;
+                
+                // Create inquiry resource with representative details
+                $inquiryResource = InquiryResource::create([
+                    'inquiry_id' => $inquiry_id,
+                    'resource_type' => $request->resource_type,
+                    'resource_id' => $request->resource_id,
+                    'resource_name' => $this->getResourceName($request->resource_type, $request->resource_id),
+                    'added_by' => auth()->id(),
+                    'start_at' => $startAt,
+                    'end_at' => $endAt,
+                    'check_in' => $request->check_in,
+                    'check_out' => $request->check_out,
+                    'number_of_rooms' => $request->number_of_rooms,
+                    'number_of_adults' => $request->number_of_adults,
+                    'number_of_children' => $request->number_of_children,
+                    'rate_per_adult' => $request->rate_per_adult,
+                    'rate_per_child' => $request->rate_per_child,
+                    'price_type' => $request->price_type,
+                    'original_price' => $representativePrice,
+                    'new_price' => $request->new_price,
+                    'increase_percent' => $request->increase_percent,
+                    'effective_price' => $representativePrice,
+                    'currency' => $request->currency ?? 'EGP',
+                    'price_note' => 'Representative service',
+                    'resource_details' => json_encode([
+                        'location' => $request->location,
+                        'description' => $request->description,
+                        'selected_languages' => $selectedLanguages,
+                        'total_languages' => count($selectedLanguages)
+                    ]),
+                ]);
+            } elseif ($request->resource_type === 'extra') {
+                // Create internal extra service
+                $inquiryResource = InquiryResource::create([
+                    'inquiry_id' => $inquiry_id,
+                    'resource_type' => $request->resource_type,
+                    'resource_id' => null, // No external resource ID for internal services
+                    'added_by' => auth()->id(),
+                    'resource_name' => $request->service_name,
+                    'price_type' => $request->price_type,
+                    'original_price' => $originalPrice,
+                    'effective_price' => $effectivePrice,
+                    'currency' => $currency,
+                    'price_note' => 'Internal extra service',
+                    'resource_details' => json_encode([
+                        'service_name' => $request->service_name,
+                        'description' => $request->description,
+                        'price_type' => $request->price_type,
+                        'is_internal' => true
+                    ]),
+                ]);
+            } else {
+                // Get the resource name for external resources
+                $resourceName = $this->getResourceName($request->resource_type, $request->resource_id);
+                
+                // Create the inquiry resource for other types
+                $inquiryResource = InquiryResource::create([
+                    'inquiry_id' => $inquiry_id,
+                    'resource_type' => $request->resource_type,
+                    'resource_id' => $request->resource_id,
+                    'resource_name' => $resourceName,
+                    'added_by' => auth()->id(),
+                    'start_at' => $startAt,
+                    'end_at' => $endAt,
+                    'check_in' => $request->check_in,
+                    'check_out' => $request->check_out,
+                    'number_of_rooms' => $request->number_of_rooms,
+                    'number_of_adults' => $request->number_of_adults,
+                    'number_of_children' => $request->number_of_children,
+                    'rate_per_adult' => $request->rate_per_adult,
+                    'rate_per_child' => $request->rate_per_child,
+                    'price_type' => $request->price_type,
+                    'original_price' => $originalPrice,
+                    'new_price' => $request->new_price,
+                    'increase_percent' => $request->increase_percent,
+                    'effective_price' => $effectivePrice,
+                    'currency' => $currency,
+                    'price_note' => $priceNote,
+                ]);
+            }
 
             // Log the activity
             $inquiryResource->logActivity('add_resource', [
                 'inquiry_id' => $inquiry_id,
                 'resource_type' => $request->resource_type,
-                'resource_id' => $request->resource_id,
+                'resource_id' => $request->resource_id ?? 'internal',
+                'resource_name' => $request->resource_type === 'extra' ? $request->service_name : null,
             ]);
 
             DB::commit();
@@ -191,8 +377,8 @@ class InquiryResourceController extends Controller
                 'data' => [
                     'id' => $inquiryResource->id,
                     'resource_type' => $inquiryResource->resource_type,
-                    'resource_name' => $inquiryResource->resource_name,
-                    'added_by' => $inquiryResource->addedBy->name,
+                    'resource_name' => $inquiryResource->resource_name ?? $inquiryResource->getResourceNameAttribute(),
+                    'added_by' => $inquiryResource->addedBy?->name ?? 'Unknown User',
                     'created_at' => $inquiryResource->created_at->format('Y-m-d H:i:s'),
                     'start_at' => optional($inquiryResource->start_at)->format('Y-m-d H:i'),
                     'end_at' => optional($inquiryResource->end_at)->format('Y-m-d H:i'),
@@ -459,11 +645,30 @@ class InquiryResourceController extends Controller
         return match($resourceType) {
             'hotel' => 'in:day',
             'vehicle' => 'in:day,hour',
-            'guide', 'representative', 'extra' => 'in:hour,day',
+            'guide', 'representative' => 'in:hour,day,half_day',
+            'extra' => 'in:per_person,per_group,per_hour,per_day,fixed',
             'ticket' => 'in:person',
             'dahabia' => 'in:person,charter',
             'restaurant' => 'in:meal',
             default => 'in:day,hour'
+        };
+    }
+
+    /**
+     * Get the resource name for a given resource type and ID.
+     */
+    private function getResourceName(string $resourceType, int $resourceId): string
+    {
+        return match($resourceType) {
+            'hotel' => Hotel::find($resourceId)?->name ?? 'Unknown Hotel',
+            'vehicle' => Vehicle::find($resourceId)?->name ?? 'Unknown Vehicle',
+            'guide' => Guide::find($resourceId)?->name ?? 'Unknown Guide',
+            'representative' => Representative::find($resourceId)?->name ?? 'Unknown Representative',
+            'extra' => Extra::find($resourceId)?->name ?? 'Unknown Extra Service',
+            'ticket' => Ticket::find($resourceId)?->name ?? 'Unknown Ticket',
+            'dahabia' => Dahabia::find($resourceId)?->name ?? 'Unknown Dahabia',
+            'restaurant' => Restaurant::find($resourceId)?->name ?? 'Unknown Restaurant',
+            default => 'Unknown Resource'
         };
     }
 }

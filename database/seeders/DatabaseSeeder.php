@@ -27,11 +27,23 @@ class DatabaseSeeder extends Seeder
         $this->call(DefaultUsersSeeder::class);
         $this->call(ResourceSeeder::class);
         
+        // Tourism resource seeders
+        $this->call(HotelSeeder::class);
+        $this->call(VehicleSeeder::class);
+        $this->call(GuideSeeder::class);
+        $this->call(RepresentativeSeeder::class);
+        
         // Client seeders
         $this->call(ClientSeeder::class);
         
+        // Business process seeders
+        $this->call(InquirySeeder::class);
+        $this->call(BookingFileSeeder::class);
+        $this->call(PaymentSeeder::class);
+        $this->call(ResourceBookingSeeder::class);
+        $this->call(InquiryResourceSeeder::class);
+        
         // Additional seeders
         $this->call(ChatSeeder::class);
-        $this->call(BookingFileSeeder::class);
     }
 }

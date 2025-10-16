@@ -18,6 +18,10 @@ use App\Http\Controllers\Dashboard\RepresentativeController;
 use App\Http\Controllers\Dashboard\ResourceAssignmentController;
 use App\Http\Controllers\Dashboard\PaymentController;
 use App\Http\Controllers\Dashboard\NotificationController;
+
+
+use App\Http\Controllers\Dashboard\SettlementController;
+use App\DataTables\SettlementDataTable;
 use App\Http\Controllers\Dashboard\InquiryResourceController;
 use App\Http\Controllers\Dashboard\TicketController;
 use App\Http\Controllers\Dashboard\DahabiaController;
@@ -133,5 +137,17 @@ Route::group([
         Route::get('show', [SettingController::class, 'show'])->name('show');
         Route::put('update', [SettingController::class, 'update'])->name('update');
     });
+
+    // Settlements
+    Route::get('settlements/generate', [SettlementController::class, 'showGenerateForm'])->name('settlements.generate');
+    Route::post('settlements/generate', [SettlementController::class, 'generateAutomatic'])->name('settlements.generate-automatic');
+    Route::get('settlements/get-resource-bookings', [SettlementController::class, 'getResourceBookings'])->name('settlements.get-resource-bookings');
+    Route::get('settlements', [SettlementController::class, 'index'])->name('settlements.index');
+    Route::resource('settlements', SettlementController::class)->except(['index']);
+    Route::post('settlements/{settlement}/calculate', [SettlementController::class, 'calculate'])->name('settlements.calculate');
+    Route::post('settlements/{settlement}/approve', [SettlementController::class, 'approve'])->name('settlements.approve');
+    Route::post('settlements/{settlement}/reject', [SettlementController::class, 'reject'])->name('settlements.reject');
+    Route::post('settlements/{settlement}/mark-paid', [SettlementController::class, 'markAsPaid'])->name('settlements.mark-paid');
+    
     //RoutePlace
 });

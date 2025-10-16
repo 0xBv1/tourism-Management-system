@@ -22,6 +22,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('queue-monitor:purge', ['--beforeDays' => 1, '--only-succeeded' => true])->daily();
 
         $schedule->command('queue-monitor:purge', ['--beforeDays' => 60])->daily();
+
+        // Generate monthly settlements automatically on the 1st of each month
+        $schedule->command('settlements:generate --type=monthly --month=' . now()->subMonth()->month . ' --year=' . now()->subMonth()->year)->monthlyOn(1, '00:00');
     }
 
     /**

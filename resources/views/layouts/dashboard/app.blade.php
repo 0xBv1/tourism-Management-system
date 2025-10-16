@@ -122,6 +122,32 @@ document.addEventListener('DOMContentLoaded', function() {
     {!! $dataTable->scripts() !!}
 @endisset
 <script>
+    // Force HTTPS for AJAX requests on Replit
+    if (window.location.hostname.includes('replit.dev') || window.location.hostname.includes('repl.co')) {
+        // Override jQuery's ajax method to force HTTPS
+        if (typeof $ !== 'undefined') {
+            const originalAjax = $.ajax;
+            $.ajax = function(options) {
+                if (typeof options === 'string') {
+                    options = { url: options };
+                }
+                if (options.url && options.url.startsWith('http://')) {
+                    options.url = options.url.replace('http://', 'https://');
+                }
+                return originalAjax.call(this, options);
+            };
+        }
+        
+        // Override fetch to force HTTPS
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            if (typeof url === 'string' && url.startsWith('http://')) {
+                url = url.replace('http://', 'https://');
+            }
+            return originalFetch.call(this, url, options);
+        };
+    }
+
     const tinymceInitEditor = async(ele) => {
         await ele.tinymce({
             relative_urls : false,

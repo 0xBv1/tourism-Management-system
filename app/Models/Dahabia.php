@@ -64,9 +64,20 @@ class Dahabia extends Model
             ->where('resource_type', 'dahabia');
     }
 
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'resource_id')
+            ->where('resource_type', 'dahabia');
+    }
+
     public function scopeAvailable($query)
     {
         return $query->where('status', ResourceStatus::AVAILABLE);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('active', true)->where('enabled', true);
     }
 
     public function scopeByCity($query, $cityId)

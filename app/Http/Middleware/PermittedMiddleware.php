@@ -29,7 +29,13 @@ class PermittedMiddleware
         'dashboard.inquiries.resources.available',
         'dashboard.inquiries.resources.destroy',
         'dashboard.chats.recipients',
-
+        'dashboard.settlements.generate',
+        'dashboard.settlements.generate-automatic',
+        'dashboard.settlements.get-resource-bookings',
+        'dashboard.notifications.unread-count',
+        'dashboard.notifications.mark-as-read',
+        'dashboard.notifications.mark-all-as-read',
+        'dashboard.notifications.index',
     ];
     public function handle(Request $request, Closure $next)
     {

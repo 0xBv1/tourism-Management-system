@@ -10,16 +10,8 @@ class TelescopePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $permissions = ['telescope.show'];
-        $permissions_db = [];
-        foreach ($permissions as $permission) {
-            $permissions_db[] = Permission::updateOrCreate([
-                'name' => $permission
-            ])->id;
-        }
-
-        if ($adminRole = Role::whereName('Administrator')->first()) {
-            $adminRole->givePermissionTo($permissions_db);
-        }
+        // Telescope is not installed in this project
+        // This seeder is kept for compatibility but does nothing
+        return;
     }
 }

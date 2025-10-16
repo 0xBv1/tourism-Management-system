@@ -134,7 +134,7 @@
                                                     id="currency" name="currency" required>
                                                 <option value="">Select Currency</option>
                                                 @foreach(\App\Services\Dashboard\Currency::getSupportedCurrencies() as $currencyCode => $currencyName)
-                                                    <option value="{{ $currencyCode }}" {{ old('currency', 'USD') == $currencyCode ? 'selected' : '' }}>
+                                                    <option value="{{ $currencyCode }}" {{ old('currency', 'EGP') == $currencyCode ? 'selected' : '' }}>
                                                         {{ $currencyCode }} - {{ $currencyName }}
                                                     </option>
                                                 @endforeach
@@ -156,6 +156,89 @@
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
+                                    </div>
+                                </div>
+
+                                <!-- Meal Information Section -->
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-utensils me-2"></i>Meal Information
+                                        </h6>
+                                    </div>
+                                </div>
+
+                                <div id="meals-container">
+                                    <div class="meal-item border p-3 rounded mb-3" data-meal-index="0">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Meal Name</label>
+                                                    <input type="text" class="form-control meal-name" name="meals[0][name]" placeholder="e.g., Traditional Egyptian Breakfast">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Currency</label>
+                                                    <select class="form-control meal-currency" name="meals[0][currency]">
+                                                        @foreach(\App\Services\Dashboard\Currency::getSupportedCurrencies() as $currencyCode => $currencyName)
+                                                            <option value="{{ $currencyCode }}" {{ $currencyCode == 'EGP' ? 'selected' : '' }}>
+                                                                {{ $currencyCode }} - {{ $currencyName }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Price</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text meal-currency-symbol">EGP</span>
+                                                        <input type="number" step="0.01" class="form-control meal-price" name="meals[0][price]" min="0" placeholder="0.00">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="mb-3">
+                                                    <label class="form-label">&nbsp;</label>
+                                                    <div>
+                                                        <button type="button" class="btn btn-danger btn-sm remove-meal" style="display: none;">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Description</label>
+                                                    <textarea class="form-control meal-description" name="meals[0][description]" rows="2" placeholder="Describe the meal ingredients, preparation, and special features"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input meal-featured" type="checkbox" name="meals[0][is_featured]" value="1">
+                                                    <label class="form-check-label">Featured Meal</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input meal-available" type="checkbox" name="meals[0][is_available]" value="1" checked>
+                                                    <label class="form-check-label">Available</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-outline-primary" id="add-meal-btn">
+                                            <i class="fas fa-plus me-1"></i>Add Another Meal
+                                        </button>
                                     </div>
                                 </div>
 
@@ -211,3 +294,156 @@
         <!-- Container-fluid Ends-->
     </div>
 @endsection
+
+@push('js')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currencySelect = document.getElementById('currency');
+    const mealsContainer = document.getElementById('meals-container');
+    const addMealBtn = document.getElementById('add-meal-btn');
+    let mealIndex = 0;
+    
+    // Currency symbol mapping
+    const currencySymbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'JPY': '¥',
+        'CAD': 'C$',
+        'AUD': 'A$',
+        'CHF': 'CHF',
+        'CNY': '¥',
+        'INR': '₹',
+        'AED': 'د.إ',
+        'EGP': 'EGP'
+    };
+    
+    // Update currency symbol when currency changes
+    currencySelect.addEventListener('change', function() {
+        const selectedCurrency = this.value;
+        const symbol = currencySymbols[selectedCurrency] || selectedCurrency;
+        document.querySelectorAll('.meal-currency-symbol').forEach(symbolEl => {
+            symbolEl.textContent = symbol;
+        });
+    });
+    
+    // Update currency symbol when meal currency changes
+    mealsContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('meal-currency')) {
+            const selectedCurrency = e.target.value;
+            const symbol = currencySymbols[selectedCurrency] || selectedCurrency;
+            const currencySymbol = e.target.closest('.meal-item').querySelector('.meal-currency-symbol');
+            if (currencySymbol) {
+                currencySymbol.textContent = symbol;
+            }
+        }
+    });
+    
+    // Set initial currency symbol
+    const initialCurrency = currencySelect.value || 'EGP';
+    const initialSymbol = currencySymbols[initialCurrency] || initialCurrency;
+    document.querySelectorAll('.meal-currency-symbol').forEach(symbolEl => {
+        symbolEl.textContent = initialSymbol;
+    });
+    
+    // Add meal functionality
+    addMealBtn.addEventListener('click', function() {
+        mealIndex++;
+        const mealTemplate = `
+            <div class="meal-item border p-3 rounded mb-3" data-meal-index="${mealIndex}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Meal Name</label>
+                            <input type="text" class="form-control meal-name" name="meals[${mealIndex}][name]" placeholder="e.g., Traditional Egyptian Breakfast">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Currency</label>
+                            <select class="form-control meal-currency" name="meals[${mealIndex}][currency]">
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="JPY">JPY - Japanese Yen</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                                <option value="AUD">AUD - Australian Dollar</option>
+                                <option value="CHF">CHF - Swiss Franc</option>
+                                <option value="CNY">CNY - Chinese Yuan</option>
+                                <option value="INR">INR - Indian Rupee</option>
+                                <option value="AED">AED - UAE Dirham</option>
+                                <option value="EGP" selected>EGP - Egyptian Pound</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text meal-currency-symbol">${initialSymbol}</span>
+                                <input type="number" step="0.01" class="form-control meal-price" name="meals[${mealIndex}][price]" min="0" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="button" class="btn btn-danger btn-sm remove-meal">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control meal-description" name="meals[${mealIndex}][description]" rows="2" placeholder="Describe the meal ingredients, preparation, and special features"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input meal-featured" type="checkbox" name="meals[${mealIndex}][is_featured]" value="1">
+                            <label class="form-check-label">Featured Meal</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input meal-available" type="checkbox" name="meals[${mealIndex}][is_available]" value="1" checked>
+                            <label class="form-check-label">Available</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        mealsContainer.insertAdjacentHTML('beforeend', mealTemplate);
+        updateRemoveButtons();
+    });
+    
+    // Remove meal functionality
+    mealsContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-meal')) {
+            e.target.closest('.meal-item').remove();
+            updateRemoveButtons();
+        }
+    });
+    
+    // Update remove buttons visibility
+    function updateRemoveButtons() {
+        const mealItems = document.querySelectorAll('.meal-item');
+        mealItems.forEach((item, index) => {
+            const removeBtn = item.querySelector('.remove-meal');
+            removeBtn.style.display = mealItems.length > 1 ? 'inline-block' : 'none';
+        });
+    }
+    
+    // Initialize remove buttons
+    updateRemoveButtons();
+});
+</script>
+@endpush

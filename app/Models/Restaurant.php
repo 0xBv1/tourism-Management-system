@@ -53,9 +53,35 @@ class Restaurant extends Model
             ->where('resource_type', 'restaurant');
     }
 
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'resource_id')
+            ->where('resource_type', 'restaurant');
+    }
+
+    public function meals(): HasMany
+    {
+        return $this->hasMany(Meal::class)->ordered();
+    }
+
+    public function availableMeals(): HasMany
+    {
+        return $this->hasMany(Meal::class)->available()->ordered();
+    }
+
+    public function featuredMeals(): HasMany
+    {
+        return $this->hasMany(Meal::class)->featured()->ordered();
+    }
+
     public function scopeAvailable($query)
     {
         return $query->where('status', ResourceStatus::AVAILABLE);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('active', true)->where('enabled', true);
     }
 
     public function scopeByCity($query, $cityId)

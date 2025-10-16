@@ -46,6 +46,7 @@ class Currency
             'CNY' => 'Chinese Yuan',
             'INR' => 'Indian Rupee',
             'AED' => 'UAE Dirham',
+            'EGP' => 'Egyptian Pound',
         ];
     }
 }

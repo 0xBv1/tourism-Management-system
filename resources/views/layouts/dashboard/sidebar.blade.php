@@ -74,6 +74,16 @@
             />
 
             <x-dashboard.sidebar.link-with-child
+                title="Settlements"
+                icon="dollar-sign"
+                :permissions="['settlements.list','settlements.create','settlements.edit','settlements.delete','settlements.show']"
+                :children="[
+                    ['title' => 'All Settlements', 'link' => route('dashboard.settlements.index'), 'permissions' => ['settlements.list','settlements.show'] ],
+                    ['title' => 'Create Settlement', 'link' => route('dashboard.settlements.create'), 'permissions' => ['settlements.create'] ],
+                ]"
+            />
+
+            <x-dashboard.sidebar.link-with-child
                 title="Finance"
                 icon="dollar-sign"
                 :permissions="['payments.list','payments.create','payments.edit','payments.delete','payments.show','payments.statements','payments.aging-buckets']"
